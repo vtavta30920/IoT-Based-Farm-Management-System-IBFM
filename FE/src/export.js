@@ -5,10 +5,12 @@ import document from "../src/assets/document.svg";
 import paint from "../src/assets/paint.svg";
 import support from "../src/assets/support.svg";
 
-import { IoDocumentTextSharp } from "react-icons/io5";
-import { MdOutlineDesignServices } from "react-icons/md";
-import { FaRegBuilding } from "react-icons/fa";
-import { FaSitemap } from "react-icons/fa";
+import {
+  FaMicrochip,
+  FaNetworkWired,
+  FaRobot,
+  FaMobileAlt,
+} from "react-icons/fa";
 
 import client1 from "../src/assets/client1.png";
 import client2 from "../src/assets/client2.png";
@@ -55,51 +57,51 @@ export const allservices = [
 
 export const planning = [
   {
-    icon: IoDocumentTextSharp,
-    title: "planning",
+    icon: FaMicrochip,
+    title: "SENSOR SYSTEM SETUP",
     about:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
+      "Deploy environmental sensors (temperature, humidity, light, soil pH, etc.) across the farm. Gather real-time data for analysis and optimal decision-making.",
   },
   {
-    icon: MdOutlineDesignServices,
-    title: "design",
+    icon: FaNetworkWired,
+    title: "DATA CONNECTION & PROCESSING",
     about:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
+      "Transmit sensor data to a cloud platform. Use algorithms and AI to analyze data, identify trends, and predict potential issues.",
   },
   {
-    icon: FaRegBuilding,
-    title: "building",
+    icon: FaRobot,
+    title: "FARMING PROCESS AUTOMATION",
     about:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
+      "Automatically adjust devices like irrigation, lighting, ventilation, and fertilization systems based on analyzed data to optimize crop growth.",
   },
   {
-    icon: FaSitemap,
-    title: "finish",
+    icon: FaMobileAlt,
+    title: "REMOTE MONITORING & ADJUSTMENT",
     about:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
+      "Farmers can monitor all farm activities and adjust parameters remotely via a smartphone or computer application, ensuring optimal conditions.",
   },
 ];
 
 export const clients = [
   {
     image: client1,
-    name: "Alex Parker",
+    name: "Nguyễn Văn Nam",
     about:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
-    post: "Constructor",
+    post: "Farmer",
   },
   {
     image: client2,
-    name: "Drew James",
+    name: "Trần Văn Việt",
     about:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
-    post: "Architect",
+    post: "Farmer",
   },
   {
     image: client3,
-    name: "Sam Peterson",
+    name: "Lê Văn Bình",
     about:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
-    post: "Builder",
+    post: "Farmer",
   },
 ];
