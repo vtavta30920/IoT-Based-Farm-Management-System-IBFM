@@ -26,7 +26,7 @@ const OurProducts = () => {
         </motion.h1>
         <motion.div
           variants={slideUpVariants}
-          className="w-[120px] h-[6px] bg-green-500"
+          className="w-20 h-1 bg-green-600 rounded-full" // Increased width and made rounded-full
         ></motion.div>
 
         {/* make div for services mapping from export */}
@@ -34,22 +34,24 @@ const OurProducts = () => {
           initial="hidden"
           whileInView="visible"
           variants={zoomInVariants}
-          className="w-full grid lg:grid-cols-3 grid-cols-1 justify-center items-start gap-[20px] mt-[30px]"
+          className="w-full grid lg:grid-cols-3 xl:grid-cols-3 gap-8 mt-12" // Increased gap and added xl grid
         >
           {allservices.map((item, index) => (
             <motion.div
               variants={zoomInVariants}
-              className="flex justify-center items-startgap-5 p-8"
+              className="flex flex-col items-center p-10 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300" // Added shadow and hover effect
               key={index}
             >
               <img
                 src={item.icon}
                 alt="icon"
-                className="w-[70px] border-2 border-green-500 hover:bg-green-500 rounded-lg p-2"
+                className="w-20 h-20 mb-6 border-4 border-green-600 rounded-full p-3 hover:bg-green-100 transition-colors duration-300" // Increased size and added hover effect
               />
-              <div className="flex flex-col justify-center items-start gap-3">
-                <h1 className="text-x1 font-bold text-black"> {item.title}</h1>
-                <p>{item.about}</p>
+              <div className="text-center">
+                <h1 className="text-xl font-bold text-gray-900 mb-2">
+                  {item.title}
+                </h1>
+                <p className="text-gray-600 text-lg">{item.about}</p>
               </div>
             </motion.div>
           ))}
