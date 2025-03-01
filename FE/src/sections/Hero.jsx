@@ -3,6 +3,7 @@ import heroimg from "../assets/heroimg.png";
 import backgroundImage from "../assets/homeimg.webp";
 import { motion } from "framer-motion";
 import { slideUpVariants, zoomInVariants } from "./animation";
+import { Link } from "react-router-dom";
 const Hero = () => {
   return (
     <div
@@ -45,13 +46,7 @@ const Hero = () => {
             variants={zoomInVariants}
             className="bg-green-500 hover:bg-white hover:text-black px-10 py-3 rounded-lg text-black font-bold"
           >
-            READ MORE
-          </motion.button>
-          <motion.button
-            variants={zoomInVariants}
-            className="border-white hover:border-green-500 hover:text-green-500 border-2 px-10 py-3 rounded-lg text white font-bold"
-          >
-            REACH US
+            <Link to="/read-more">READ MORE</Link>
           </motion.button>
         </motion.div>
       </motion.div>

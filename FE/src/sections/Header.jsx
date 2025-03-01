@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { FaXmark, FaBars } from "react-icons/fa6";
-import { Link } from "react-scroll";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -13,48 +14,61 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
+  const handleHomeClick = () => {
+    navigate("/");
+    window.location.reload(); // Ensures full page reload
+  };
+
   const navItem = [
-    { link: "Home", path: "home" },
-    { link: "About", path: "about" },
-    { link: "Products", path: "our products" },
+    { link: "Home", path: "/" },
+    { link: "About", path: "/read-more" },
+    { link: "Products", path: "/products" },
   ];
 
   return (
     <nav className="w-full flex bg-white justify-between items-center gap-1 lg:px-16 px-6 py-4 sticky top-0 z-50">
-      <h1 className="text-black md:text-6xl text-5xl font-bold font-rubik">
-        IoT
-        <span className="text-green-500 italic"> Farm</span>
+      <h1
+        className="text-black md:text-6xl text-5xl font-bold font-rubik cursor-pointer"
+        onClick={handleHomeClick}
+      >
+        IoT <span className="text-green-500 italic">Farm</span>
       </h1>
       <ul className="flex justify-center items-center gap-6">
         {navItem.map(({ link, path }) => (
           <Link
             key={path}
+            to={path}
             className="text-black uppercase font-bold cursor-pointer p-3 rounded-full hover:bg-green-500 hover:text-black text-[15px]"
-            to={path} // Đổi target thành to
-            spy={true}
-            offset={-100}
-            smooth={true}
           >
             {link}
           </Link>
         ))}
       </ul>
-      <button className="bg-green-500 hover:bg-black hover:text-white text-black px-10 py-3 rounded-full font-semibold transform hover:scale-105 transition-transform duration-300 cursor-pointer md:flex hidden">
-        LOG IN
-      </button>
+      <div className="md:flex hidden gap-3">
+        <Link
+          to="/login"
+          className="bg-green-500 hover:bg-black hover:text-white text-black px-10 py-3 rounded-full font-semibold transform hover:scale-105 transition-transform duration-300 cursor-pointer"
+        >
+          LOG IN
+        </Link>
+        <Link
+          to="/signup"
+          className="bg-black hover:bg-green-500 hover:text-black text-white px-10 py-3 rounded-full font-semibold transform hover:scale-105 transition-transform duration-300 cursor-pointer"
+        >
+          SIGN UP
+        </Link>
+      </div>
 
-      {/* mobile menu starts here */}
+      {/* Mobile Menu */}
       <div
         className="flex justify-center items-center lg:hidden mt-3"
         onClick={toggleMenu}
       >
-        <div>
-          {isMenuOpen ? (
-            <FaXmark className="text-green-500 text-3xl cursor-pointer" />
-          ) : (
-            <FaBars className="text-green-500 text-3xl cursor-pointer" />
-          )}
-        </div>
+        {isMenuOpen ? (
+          <FaXmark className="text-green-500 text-3xl cursor-pointer" />
+        ) : (
+          <FaBars className="text-green-500 text-3xl cursor-pointer" />
+        )}
       </div>
       <div
         className={`${
@@ -66,11 +80,8 @@ const Header = () => {
           {navItem.map(({ link, path }) => (
             <Link
               key={path}
+              to={path}
               className="text-black uppercase font-semibold cursor-pointer p-2 rounded-lg hover:bg-black hover:text-white w-full text-center"
-              to={path} // Đổi target thành to
-              spy={true}
-              offset={-100}
-              smooth={true}
             >
               {link}
             </Link>

@@ -27,14 +27,14 @@ const Footer = () => {
           <h2 className="text-xl font-semibold mb-3">Quick Links</h2>
           <ul className="space-y-2">
             <li>
-              <a href="/about" className="hover:text-green-400">
+              <a href="/read-more" className="hover:text-green-400">
                 About Us
               </a>
             </li>
 
             <li>
               <a href="/policy" className="hover:text-green-400">
-                Policy
+                Privacy & Policy
               </a>
             </li>
           </ul>

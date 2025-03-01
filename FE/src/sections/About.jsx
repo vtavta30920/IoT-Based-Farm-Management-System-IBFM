@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { slideUpVariants, zoomInVariants } from "./animation";
-
+import { Link } from "react-router-dom";
 const About = () => {
   return (
     <div
@@ -50,7 +50,7 @@ const About = () => {
           variants={zoomInVariants}
           className="bg-green-500 hover:bg-white hover:text-black px-10 py-3 rounded-lg font-bold text-black"
         >
-          READ MORE
+          <Link to="/read-more">READ MORE</Link>
         </motion.button>
       </motion.div>
     </div>
