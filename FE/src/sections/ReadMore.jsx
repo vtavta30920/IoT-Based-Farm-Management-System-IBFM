@@ -92,12 +92,6 @@ const ReadMore = () => {
           methods.
         </li>
       </ul>
-      <h2 className="text-2xl font-semibold text-green-400 mt-6">Join Us:</h2>
-      <p className="text-lg mb-4">
-        We invite you to join us on our mission to revolutionize agriculture.
-        Whether you're a farmer, a consumer, or simply passionate about
-        sustainability, there's a place for you in the IoT Farm community.
-      </p>
     </div>
   );
 };

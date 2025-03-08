@@ -1,10 +1,6 @@
-import building from "../src/assets/building.svg";
-import construction from "../src/assets/construction.svg";
-import design from "../src/assets/design.svg";
-import document from "../src/assets/document.svg";
-import paint from "../src/assets/paint.svg";
-import support from "../src/assets/support.svg";
-
+import xalach from "../src/assets/xalach.png";
+import caingot from "../src/assets/caingot.png";
+import raumuong from "../src/assets/raumuong.png";
 import {
   FaMicrochip,
   FaNetworkWired,
@@ -18,40 +14,25 @@ import client3 from "../src/assets/client3.png";
 
 export const allservices = [
   {
-    icon: building,
-    title: "BUILDING RENOVATION",
+    icon: xalach,
+    title: "Xà Lách",
     about:
       "Sample text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    price: "$2.99", // Add prices
   },
   {
-    icon: construction,
-    title: "CONSTRUCTION SERVICES",
+    icon: caingot,
+    title: "Cải Ngọt",
     about:
       "Sample text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    price: "$3.49", // Add prices
   },
   {
-    icon: design,
-    title: "DESIGN & PLANNING",
+    icon: raumuong,
+    title: "Rau Muống",
     about:
       "Sample text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-  },
-  {
-    icon: document,
-    title: "DOCUMENTATION",
-    about:
-      "Sample text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-  },
-  {
-    icon: paint,
-    title: "INTERIOR DESIGN",
-    about:
-      "Sample text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-  },
-  {
-    icon: support,
-    title: "CUSTOMER SUPPORT",
-    about:
-      "Sample text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    price: "$2.79", // Add prices
   },
 ];
 
