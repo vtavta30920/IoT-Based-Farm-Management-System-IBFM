@@ -12,7 +12,7 @@ import Products from "./sections/Products";
 import Policy from "./sections/Policy";
 import Login from "./sections/Login";
 import Signup from "./sections/Signup";
-
+import ProductDetails from "./sections/ProductDetails.jsx";
 const App = () => {
   return (
     <Router>
@@ -32,6 +32,7 @@ const App = () => {
         />
         <Route path="/read-more" element={<ReadMore />} />
         <Route path="/products" element={<Products />} />
+        <Route path="/products/:title" element={<ProductDetails />} />
         <Route path="/policy" element={<Policy />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

@@ -1,5 +1,6 @@
 import React from "react";
 import { allservices } from "../export";
+import { Link } from "react-router-dom"; 
 const Products = () => {
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-gray-100 p-10">
@@ -25,9 +26,12 @@ const Products = () => {
               <p className="text-gray-600 mb-4">{product.about}</p>
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold">{product.price}</span>
-                <button className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                <Link
+                  to={`/products/${product.title}`} // Dynamic route for product details
+                  className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition duration-300"
+                >
                   View Details
-                </button>
+                </Link>
               </div>
             </div>
           </div>
