@@ -1,21 +1,24 @@
-// LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { UserContext } from "../UserContext"; // Import the UserContext
+import { useNavigate } from "react-router-dom"; // For redirecting after login
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useContext(UserContext); // Access the login function from UserContext
+  const navigate = useNavigate(); // For navigation
 
-  const handleSubmit = (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login:", { email, password });
+    login(email, password); // Call the login function with email and password
+    navigate("/"); // Redirect to the home page after login
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-semibold mb-4 text-center">Log In</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleLogin}> {/* Use handleLogin here */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Email
@@ -26,6 +29,7 @@ const Login = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required // Ensure the field is required
             />
           </div>
           <div className="mb-6">
@@ -38,6 +42,7 @@ const Login = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required // Ensure the field is required
             />
           </div>
           <div className="flex items-center justify-between">
