@@ -17,6 +17,8 @@ import Profile from "./sections/Profile.jsx";
 import Login from "./sections/Login";
 import Signup from "./sections/Signup";
 import ProductDetails from "./sections/ProductDetails.jsx";
+import Cart from "./sections/Cart.jsx";
+
 
 const App = () => {
   return (
@@ -43,6 +45,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/cart" element={<Cart />} />
         </Routes>
         <Footer />
       </Router>

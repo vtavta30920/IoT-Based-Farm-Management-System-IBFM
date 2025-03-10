@@ -1,17 +1,28 @@
-import React, { useState, useContext } from "react";
-import { UserContext } from "../UserContext"; // Import the UserContext
+import React, { useState, useContext, useEffect } from "react";
+import { UserContext } from "../UserContext";
 
 const Profile = () => {
-  const { user, updateProfile } = useContext(UserContext); // Access user and updateProfile
-  const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
+  const { user, updateProfile } = useContext(UserContext);
+  const [isEditing, setIsEditing] = useState(false);
   const [updatedInfo, setUpdatedInfo] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    address: user?.address || "",
+    accountId: user?.accountId || "",
+    fullname: user?.fullname || "",
     phone: user?.phone || "",
+    address: user?.address || "",
   });
 
-  // Handle input changes
+  // Sync updatedInfo with user only when not editing
+  useEffect(() => {
+    if (user && !isEditing) {
+      setUpdatedInfo({
+        accountId: user.accountId || "",
+        fullname: user.fullname || "",
+        phone: user.phone || "",
+        address: user.address || "",
+      });
+    }
+  }, [user, isEditing]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedInfo({
@@ -20,11 +31,14 @@ const Profile = () => {
     });
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    updateProfile(updatedInfo); // Update the user profile
-    setIsEditing(false); // Exit edit mode
+    try {
+      await updateProfile(updatedInfo); // Call updateProfile from UserContext
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    }
   };
 
   if (!user) {
@@ -39,27 +53,28 @@ const Profile = () => {
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                Name
+                Full Name
               </label>
               <input
                 type="text"
-                name="name"
-                value={updatedInfo.name}
+                name="fullname"
+                value={updatedInfo.fullname}
                 onChange={handleInputChange}
-                className="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="border rounded w-full py-2 px-3 text-gray-700 focus:outline-none"
                 required
               />
             </div>
+            
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                Email
+                Phone
               </label>
               <input
-                type="email"
-                name="email"
-                value={updatedInfo.email}
+                type="text"
+                name="phone"
+                value={updatedInfo.phone}
                 onChange={handleInputChange}
-                className="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="border rounded w-full py-2 px-3 text-gray-700 focus:outline-none"
                 required
               />
             </div>
@@ -72,49 +87,27 @@ const Profile = () => {
                 name="address"
                 value={updatedInfo.address}
                 onChange={handleInputChange}
-                className="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="border rounded w-full py-2 px-3 text-gray-700 focus:outline-none"
                 required
               />
             </div>
-            <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Phone
-              </label>
-              <input
-                type="text"
-                name="phone"
-                value={updatedInfo.phone}
-                onChange={handleInputChange}
-                className="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
+           
             <div className="flex items-center justify-between">
-              <button
-                type="submit"
-                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
+              <button type="submit" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                 Save
               </button>
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
+              <button type="button" onClick={() => setIsEditing(false)} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                 Cancel
               </button>
             </div>
           </form>
         ) : (
           <div>
-            <p className="text-gray-700 mb-2"><strong>Name:</strong> {user.name}</p>
-            <p className="text-gray-700 mb-2"><strong>Email:</strong> {user.email}</p>
+            <p className="text-gray-700 mb-2"><strong>Full Name:</strong> {user.fullname}</p>
+            <p className="text-gray-700 mb-2"><strong>Phone:</strong> {user.phone}</p>
             <p className="text-gray-700 mb-2"><strong>Address:</strong> {user.address}</p>
-            <p className="text-gray-700 mb-4"><strong>Phone:</strong> {user.phone}</p>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
+            
+            <button onClick={() => setIsEditing(true)} className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
               Edit Profile
             </button>
           </div>
