@@ -1,5 +1,6 @@
-// SignupPage.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { UserContext } from "../UserContext";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -7,8 +8,10 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const { register } = useContext(UserContext);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // Clear previous errors
 
@@ -32,10 +35,12 @@ const Signup = () => {
       return;
     }
 
-    // Handle signup logic here
-    console.log("Signup:", { name, email, password });
-    // Simulate successful signup (replace with your actual logic)
-    alert("Signup successful!");
+    try {
+      await register(name, email, password);
+      navigate("/"); // Redirect to home page after successful registration
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   return (

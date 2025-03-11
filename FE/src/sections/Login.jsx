@@ -1,21 +1,32 @@
-// LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { UserContext } from "../UserContext"; // Import the UserContext
+import { useNavigate } from "react-router-dom"; // For redirecting after login
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); // State to handle login errors
+  const { login } = useContext(UserContext); // Access the login function from UserContext
+  const navigate = useNavigate(); // For navigation
 
-  const handleSubmit = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login:", { email, password });
+    setError(""); // Clear any previous errors
+
+    try {
+      await login(email, password); // Call the login function with email and password
+      navigate("/"); // Redirect to the home page after successful login
+    } catch (error) {
+      setError(error.message); // Display the error message
+    }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-semibold mb-4 text-center">Log In</h2>
-        <form onSubmit={handleSubmit}>
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>} {/* Display error message */}
+        <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Email
@@ -26,6 +37,7 @@ const Login = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           <div className="mb-6">
@@ -38,6 +50,7 @@ const Login = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
           <div className="flex items-center justify-between">
