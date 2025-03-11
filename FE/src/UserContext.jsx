@@ -18,6 +18,13 @@ export const UserProvider = ({ children }) => {
       throw error;
     }
   };
+   // Logout function
+   const logout = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+  };
+
 
   // Register function
   const register = async (name, email, password) => {
@@ -31,7 +38,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Fetch profile function
   const fetchProfile = async () => {
     try {
       if (token) {
@@ -43,7 +49,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // **Update Profile Function**
   const updateProfile = async (updatedInfo) => {
     try {
       if (!token) {
@@ -51,25 +56,26 @@ export const UserProvider = ({ children }) => {
       }
   
       const profileUpdateData = {
-        accountId: user?.accountId, // Ensure correct accountId is sent
-        fullname: updatedInfo.fullname, // Use "fullname" instead of "name"
+        accountId: user?.accountId || 0,
+        gender: updatedInfo.gender || 1,
+        fullname: updatedInfo.fullname,
         phone: updatedInfo.phone,
         address: updatedInfo.address,
+        images: updatedInfo.images || "",
       };
   
+      console.log("Sending update data:", profileUpdateData); // Log outgoing data
       const updatedUser = await apiUpdateProfile(profileUpdateData, token);
-      
-      // Ensure the state is updated immediately
-      setUser(updatedUser); 
-      
-      return updatedUser; // Return updated user data
+      console.log("Received updated user:", updatedUser); // Log incoming data
+  
+      setUser(updatedUser); // Update state
+      return updatedUser;
     } catch (error) {
-      console.error("Error updating profile:", error);
-      throw error;
+      console.error("Error in updateProfile:", error.message); // Detailed error logging
+      throw error; // Propagate the error to Profile.js
     }
   };
 
-  // Fetch profile on component mount
   useEffect(() => {
     if (token) {
       fetchProfile();
@@ -77,7 +83,7 @@ export const UserProvider = ({ children }) => {
   }, [token]);
 
   return (
-    <UserContext.Provider value={{ user, token, login, register, updateProfile }}>
+    <UserContext.Provider value={{ user, token, login, register, logout, updateProfile }}>
       {children}
     </UserContext.Provider>
   );

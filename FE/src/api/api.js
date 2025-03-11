@@ -1,6 +1,5 @@
 const API_BASE_URL = "https://localhost:7067/api/v1";
 
-// Login API
 export const login = async (email, password) => {
   const response = await fetch(`${API_BASE_URL}/account/login`, {
     method: "POST",
@@ -17,7 +16,6 @@ export const login = async (email, password) => {
   return response.json();
 };
 
-// Register API
 export const register = async (name, email, password) => {
   const response = await fetch(`${API_BASE_URL}/account/register`, {
     method: "POST",
@@ -34,7 +32,6 @@ export const register = async (name, email, password) => {
   return response.json();
 };
 
-// Get Profile API
 export const getProfile = async (token) => {
   const response = await fetch(`${API_BASE_URL}/account-profile/profile`, {
     method: "GET",
@@ -51,20 +48,35 @@ export const getProfile = async (token) => {
   return response.json();
 };
 
-// **Update Profile API using PUT**
 export const updateProfile = async (updatedInfo, token) => {
-    const response = await fetch(`${API_BASE_URL}/account-profile/update`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updatedInfo), // Send updated profile data
-    });
-  
-    if (!response.ok) {
-      throw new Error("Failed to update profile.");
-    }
-  
-    return response.json();
-  };
+  const response = await fetch(`${API_BASE_URL}/account-profile/update`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updatedInfo),
+  });
+
+  console.log("Update Profile Response Status:", response.status);
+
+  if (response.status === 204) {
+    console.log("No content returned, assuming success.");
+    return updatedInfo; // Return the same data for state update
+  }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to update profile: ${errorText || response.status}`);
+  }
+
+  // Handle non-JSON responses
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return response.json(); // Parse JSON response
+  } else {
+    const text = await response.text(); // Handle plain text response
+    console.log("Non-JSON response:", text);
+    return updatedInfo; // Return the same data for state update
+  }
+};

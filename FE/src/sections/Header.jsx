@@ -24,7 +24,7 @@ const Header = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    logout(); // Call the logout function from the context
     navigate("/");
     setIsDropdownOpen(false); // Close dropdown on logout
   };
