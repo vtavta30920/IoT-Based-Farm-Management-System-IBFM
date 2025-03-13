@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
-import { FaXmark, FaBars } from "react-icons/fa6";
+import { FaXmark, FaBars } from "react-icons/fa6"; // Import from react-icons/fa6
+import { FaUser, FaShoppingCart } from "react-icons/fa"; // Other icons from react-icons/fa
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../UserContext";
 
@@ -59,9 +60,9 @@ const Header = () => {
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="bg-green-500 hover:bg-black hover:text-white text-black px-10 py-3 rounded-full font-semibold transform hover:scale-105 transition-transform duration-300 cursor-pointer"
+              className="bg-green-500 hover:bg-black hover:text-white text-black px-10 py-3 rounded-full font-semibold transform hover:scale-105 transition-transform duration-300 cursor-pointer flex items-center gap-2"
             >
-              {user.name} ▼
+              <FaUser /> {user.name} ▼
             </button>
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg z-50">
@@ -71,6 +72,13 @@ const Header = () => {
                   onClick={() => setIsDropdownOpen(false)}
                 >
                   Profile
+                </Link>
+                <Link
+                  to="/cart"
+                  className="block px-4 py-2 text-black hover:bg-green-500 hover:text-white uppercase font-semibold"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <FaShoppingCart /> Cart
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -99,7 +107,6 @@ const Header = () => {
         )}
       </div>
 
-      {/* Mobile Menu */}
       <div
         className="flex justify-center items-center lg:hidden mt-3"
         onClick={toggleMenu}
@@ -132,7 +139,7 @@ const Header = () => {
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="text-black uppercase font-semibold cursor-pointer p-2 rounded-lg hover:bg-black hover:text-white w-full text-center"
               >
-                {user.name} ▼
+                <FaUser /> {user.name} ▼
               </button>
               {isDropdownOpen && (
                 <>
@@ -142,13 +149,18 @@ const Header = () => {
                   >
                     PROFILE
                   </Link>
+                  <Link
+                    to="/cart"
+                    className="text-black uppercase font-semibold cursor-pointer p-2 rounded-lg hover:bg-black hover:text-white w-full text-center"
+                  >
+                    <FaShoppingCart /> CART
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="text-black uppercase font-semibold cursor-pointer p-2 rounded-lg hover:bg-black hover:text-white w-full text-center"
                   >
                     LOG OUT
                   </button>
-                  
                 </>
               )}
             </div>
