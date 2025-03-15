@@ -16,13 +16,13 @@ export const login = async (email, password) => {
   return response.json();
 };
 
-export const register = async (name, email, password) => {
+export const register = async (email, password, confirmPassword) => {
   const response = await fetch(`${API_BASE_URL}/account/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ email, password, confirmPassword }), // Updated payload
   });
 
   if (!response.ok) {
@@ -67,7 +67,9 @@ export const updateProfile = async (updatedInfo, token) => {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to update profile: ${errorText || response.status}`);
+    throw new Error(
+      `Failed to update profile: ${errorText || response.status}`
+    );
   }
 
   // Handle non-JSON responses

@@ -1,5 +1,10 @@
 import React, { createContext, useState, useEffect } from "react";
-import { login as apiLogin, register as apiRegister, getProfile, updateProfile as apiUpdateProfile } from "./api/api";
+import {
+  login as apiLogin,
+  register as apiRegister,
+  getProfile,
+  updateProfile as apiUpdateProfile,
+} from "./api/api";
 
 export const UserContext = createContext();
 
@@ -10,7 +15,7 @@ export const UserProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      const { token, user } = await apiLogin(email, password);
+      const { token, user } = await apiLogin(email, password); // Correct destructuring and await
       setToken(token);
       setUser(user);
       localStorage.setItem("token", token);
@@ -18,18 +23,21 @@ export const UserProvider = ({ children }) => {
       throw error;
     }
   };
-   // Logout function
-   const logout = () => {
+  // Logout function
+  const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
   };
 
-
   // Register function
-  const register = async (name, email, password) => {
+  const register = async (email, password, confirmPassword) => {
     try {
-      const { token, user } = await apiRegister(name, email, password);
+      const { token, user } = await apiRegister(
+        email,
+        password,
+        confirmPassword
+      ); // Pass confirmPassword
       setToken(token);
       setUser(user);
       localStorage.setItem("token", token);
@@ -54,7 +62,7 @@ export const UserProvider = ({ children }) => {
       if (!token) {
         throw new Error("No authentication token found.");
       }
-  
+
       const profileUpdateData = {
         accountId: user?.accountId || 0,
         gender: updatedInfo.gender || 1,
@@ -63,11 +71,11 @@ export const UserProvider = ({ children }) => {
         address: updatedInfo.address,
         images: updatedInfo.images || "",
       };
-  
+
       console.log("Sending update data:", profileUpdateData); // Log outgoing data
       const updatedUser = await apiUpdateProfile(profileUpdateData, token);
       console.log("Received updated user:", updatedUser); // Log incoming data
-  
+
       setUser(updatedUser); // Update state
       return updatedUser;
     } catch (error) {
@@ -83,7 +91,9 @@ export const UserProvider = ({ children }) => {
   }, [token]);
 
   return (
-    <UserContext.Provider value={{ user, token, login, register, logout, updateProfile }}>
+    <UserContext.Provider
+      value={{ user, token, login, register, logout, updateProfile }}
+    >
       {children}
     </UserContext.Provider>
   );
