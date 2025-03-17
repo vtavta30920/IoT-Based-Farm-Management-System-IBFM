@@ -15,7 +15,7 @@ const Testimonials = () => {
           variants={slideUpVariants}
           className="text-green-500 text-2x1"
         >
-          TESTIMONIALS
+          FEEDBACK
         </motion.h1>
         <motion.h1
           variants={slideUpVariants}

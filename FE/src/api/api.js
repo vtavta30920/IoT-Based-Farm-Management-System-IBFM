@@ -31,7 +31,23 @@ export const register = async (email, password, confirmPassword) => {
 
   return response.json();
 };
+export const getProducts = async (pageIndex = 0, pageSize = 10) => {
+  const response = await fetch(
+    `${API_BASE_URL}/products/products-list?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
+  if (!response.ok) {
+    throw new Error("Failed to fetch products.");
+  }
+
+  return response.json();
+};
 export const getProfile = async (token) => {
   const response = await fetch(`${API_BASE_URL}/account-profile/profile`, {
     method: "GET",
