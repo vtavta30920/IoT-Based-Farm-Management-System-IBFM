@@ -1,7 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { UserProvider } from "./UserContext";
-import { CartProvider } from "./CartContext"; // Import the UserProvider
+import { CartProvider } from "./CartContext";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Header from "./sections/Header";
 import Hero from "./sections/Hero";
@@ -18,15 +20,16 @@ import Login from "./sections/Login";
 import Signup from "./sections/Signup";
 import ProductDetails from "./sections/ProductDetails.jsx";
 import Cart from "./sections/Cart.jsx";
+import Checkout from "./sections/Checkout.jsx"; // Import the Checkout component
+import VNPayCallback from "./sections/VNPayCallback.jsx";
 
 const App = () => {
   return (
     <UserProvider>
       <CartProvider>
-        {" "}
-        {/* Wrap the app with CartProvider */}
         <Router>
           <Header />
+          <ToastContainer />
           <Routes>
             <Route
               path="/"
@@ -48,6 +51,9 @@ const App = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/vnpay-callback" element={<VNPayCallback />} />
+            {/* Add the Checkout route */}
           </Routes>
           <Footer />
         </Router>

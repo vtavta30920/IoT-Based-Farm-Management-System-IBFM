@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Link } from "react-router-dom";
 import { getProducts } from "../api/api";
-import { CartContext } from "../CartContext"; // Import the CartContext
+import { CartContext } from "../CartContext";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
-  const { addToCart } = useContext(CartContext); // Use the CartContext
+  const { addToCart } = useContext(CartContext);
+  const [isAdding, setIsAdding] = useState(false); // State to track if adding to cart
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -19,6 +19,13 @@ const Products = () => {
 
     fetchProducts();
   }, []);
+
+  const handleAddToCart = (product) => {
+    if (isAdding) return; // Prevent multiple clicks
+    setIsAdding(true); // Disable button
+    addToCart(product);
+    setTimeout(() => setIsAdding(false), 1000); // Re-enable button after 1 second
+  };
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-gray-100 p-10">
@@ -50,9 +57,10 @@ const Products = () => {
                 </span>
                 <button
                   className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition duration-300"
-                  onClick={() => addToCart(product)}
+                  onClick={() => handleAddToCart(product)}
+                  disabled={isAdding} // Disable button while adding
                 >
-                  Add to Cart
+                  {isAdding ? "Adding..." : "Add to Cart"}
                 </button>
               </div>
             </div>

@@ -98,3 +98,70 @@ export const updateProfile = async (updatedInfo, token) => {
     return updatedInfo; // Return the same data for state update
   }
 };
+export const createOrder = async (orderItems, shippingAddress, token) => {
+  const response = await fetch(`${API_BASE_URL}/Order/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      orderItems,
+      shippingAddress,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create order.");
+  }
+
+  return response.json();
+};
+
+export const createVNPayPaymentUrl = async (
+  orderId,
+  orderType,
+  amount,
+  orderDescription,
+  name,
+  token
+) => {
+  const response = await fetch(`${API_BASE_URL}/vnpay/create-payment-url`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      orderId,
+      orderType,
+      amount,
+      orderDescription,
+      name,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create VNPay payment URL.");
+  }
+
+  return response.json();
+};
+
+export const handleVNPayCallback = async (queryParams) => {
+  const response = await fetch(
+    `${API_BASE_URL}/vnpay/callback?${queryParams}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to handle VNPay callback.");
+  }
+
+  return response.json();
+};
