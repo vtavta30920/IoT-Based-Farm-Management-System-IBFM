@@ -112,7 +112,9 @@ export const createOrder = async (orderItems, shippingAddress, token) => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create order.");
+    const errorText = await response.text();
+    console.error("Failed to create order. Response:", errorText);
+    throw new Error(errorText || "Failed to create order.");
   }
 
   return response.json();

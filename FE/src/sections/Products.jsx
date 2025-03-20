@@ -5,26 +5,36 @@ import { CartContext } from "../CartContext";
 const Products = () => {
   const [products, setProducts] = useState([]);
   const { addToCart } = useContext(CartContext);
-  const [isAdding, setIsAdding] = useState(false); // State to track if adding to cart
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const data = await getProducts();
-        setProducts(data.data.items);
+        console.log("Raw Products API Response:", data.data.items); // Log raw API response
+        const normalizedProducts = data.data.items.map((product) => {
+          const normalized = {
+            ...product,
+            productId: product.id || product.productId, // Map `id` to `productId`
+          };
+          console.log("Normalized Product:", normalized); // Log each normalized product
+          return normalized;
+        });
+        console.log("All Normalized Products:", normalizedProducts); // Log final array
+        setProducts(normalizedProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
-
     fetchProducts();
   }, []);
 
   const handleAddToCart = (product) => {
-    if (isAdding) return; // Prevent multiple clicks
-    setIsAdding(true); // Disable button
+    if (isAdding) return;
+    setIsAdding(true);
+    console.log("Product to Add to Cart:", product); // Log product before adding
     addToCart(product);
-    setTimeout(() => setIsAdding(false), 1000); // Re-enable button after 1 second
+    setTimeout(() => setIsAdding(false), 1000);
   };
 
   return (
@@ -34,7 +44,6 @@ const Products = () => {
         Explore our premium, IoT-powered fresh produce and innovative farming
         solutions.
       </p>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
         {products.map((product, index) => (
           <div
@@ -42,7 +51,7 @@ const Products = () => {
             className="bg-white rounded-lg shadow-md overflow-hidden"
           >
             <img
-              src="https://via.placeholder.com/150" // Replace with actual product image URL if available
+              src="https://via.placeholder.com/150"
               alt={product.productName}
               className="w-full h-48 object-cover"
             />
@@ -58,7 +67,7 @@ const Products = () => {
                 <button
                   className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition duration-300"
                   onClick={() => handleAddToCart(product)}
-                  disabled={isAdding} // Disable button while adding
+                  disabled={isAdding}
                 >
                   {isAdding ? "Adding..." : "Add to Cart"}
                 </button>

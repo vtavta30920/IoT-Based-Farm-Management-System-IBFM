@@ -22,6 +22,7 @@ import ProductDetails from "./sections/ProductDetails.jsx";
 import Cart from "./sections/Cart.jsx";
 import Checkout from "./sections/Checkout.jsx"; // Import the Checkout component
 import VNPayCallback from "./sections/VNPayCallback.jsx";
+import OrderSuccess from "./sections/OrderSuccess.jsx";
 
 const App = () => {
   return (
@@ -53,7 +54,7 @@ const App = () => {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/vnpay-callback" element={<VNPayCallback />} />
-            {/* Add the Checkout route */}
+            <Route path="/order-success" element={<OrderSuccess />} />
           </Routes>
           <Footer />
         </Router>

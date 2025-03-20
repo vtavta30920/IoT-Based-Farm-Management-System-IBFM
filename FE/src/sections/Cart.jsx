@@ -2,10 +2,12 @@ import React, { useContext, useState } from "react";
 import { CartContext } from "../CartContext";
 import { FaTrash, FaEdit, FaShoppingCart } from "react-icons/fa"; // Import icons
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Cart = () => {
   const { cart, updateCartItem, removeFromCart } = useContext(CartContext);
   const [quantities, setQuantities] = useState({});
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Initialize quantities state with cart items
   React.useEffect(() => {
@@ -39,6 +41,17 @@ const Cart = () => {
   const totalPrice = cart.reduce((total, item) => {
     return total + item.price * item.quantity;
   }, 0);
+
+  // Handle checkout button click
+  const handleCheckout = () => {
+    if (cart.length === 0) {
+      toast.error(
+        "Your cart is empty. Add some products before proceeding to checkout."
+      );
+      return;
+    }
+    navigate("/checkout"); // Navigate to the checkout page
+  };
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-gray-100 p-10">
@@ -106,9 +119,7 @@ const Cart = () => {
             </div>
             <button
               className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300 mt-6"
-              onClick={() =>
-                toast.info("Proceed to checkout (not implemented).")
-              }
+              onClick={handleCheckout} // Use handleCheckout function
             >
               Proceed to Checkout
             </button>

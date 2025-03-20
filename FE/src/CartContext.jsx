@@ -8,7 +8,6 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const { user } = useContext(UserContext);
 
-  // Load cart from local storage when the user logs in
   useEffect(() => {
     if (user) {
       const savedCart = localStorage.getItem(`cart_${user.email}`);
@@ -16,24 +15,23 @@ export const CartProvider = ({ children }) => {
         setCart(JSON.parse(savedCart));
       }
     } else {
-      setCart([]); // Clear cart if user logs out
+      setCart([]);
     }
   }, [user]);
 
-  // Save cart to local storage whenever it changes
   useEffect(() => {
     if (user) {
       localStorage.setItem(`cart_${user.email}`, JSON.stringify(cart));
     }
   }, [cart, user]);
 
-  // Add item to cart
   const addToCart = (product) => {
     if (!user) {
       toast.error("You must be logged in to add items to the cart.");
       return;
     }
 
+    console.log("Product Received by addToCart:", product); // Log incoming product
     setCart((prevCart) => {
       const existingProduct = prevCart.find(
         (item) => item.productName === product.productName
@@ -46,38 +44,39 @@ export const CartProvider = ({ children }) => {
             : item
         );
       }
+      const newItem = {
+        ...product,
+        productId: product.productId || product.id, // Ensure productId is set
+        quantity: 1,
+      };
+      console.log("New Cart Item:", newItem); // Log new item
       toast.success(`${product.productName} added to cart.`);
-      return [...prevCart, { ...product, quantity: 1 }];
+      const updatedCart = [...prevCart, newItem];
+      console.log("Updated Cart:", updatedCart); // Log updated cart
+      return updatedCart;
     });
   };
 
-  // Update item quantity in cart
   const updateCartItem = (productName, newQuantity) => {
     if (newQuantity < 1) {
       toast.error("Quantity must be at least 1.");
       return;
     }
-
-    setCart((prevCart) => {
-      const updatedCart = prevCart.map((item) =>
+    setCart((prevCart) =>
+      prevCart.map((item) =>
         item.productName === productName
           ? { ...item, quantity: newQuantity }
           : item
-      );
-      toast.success(`${productName} quantity updated.`);
-      return updatedCart;
-    });
+      )
+    );
+    toast.success(`${productName} quantity updated.`);
   };
 
-  // Remove item from cart
   const removeFromCart = (productName) => {
-    setCart((prevCart) => {
-      const updatedCart = prevCart.filter(
-        (item) => item.productName !== productName
-      );
-      toast.success(`${productName} removed from cart.`);
-      return updatedCart;
-    });
+    setCart((prevCart) =>
+      prevCart.filter((item) => item.productName !== productName)
+    );
+    toast.success(`${productName} removed from cart.`);
   };
 
   return (
