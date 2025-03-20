@@ -69,6 +69,8 @@ const Checkout = () => {
     try {
       const shippingAddress = `${formData.streetAddress}, ${formData.city}, ${formData.province}, ${formData.postalCode}`;
       console.log("Request Payload:", { orderItems, shippingAddress });
+
+      // Call createOrder API
       const orderResponse = await createOrder(
         orderItems,
         shippingAddress,
@@ -76,29 +78,14 @@ const Checkout = () => {
       );
 
       console.log("Order Response:", orderResponse);
-      const orderId = orderResponse.orderId;
 
-      const paymentData = {
-        orderId,
-        orderType: "billpayment",
-        amount: cart.reduce(
-          (total, item) => total + item.price * item.quantity,
-          0
-        ),
-        orderDescription: "Payment for order",
-        name: `${formData.firstName} ${formData.lastName}`,
-      };
-
-      const paymentResponse = await createVNPayPaymentUrl(
-        paymentData.orderId,
-        paymentData.orderType,
-        paymentData.amount,
-        paymentData.orderDescription,
-        paymentData.name,
-        token
-      );
-
-      window.location.href = paymentResponse.paymentUrl;
+      // Check if paymentUrl is present in the response
+      if (orderResponse.data && orderResponse.data.paymentUrl) {
+        // Redirect to the payment URL
+        window.location.href = orderResponse.data.paymentUrl;
+      } else {
+        throw new Error("Payment URL is missing in the response.");
+      }
     } catch (error) {
       console.error("Error during checkout:", error);
       toast.error(error.message);
