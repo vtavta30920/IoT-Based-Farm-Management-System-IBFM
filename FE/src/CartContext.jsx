@@ -79,11 +79,18 @@ export const CartProvider = ({ children }) => {
     toast.success(`${productName} removed from cart.`);
   };
 
+  const clearCart = () => {
+    setCart([]);
+    if (user) {
+      localStorage.removeItem(`cart_${user.email}`);
+    }
+  };
+  
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, updateCartItem, removeFromCart }}
+      value={{ cart, addToCart, updateCartItem, removeFromCart, clearCart }}
     >
       {children}
     </CartContext.Provider>
   );
-};
+}
