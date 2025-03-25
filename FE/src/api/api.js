@@ -162,8 +162,22 @@ export const handleVNPayCallback = async (queryParams) => {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to handle VNPay callback.");
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to handle VNPay callback.");
   }
 
-  return response.json();
+  const data = await response.json();
+  
+  // Handle both response formats
+  if (data.payment) {
+    return {
+      success: data.payment.success,
+      message: data.message,
+      orderId: data.payment.orderId,
+      amount: data.payment.amount,
+      transactionId: data.payment.transactionId
+    };
+  }
+  
+  return data;
 };
