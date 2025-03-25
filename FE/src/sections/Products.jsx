@@ -7,20 +7,24 @@ const Products = () => {
   const { addToCart } = useContext(CartContext);
   const [isAdding, setIsAdding] = useState(false);
 
+  // Format price with VND unit (no conversion)
+  const formatPrice = (price) => {
+    return price.toLocaleString('vi-VN') + ' VND';
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const data = await getProducts();
-        console.log("Raw Products API Response:", data.data.items); // Log raw API response
+        console.log("Raw Products API Response:", data.data.items);
         const normalizedProducts = data.data.items.map((product) => {
           const normalized = {
             ...product,
-            productId: product.id || product.productId, // Map `id` to `productId`
+            productId: product.id || product.productId,
+            imageUrl: product.imageUrl || "https://via.placeholder.com/150"
           };
-          console.log("Normalized Product:", normalized); // Log each normalized product
           return normalized;
         });
-        console.log("All Normalized Products:", normalizedProducts); // Log final array
         setProducts(normalizedProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -32,7 +36,6 @@ const Products = () => {
   const handleAddToCart = (product) => {
     if (isAdding) return;
     setIsAdding(true);
-    console.log("Product to Add to Cart:", product); // Log product before adding
     addToCart(product);
     setTimeout(() => setIsAdding(false), 1000);
   };
@@ -51,15 +54,19 @@ const Products = () => {
             className="bg-white rounded-lg shadow-md overflow-hidden"
           >
             <img
-              src="https://via.placeholder.com/150"
+              src={product.imageUrl}
               alt={product.productName}
               className="w-full h-48 object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://via.placeholder.com/150";
+              }}
             />
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-2">
                 {product.productName}
               </h2>
-              <p className="text-gray-600 mb-4">Price: ${product.price}</p>
+              <p className="text-gray-600 mb-4">Price: {formatPrice(product.price)}</p>
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold">
                   Stock: {product.stockQuantity}
