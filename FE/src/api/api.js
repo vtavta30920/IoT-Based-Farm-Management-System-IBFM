@@ -16,13 +16,13 @@ export const login = async (email, password) => {
   return response.json();
 };
 
-export const register = async (name, email, password) => {
+export const register = async (email, password, confirmPassword) => {
   const response = await fetch(`${API_BASE_URL}/account/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ email, password, confirmPassword }), // Updated payload
   });
 
   if (!response.ok) {
@@ -31,7 +31,23 @@ export const register = async (name, email, password) => {
 
   return response.json();
 };
+export const getProducts = async (pageIndex = 0, pageSize = 10) => {
+  const response = await fetch(
+    `${API_BASE_URL}/products/products-list?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
+  if (!response.ok) {
+    throw new Error("Failed to fetch products.");
+  }
+
+  return response.json();
+};
 export const getProfile = async (token) => {
   const response = await fetch(`${API_BASE_URL}/account-profile/profile`, {
     method: "GET",
@@ -67,7 +83,9 @@ export const updateProfile = async (updatedInfo, token) => {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to update profile: ${errorText || response.status}`);
+    throw new Error(
+      `Failed to update profile: ${errorText || response.status}`
+    );
   }
 
   // Handle non-JSON responses
@@ -79,4 +97,87 @@ export const updateProfile = async (updatedInfo, token) => {
     console.log("Non-JSON response:", text);
     return updatedInfo; // Return the same data for state update
   }
+};
+export const createOrder = async (orderItems, shippingAddress, token) => {
+  const response = await fetch(`${API_BASE_URL}/Order/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      orderItems,
+      shippingAddress,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Failed to create order. Response:", errorText);
+    throw new Error(errorText || "Failed to create order.");
+  }
+
+  return response.json();
+};
+
+export const createVNPayPaymentUrl = async (
+  orderId,
+  orderType,
+  amount,
+  orderDescription,
+  name,
+  token
+) => {
+  const response = await fetch(`${API_BASE_URL}/vnpay/create-payment-url`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      orderId,
+      orderType,
+      amount,
+      orderDescription,
+      name,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create VNPay payment URL.");
+  }
+
+  return response.json();
+};
+
+export const handleVNPayCallback = async (queryParams) => {
+  const response = await fetch(
+    `${API_BASE_URL}/vnpay/callback?${queryParams}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to handle VNPay callback.");
+  }
+
+  const data = await response.json();
+  
+  // Handle both response formats
+  if (data.payment) {
+    return {
+      success: data.payment.success,
+      message: data.message,
+      orderId: data.payment.orderId,
+      amount: data.payment.amount,
+      transactionId: data.payment.transactionId
+    };
+  }
+  
+  return data;
 };
