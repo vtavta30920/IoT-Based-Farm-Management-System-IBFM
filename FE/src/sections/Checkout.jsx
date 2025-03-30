@@ -30,91 +30,118 @@ const Checkout = () => {
     }));
   };
 
- // Add loading state at the top of the component
-const [isProcessing, setIsProcessing] = useState(false);
+  // Add loading state at the top of the component
+  const [isProcessing, setIsProcessing] = useState(false);
+  // Format price to VND
+  const formatVND = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+  // Update handleSubmit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsProcessing(true);
 
-// Update handleSubmit
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsProcessing(true);
+    try {
+      // Validation
+      if (!user || !token) {
+        toast.error("You must be logged in to proceed to checkout.");
+        setIsProcessing(false);
+        return;
+      }
 
-  try {
-    // Validation
-    if (!user || !token) {
-      toast.error("You must be logged in to proceed to checkout.");
+      if (cart.length === 0) {
+        toast.error("Your cart is empty. Please add items before checkout.");
+        setIsProcessing(false);
+        return;
+      }
+
+      const requiredFields = [
+        "firstName",
+        "lastName",
+        "streetAddress",
+        "postalCode",
+        "city",
+        "province",
+        "phoneNumber",
+      ];
+
+      const missingFields = requiredFields.filter((field) => !formData[field]);
+      if (missingFields.length > 0) {
+        toast.error(`Please fill out: ${missingFields.join(", ")}`);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Validate phone number format
+      if (!/^\d{10,15}$/.test(formData.phoneNumber)) {
+        toast.error("Please enter a valid phone number (10-15 digits)");
+        setIsProcessing(false);
+        return;
+      }
+
+      const orderItems = cart.map((item) => ({
+        productId: item.productId || item.id,
+        stockQuantity: item.quantity,
+        price: item.price,
+      }));
+
+      const shippingAddress = `${formData.streetAddress}, ${formData.city}, ${formData.province}, ${formData.postalCode}`;
+
+      const orderResponse = await createOrder(
+        orderItems,
+        shippingAddress,
+        token
+      );
+
+      if (orderResponse.data?.paymentUrl) {
+        window.location.href = orderResponse.data.paymentUrl;
+      } else {
+        throw new Error("Payment URL is missing in the response.");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error(error.message || "Checkout failed. Please try again.");
       setIsProcessing(false);
-      return;
     }
+  };
 
-    if (cart.length === 0) {
-      toast.error("Your cart is empty. Please add items before checkout.");
-      setIsProcessing(false);
-      return;
-    }
-
-    const requiredFields = [
-      'firstName', 'lastName', 'streetAddress', 
-      'postalCode', 'city', 'province', 'phoneNumber'
-    ];
-
-    const missingFields = requiredFields.filter(field => !formData[field]);
-    if (missingFields.length > 0) {
-      toast.error(`Please fill out: ${missingFields.join(', ')}`);
-      setIsProcessing(false);
-      return;
-    }
-
-    // Validate phone number format
-    if (!/^\d{10,15}$/.test(formData.phoneNumber)) {
-      toast.error("Please enter a valid phone number (10-15 digits)");
-      setIsProcessing(false);
-      return;
-    }
-
-    const orderItems = cart.map(item => ({
-      productId: item.productId || item.id,
-      stockQuantity: item.quantity,
-      price: item.price
-    }));
-
-    const shippingAddress = `${formData.streetAddress}, ${formData.city}, ${formData.province}, ${formData.postalCode}`;
-
-    const orderResponse = await createOrder(
-      orderItems,
-      shippingAddress,
-      token
-    );
-
-    if (orderResponse.data?.paymentUrl) {
-      window.location.href = orderResponse.data.paymentUrl;
-    } else {
-      throw new Error("Payment URL is missing in the response.");
-    }
-  } catch (error) {
-    console.error("Checkout error:", error);
-    toast.error(error.message || "Checkout failed. Please try again.");
-    setIsProcessing(false);
-  }
-};
-
-// Update the submit button
-<button
-  type="submit"
-  className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300 flex justify-center items-center"
-  disabled={isProcessing}
->
-  {isProcessing ? (
-    <>
-      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      Processing...
-    </>
-  ) : (
-    "Proceed to Payment"
-  )}
-</button>
+  // Update the submit button
+  <button
+    type="submit"
+    className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300 flex justify-center items-center"
+    disabled={isProcessing}
+  >
+    {isProcessing ? (
+      <>
+        <svg
+          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        Processing...
+      </>
+    ) : (
+      "Proceed to Payment"
+    )}
+  </button>;
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-gray-100 p-10">
       <h1 className="text-4xl font-bold text-green-600 mb-6">Checkout</h1>
@@ -255,7 +282,7 @@ const handleSubmit = async (e) => {
             <div key={index} className="mb-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">{item.productName}</h3>
-                <p className="text-gray-600">${item.price.toFixed(2)}</p>
+                <p className="text-gray-600">{formatVND(item.price)}</p>
               </div>
               <p className="text-gray-600">Quantity: {item.quantity}</p>
             </div>
@@ -264,13 +291,12 @@ const handleSubmit = async (e) => {
             <div className="flex justify-between items-center">
               <p className="text-xl text-gray-700">Total Price:</p>
               <p className="text-2xl font-bold text-green-600">
-                $
-                {cart
-                  .reduce(
+                {formatVND(
+                  cart.reduce(
                     (total, item) => total + item.price * item.quantity,
                     0
                   )
-                  .toFixed(2)}
+                )}
               </p>
             </div>
           </div>

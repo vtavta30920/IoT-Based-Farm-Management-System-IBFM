@@ -9,6 +9,14 @@ const Cart = () => {
   const [quantities, setQuantities] = useState({});
   const navigate = useNavigate(); // Initialize useNavigate
 
+  // Format price to VND
+  const formatVND = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
   // Initialize quantities state with cart items
   React.useEffect(() => {
     const initialQuantities = {};
@@ -75,7 +83,7 @@ const Cart = () => {
                     {item.productName}
                   </h2>
                   <p className="text-gray-600 mb-4">
-                    Price: ${item.price.toFixed(2)}
+                    Price: {formatVND(item.price)}
                   </p>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -114,7 +122,7 @@ const Cart = () => {
             <div className="flex justify-between items-center">
               <p className="text-xl text-gray-700">Total Price:</p>
               <p className="text-2xl font-bold text-green-600">
-                ${totalPrice.toFixed(2)}
+                {formatVND(totalPrice)}
               </p>
             </div>
             <button
