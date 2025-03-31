@@ -11,7 +11,6 @@ const Products = () => {
   const [sortOption, setSortOption] = useState("default");
   const [quantities, setQuantities] = useState({});
 
-  // Format price with VND unit
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN") + " VND";
   };
@@ -22,7 +21,6 @@ const Products = () => {
         const data = await getProducts();
         console.log("Raw Products API Response:", data.data.items);
         const normalizedProducts = data.data.items.map((product) => {
-          // Extract category from product name (simple approach)
           const category = product.productName.toLowerCase().includes("fruit")
             ? "fruit"
             : "vegetable";
@@ -41,10 +39,13 @@ const Products = () => {
         setProducts(normalizedProducts);
         setFilteredProducts(normalizedProducts);
 
-        // Initialize quantities
         const initialQuantities = {};
         normalizedProducts.forEach((product) => {
-          initialQuantities[product.productId] = 1;
+          // Initialize with maximum available quantity (minimum between 1 and stock)
+          initialQuantities[product.productId] = Math.min(
+            1,
+            product.stockQuantity
+          );
         });
         setQuantities(initialQuantities);
       } catch (error) {
@@ -54,18 +55,14 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // Apply filters and sorting whenever products, selectedCategory, or sortOption changes
   useEffect(() => {
     let result = [...products];
-
-    // Apply category filter
     if (selectedCategory !== "all") {
       result = result.filter(
         (product) => product.category === selectedCategory
       );
     }
 
-    // Apply sorting
     switch (sortOption) {
       case "price-low":
         result.sort((a, b) => a.price - b.price);
@@ -80,7 +77,6 @@ const Products = () => {
         result.sort((a, b) => b.productName.localeCompare(a.productName));
         break;
       default:
-        // Default sorting (perhaps by productId)
         result.sort((a, b) => a.productId - b.productId);
     }
 
@@ -88,10 +84,9 @@ const Products = () => {
   }, [products, selectedCategory, sortOption]);
 
   const handleAddToCart = (product) => {
-    if (isAdding) return;
+    if (isAdding || product.stockQuantity === 0) return;
     setIsAdding(true);
 
-    // Add the selected quantity to cart
     const productWithQuantity = {
       ...product,
       quantity: quantities[product.productId] || 1,
@@ -102,23 +97,31 @@ const Products = () => {
   };
 
   const handleQuantityChange = (productId, newQuantity) => {
-    // Ensure quantity is at least 1 and doesn't exceed available stock
     const product = products.find((p) => p.productId === productId);
-    if (product) {
-      newQuantity = Math.max(1, Math.min(newQuantity, product.stockQuantity));
-      setQuantities((prev) => ({
-        ...prev,
-        [productId]: newQuantity,
-      }));
-    }
+    if (!product) return;
+
+    // Ensure quantity is between 1 and available stock
+    newQuantity = Math.max(1, Math.min(newQuantity, product.stockQuantity));
+    setQuantities((prev) => ({
+      ...prev,
+      [productId]: newQuantity,
+    }));
   };
 
   const incrementQuantity = (productId) => {
-    handleQuantityChange(productId, (quantities[productId] || 1) + 1);
+    const currentQty = quantities[productId] || 1;
+    const product = products.find((p) => p.productId === productId);
+
+    if (product && currentQty < product.stockQuantity) {
+      handleQuantityChange(productId, currentQty + 1);
+    }
   };
 
   const decrementQuantity = (productId) => {
-    handleQuantityChange(productId, (quantities[productId] || 1) - 1);
+    const currentQty = quantities[productId] || 1;
+    if (currentQty > 1) {
+      handleQuantityChange(productId, currentQty - 1);
+    }
   };
 
   return (
@@ -131,7 +134,6 @@ const Products = () => {
         solutions.
       </p>
 
-      {/* Filter and Sort Controls */}
       <div className="w-full max-w-6xl mb-8 flex flex-col md:flex-row justify-between gap-4">
         <div className="flex items-center gap-4">
           <label htmlFor="category-filter" className="font-medium">
@@ -168,7 +170,6 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Product Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
         {filteredProducts.map((product) => (
           <div
@@ -182,7 +183,7 @@ const Products = () => {
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src =
-                  "https://source.unsplash.com/random/300x200/?vegetable";
+                  "https://dalattungtrinh.vn/wp-content/uploads/2024/08/rau-romain-1.jpg";
               }}
             />
             <div className="p-6">
@@ -200,35 +201,55 @@ const Products = () => {
 
               <div className="flex flex-col gap-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold">
+                  <span
+                    className={`text-lg font-bold ${
+                      product.stockQuantity === 0
+                        ? "text-red-500"
+                        : "text-gray-700"
+                    }`}
+                  >
                     Stock: {product.stockQuantity}
                   </span>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="bg-gray-200 text-gray-800 w-8 h-8 rounded flex items-center justify-center hover:bg-gray-300"
-                      onClick={() => decrementQuantity(product.productId)}
-                      disabled={quantities[product.productId] <= 1}
-                    >
-                      -
-                    </button>
-                    <span className="w-8 text-center">
-                      {quantities[product.productId] || 1}
-                    </span>
-                    <button
-                      className="bg-gray-200 text-gray-800 w-8 h-8 rounded flex items-center justify-center hover:bg-gray-300"
-                      onClick={() => incrementQuantity(product.productId)}
-                      disabled={
-                        quantities[product.productId] >= product.stockQuantity
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
+                  {product.stockQuantity > 0 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className={`bg-gray-200 text-gray-800 w-8 h-8 rounded flex items-center justify-center ${
+                          quantities[product.productId] <= 1
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-gray-300"
+                        }`}
+                        onClick={() => decrementQuantity(product.productId)}
+                        disabled={quantities[product.productId] <= 1}
+                      >
+                        -
+                      </button>
+                      <span className="w-8 text-center">
+                        {quantities[product.productId] || 1}
+                      </span>
+                      <button
+                        className={`bg-gray-200 text-gray-800 w-8 h-8 rounded flex items-center justify-center ${
+                          quantities[product.productId] >= product.stockQuantity
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-gray-300"
+                        }`}
+                        onClick={() => incrementQuantity(product.productId)}
+                        disabled={
+                          quantities[product.productId] >= product.stockQuantity
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition duration-300 disabled:bg-gray-400"
+                  className={`w-full py-2 px-4 rounded transition duration-300 ${
+                    product.stockQuantity === 0
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
                   onClick={() => handleAddToCart(product)}
                   disabled={isAdding || product.stockQuantity === 0}
                 >
