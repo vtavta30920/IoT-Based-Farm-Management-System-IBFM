@@ -4,13 +4,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import { UserContext } from "../../UserContext";
 
 const ManagerLayout = () => {
-  const { user, role, logout } = useContext(UserContext);
-  const navigate = useNavigate();
-
-  if (role !== "manager") {
-    navigate("/");
-    return null;
-  }
+  const { user, logout } = useContext(UserContext);
 
   return (
     <div className="flex h-screen bg-gray-100">

@@ -25,6 +25,8 @@ import OrderSuccess from "./sections/OrderSuccess.jsx";
 import OrderFailed from "./sections/OrderFailed.jsx";
 import VnPayCallback from "./sections/VnPayCallback.jsx";
 
+import AdminLayout from "./sections/Layouts/AdminLayout.jsx";
+import StaffLayout from "./sections/Layouts/StaffLayout.jsx";
 
 const App = () => {
   return (
@@ -59,6 +61,11 @@ const App = () => {
             <Route path="/order-failed" element={<OrderFailed />} />
             <Route path="/vnpay-callback" element={<VnPayCallback />} />
 
+            <Route path="/admin/*" element={<AdminRoutes />} />
+
+            {/* Route cho trang staff */}
+            <Route path="/staff/*" element={<StaffRoutes />} />
+            {/* <Route path="/manager/*" element={<ManagerRoutes />} /> */}
           </Routes>
           <Footer />
         </Router>
@@ -66,5 +73,36 @@ const App = () => {
     </UserProvider>
   );
 };
+function AdminRoutes() {
+  return (
+    <AdminLayout>
+      <Routes>
+        <Route path="/" element={<AdminLayout />} />
+        {/* Thêm các route con khác của admin */}
+      </Routes>
+    </AdminLayout>
+  );
+}
 
+// Component riêng để nhóm các route của staff với layout staff
+function StaffRoutes() {
+  return (
+    <StaffLayout>
+      <Routes>
+        <Route path="/" element={<StaffLayout />} />
+        {/* Thêm các route con khác của staff */}
+      </Routes>
+    </StaffLayout>
+  );
+}
+// function ManagerRoutes() {
+//   return (
+//     <ManagerLayout>
+//       <Routes>
+//         <Route path="/" element={<StaffDashboard />} />
+//         {/* Thêm các route con khác của staff */}
+//       </Routes>
+//     </ManagerLayout>
+//   );
+// }
 export default App;
