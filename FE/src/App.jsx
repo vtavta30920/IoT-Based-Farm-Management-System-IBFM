@@ -33,63 +33,66 @@ import ManagerLayout from "./sections/Layouts/ManagerLayout.jsx";
 
 import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const App = () => {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient();
 
   return (
-  <QueryClientProvider client={queryClient}>
-    <ReactQueryDevtools initialIsOpen={true} />
-    <UserProvider>
-      <CartProvider>
-        <SidebarProvider>
-          {" "}
-          {/* Wrap with SidebarProvider */}
-          <Router>
-            <Header />
-            <ToastContainer />
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <Hero />
-                    <About />
-                    <OurProducts />
-                    <Working />
-                    <Testimonials />
-                  </>
-                }
-              />
-              <Route path="/read-more" element={<ReadMore />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:title" element={<ProductDetails />} />
-              <Route path="/policy" element={<Policy />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-success" element={<OrderSuccess />} />
-              <Route path="/order-failed" element={<OrderFailed />} />
-              <Route path="/vnpay-callback" element={<VnPayCallback />} />
+    <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools initialIsOpen={true} />
+      <UserProvider>
+        <CartProvider>
+          <SidebarProvider>
+            {" "}
+            {/* Wrap with SidebarProvider */}
+            <Router>
+              <Header />
+              <ToastContainer />
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <>
+                      <Hero />
+                      <About />
+                      <OurProducts />
+                      <Working />
+                      <Testimonials />
+                    </>
+                  }
+                />
+                <Route path="/read-more" element={<ReadMore />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:title" element={<ProductDetails />} />
+                <Route path="/policy" element={<Policy />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/order-failed" element={<OrderFailed />} />
+                <Route path="/vnpay-callback" element={<VnPayCallback />} />
 
-              <Route
-                path="/manager/farming-schedules"
-                element={<FarmingSchedules />}
-              />
-              {/* Route cho trang staff */}
-              <Route path="/admin/*" element={<AdminRoutes />} />
-              <Route path="/staff/*" element={<StaffRoutes />} />
-              <Route path="/manager/*" element={<ManagerRoutes />} />
-            </Routes>
-            <Footer />
-          </Router>
-        </SidebarProvider>
-      </CartProvider>
-    </UserProvider>
-  </QueryClientProvider>
+                <Route
+                  path="/manager/farming-schedules"
+                  element={<FarmingSchedules />}
+                />
+
+                <Route path="/admin/users" element={<ManageUsers />} />
+                {/* Route cho trang staff */}
+
+                <Route path="/admin/*" element={<AdminRoutes />} />
+                <Route path="/staff/*" element={<StaffRoutes />} />
+                <Route path="/manager/*" element={<ManagerRoutes />} />
+              </Routes>
+              <Footer />
+            </Router>
+          </SidebarProvider>
+        </CartProvider>
+      </UserProvider>
+    </QueryClientProvider>
   );
 };
 
@@ -98,7 +101,7 @@ function AdminRoutes() {
     <AdminLayout>
       <Routes>
         <Route path="/" element={<AdminLayout />} />
-        <Route path="/users" element={<ManageUsers />} />
+        {/* <Route path="/users" element={<ManageUsers />} /> */}
         {/*<Route path="/settings" element={<SystemSettings />} />
         <Route path="/performance" element={<SystemPerformance />} /> */}
         {/* Thêm các route con khác của admin */}
