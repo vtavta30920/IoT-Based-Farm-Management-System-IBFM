@@ -191,14 +191,6 @@ const Cart = () => {
                       {/* Action buttons */}
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => handleUpdateQuantity(item.productName)}
-                          disabled={isUpdating}
-                          className="p-2 text-green-600 hover:text-green-800 transition-colors disabled:opacity-50"
-                          aria-label="Update quantity"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
                           onClick={() => removeFromCart(item.productName)}
                           className="p-2 text-red-600 hover:text-red-800 transition-colors"
                           aria-label="Remove item"

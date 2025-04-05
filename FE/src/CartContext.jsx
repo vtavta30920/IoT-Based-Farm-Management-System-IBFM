@@ -69,7 +69,9 @@ export const CartProvider = ({ children }) => {
 
   const updateCartItem = (productName, newQuantity) => {
     if (newQuantity < 1) {
-      toast.error("Quantity must be at least 1.");
+      toast.error("Quantity must be at least 1.", {
+        toastId: `quantity-error-${productName}`,
+      });
       return;
     }
     setCart((prevCart) =>
@@ -79,7 +81,9 @@ export const CartProvider = ({ children }) => {
           : item
       )
     );
-    toast.success(`${productName} quantity updated.`);
+    toast.success(`${productName} quantity updated.`, {
+      toastId: `quantity-update-${productName}`,
+    });
   };
 
   const removeFromCart = (productName) => {
