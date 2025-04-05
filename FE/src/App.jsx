@@ -1,14 +1,14 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { UserProvider } from "./UserContext";
-import { CartProvider } from "./CartContext";
+import { UserProvider } from "./contexts/UserContext.jsx";
+import { CartProvider } from "./contexts/CartContext.jsx";
 import { SidebarProvider } from "./SidebarToggle.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import Header from "./sections/Header";
 import Hero from "./sections/Hero";
-import About from "./sections/About";
+import About from "./pages/About";
 import OurProducts from "./sections/OurProducts";
 import Working from "./sections/Working";
 import Testimonials from "./sections/Testimonials";
@@ -25,15 +25,22 @@ import Checkout from "./sections/Checkout.jsx";
 import OrderSuccess from "./sections/OrderSuccess.jsx";
 import OrderFailed from "./sections/OrderFailed.jsx";
 import VnPayCallback from "./sections/VnPayCallback.jsx";
+import ManageUsers from "./pages/Admin/ManageUsers.jsx";
 
 import AdminLayout from "./sections/Layouts/AdminLayout.jsx";
 import StaffLayout from "./sections/Layouts/StaffLayout.jsx";
 import ManagerLayout from "./sections/Layouts/ManagerLayout.jsx";
 
 import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 const App = () => {
+  const queryClient = new QueryClient()
+
   return (
+  <QueryClientProvider client={queryClient}>
+    <ReactQueryDevtools initialIsOpen={true} />
     <UserProvider>
       <CartProvider>
         <SidebarProvider>
@@ -82,6 +89,7 @@ const App = () => {
         </SidebarProvider>
       </CartProvider>
     </UserProvider>
+  </QueryClientProvider>
   );
 };
 
@@ -90,8 +98,8 @@ function AdminRoutes() {
     <AdminLayout>
       <Routes>
         <Route path="/" element={<AdminLayout />} />
-        {/* <Route path="/users" element={<ManageUsers />} />
-        <Route path="/settings" element={<SystemSettings />} />
+        <Route path="/users" element={<ManageUsers />} />
+        {/*<Route path="/settings" element={<SystemSettings />} />
         <Route path="/performance" element={<SystemPerformance />} /> */}
         {/* Thêm các route con khác của admin */}
       </Routes>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { getProducts } from "../api/api";
-import { CartContext } from "../CartContext";
+import { CartContext } from "../contexts/CartContext";
 
 const Products = () => {
   const [products, setProducts] = useState([]);

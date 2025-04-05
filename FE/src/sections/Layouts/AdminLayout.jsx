@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { Link, Outlet } from "react-router-dom";
-import { UserContext } from "../../UserContext";
+import { UserContext } from "../../contexts/UserContext";
 import { SidebarContext } from "../../SidebarToggle";
 
 const AdminLayout = () => {

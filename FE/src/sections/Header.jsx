@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { FaXmark, FaBars } from "react-icons/fa6"; // Import from react-icons/fa6
 import { FaUser, FaShoppingCart } from "react-icons/fa"; // Other icons from react-icons/fa
 import { Link, useNavigate } from "react-router-dom";
-import { UserContext } from "../UserContext";
+import { UserContext } from "../contexts/UserContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { UserContext } from "../UserContext";
+import { UserContext } from "../contexts/UserContext.jsx";
 
 const Profile = () => {
   const { user, updateProfile } = useContext(UserContext);

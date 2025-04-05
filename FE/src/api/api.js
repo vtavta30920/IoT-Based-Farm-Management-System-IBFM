@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const API_BASE_URL = "https://localhost:7067/api/v1";
 
 export const login = async (email, password) => {
@@ -119,4 +121,3 @@ export const createOrder = async (orderItems, shippingAddress, token) => {
 
   return response.json();
 };
-
