@@ -34,54 +34,57 @@ import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
 
 const App = () => {
   return (
-    <UserProvider>
-      <CartProvider>
-        <SidebarProvider>
-          {" "}
-          {/* Wrap with SidebarProvider */}
-          <Router>
-            <Header />
-            <ToastContainer />
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <Hero />
-                    <About />
-                    <OurProducts />
-                    <Working />
-                    <Testimonials />
-                  </>
-                }
-              />
-              <Route path="/read-more" element={<ReadMore />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:title" element={<ProductDetails />} />
-              <Route path="/policy" element={<Policy />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-success" element={<OrderSuccess />} />
-              <Route path="/order-failed" element={<OrderFailed />} />
-              <Route path="/vnpay-callback" element={<VnPayCallback />} />
+    <>
+      <ToastContainer />
+      <UserProvider>
+        <CartProvider>
+          <SidebarProvider>
+            {" "}
+            {/* Wrap with SidebarProvider */}
+            <Router>
+              <Header />
 
-              <Route
-                path="/manager/farming-schedules"
-                element={<FarmingSchedules />}
-              />
-              {/* Route cho trang staff */}
-              <Route path="/admin/*" element={<AdminRoutes />} />
-              <Route path="/staff/*" element={<StaffRoutes />} />
-              <Route path="/manager/*" element={<ManagerRoutes />} />
-            </Routes>
-            <Footer />
-          </Router>
-        </SidebarProvider>
-      </CartProvider>
-    </UserProvider>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <>
+                      <Hero />
+                      <About />
+                      <OurProducts />
+                      <Working />
+                      <Testimonials />
+                    </>
+                  }
+                />
+                <Route path="/read-more" element={<ReadMore />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:title" element={<ProductDetails />} />
+                <Route path="/policy" element={<Policy />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/order-failed" element={<OrderFailed />} />
+                <Route path="/vnpay-callback" element={<VnPayCallback />} />
+
+                <Route
+                  path="/manager/farming-schedules"
+                  element={<FarmingSchedules />}
+                />
+                {/* Route cho trang staff */}
+                <Route path="/admin/*" element={<AdminRoutes />} />
+                <Route path="/staff/*" element={<StaffRoutes />} />
+                <Route path="/manager/*" element={<ManagerRoutes />} />
+              </Routes>
+              <Footer />
+            </Router>
+          </SidebarProvider>
+        </CartProvider>
+      </UserProvider>
+    </>
   );
 };
 
