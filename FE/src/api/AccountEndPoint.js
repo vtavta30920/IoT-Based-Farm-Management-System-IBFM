@@ -1,4 +1,5 @@
-import {useQuery} from '@tanstack/react-query'
+// AccountEndPoint.js
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 const fetchGetAllAccount = async (pageIndex, pageSize) => {
@@ -7,6 +8,9 @@ const fetchGetAllAccount = async (pageIndex, pageSize) => {
 };
 
 export const useGetAllAccount = (pageIndex, pageSize) => {
-  return useQuery(['v1/account/get-all', pageIndex, pageSize], () => fetchGetAllAccount(pageIndex, pageSize), {
+  return useQuery({
+    queryKey: ['v1/account/get-all', { pageIndex, pageSize }],
+    queryFn: () => fetchGetAllAccount(pageIndex, pageSize),
+    staleTime: Infinity
   });
 };
