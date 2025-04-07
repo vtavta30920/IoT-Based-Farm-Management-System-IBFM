@@ -70,15 +70,31 @@ const App = () => {
                 <Route path="/order-failed" element={<OrderFailed />} />
                 <Route path="/vnpay-callback" element={<VnPayCallback />} />
 
+                {/* Route cho trang staff */}
+                <Route path="/admin/*" element={<AdminLayout />} />
+                {/* <Route path="/users" element={<ManageUsers />} />
+        <Route path="/settings" element={<SystemSettings />} />
+        <Route path="/performance" element={<SystemPerformance />} /> */}
+                {/* Thêm các route con khác của admin */}
+                <Route path="/staff/*" element={<StaffLayout />} />
+
+                {/* <Route path="/iot-devices" element={<IotDevices />} />
+        <Route path="/farming-tasks" element={<FarmingTasks />} />
+        <Route path="/quality-control" element={<QualityControl />} />
+        <Route path="/logistics" element={<Logistics />} /> */}
+                {/* Thêm các route con khác của staff */}
+                <Route path="/manager/*" element={<ManagerLayout />} />
                 <Route
                   path="/manager/farming-schedules"
                   element={<FarmingSchedules />}
                 />
-                {/* Route cho trang staff */}
-                <Route path="/admin/*" element={<AdminRoutes />} />
-                <Route path="/staff/*" element={<StaffRoutes />} />
-                <Route path="/manager/*" element={<ManagerRoutes />} />
+                {/* <Route path="/iot-monitoring" element={<IotMonitoring />} />
+       
+        <Route path="/inventory" element={<InventoryManagement />} />
+        <Route path="/reports" element={<Reports />} /> */}
+                {/* Thêm các route con khác của manager */}
               </Routes>
+
               <Footer />
             </Router>
           </SidebarProvider>
@@ -87,50 +103,5 @@ const App = () => {
     </>
   );
 };
-
-function AdminRoutes() {
-  return (
-    <AdminLayout>
-      <Routes>
-        <Route path="/" element={<AdminLayout />} />
-        {/* <Route path="/users" element={<ManageUsers />} />
-        <Route path="/settings" element={<SystemSettings />} />
-        <Route path="/performance" element={<SystemPerformance />} /> */}
-        {/* Thêm các route con khác của admin */}
-      </Routes>
-    </AdminLayout>
-  );
-}
-
-function StaffRoutes() {
-  return (
-    <StaffLayout>
-      <Routes>
-        <Route path="/" element={<StaffLayout />} />
-        {/* <Route path="/iot-devices" element={<IotDevices />} />
-        <Route path="/farming-tasks" element={<FarmingTasks />} />
-        <Route path="/quality-control" element={<QualityControl />} />
-        <Route path="/logistics" element={<Logistics />} /> */}
-        {/* Thêm các route con khác của staff */}
-      </Routes>
-    </StaffLayout>
-  );
-}
-
-function ManagerRoutes() {
-  return (
-    <ManagerLayout>
-      <Routes>
-        <Route path="/" element={<ManagerLayout />} />
-
-        {/* <Route path="/iot-monitoring" element={<IotMonitoring />} />
-       
-        <Route path="/inventory" element={<InventoryManagement />} />
-        <Route path="/reports" element={<Reports />} /> */}
-        {/* Thêm các route con khác của manager */}
-      </Routes>
-    </ManagerLayout>
-  );
-}
 
 export default App;
