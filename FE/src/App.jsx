@@ -30,7 +30,19 @@ import AdminLayout from "./sections/Layouts/AdminLayout.jsx";
 import StaffLayout from "./sections/Layouts/StaffLayout.jsx";
 import ManagerLayout from "./sections/Layouts/ManagerLayout.jsx";
 
+// Manager Pages
+import IotMonitoring from "./sections/Manager/IotMonitoring.jsx";
 import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
+import InventoryManagement from "./sections/Manager/InventoryManagement.jsx";
+import Reports from "./sections/Manager/Reports.jsx";
+
+// Staff Pages
+import IotDevices from "./sections/Staff/IotDevices.jsx";
+import DeviceDetails from "./sections/Staff/DeviceDetails.jsx";
+import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
+import TaskDetails from "./sections/Staff/TaskDetails.jsx";
+import QualityControl from "./sections/Staff/QualityControl.jsx";
+import Logistics from "./sections/Staff/Logistics.jsx";
 
 const App = () => {
   return (
@@ -75,24 +87,32 @@ const App = () => {
                 {/* <Route path="/users" element={<ManageUsers />} />
         <Route path="/settings" element={<SystemSettings />} />
         <Route path="/performance" element={<SystemPerformance />} /> */}
-                {/* Thêm các route con khác của admin */}
-                <Route path="/staff/*" element={<StaffLayout />} />
 
-                {/* <Route path="/iot-devices" element={<IotDevices />} />
-        <Route path="/farming-tasks" element={<FarmingTasks />} />
-        <Route path="/quality-control" element={<QualityControl />} />
-        <Route path="/logistics" element={<Logistics />} /> */}
-                {/* Thêm các route con khác của staff */}
-                <Route path="/manager/*" element={<ManagerLayout />} />
-                <Route
-                  path="/manager/farming-schedules"
-                  element={<FarmingSchedules />}
-                />
-                {/* <Route path="/iot-monitoring" element={<IotMonitoring />} />
-       
-        <Route path="/inventory" element={<InventoryManagement />} />
-        <Route path="/reports" element={<Reports />} /> */}
-                {/* Thêm các route con khác của manager */}
+                {/* Staff Routes */}
+                <Route path="/staff/*" element={<StaffLayout />}>
+                  <Route index element={<IotDevices />} />
+                  <Route path="iot-devices" element={<IotDevices />} />
+                  <Route path="iot-devices/:id" element={<DeviceDetails />} />
+                  <Route path="farming-tasks" element={<FarmingTasks />} />
+                  <Route path="farming-tasks/:id" element={<TaskDetails />} />
+                  <Route path="quality-control" element={<QualityControl />} />
+                  <Route path="logistics" element={<Logistics />} />
+                </Route>
+
+                {/* Manager Routes */}
+                <Route path="/manager/*" element={<ManagerLayout />}>
+                  <Route index element={<IotMonitoring />} />
+                  <Route path="iot-monitoring" element={<IotMonitoring />} />
+                  <Route
+                    path="farming-schedules"
+                    element={<FarmingSchedules />}
+                  />
+                  <Route path="inventory" element={<InventoryManagement />} />
+                  <Route path="reports" element={<Reports />} />
+                </Route>
+
+                {/* 404 Page - You might want to add this */}
+                <Route path="*" element={<div>404 Not Found</div>} />
               </Routes>
 
               <Footer />
