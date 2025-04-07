@@ -25,7 +25,8 @@ import Checkout from "./sections/Checkout.jsx";
 import OrderSuccess from "./sections/OrderSuccess.jsx";
 import OrderFailed from "./sections/OrderFailed.jsx";
 import VnPayCallback from "./sections/VnPayCallback.jsx";
-import ManageUsers from "./pages/Admin/ManageUsers.jsx";
+
+import AccountDetail from "./pages/Admin/AccountDetail.jsx";
 
 import AdminLayout from "./sections/Layouts/AdminLayout.jsx";
 import StaffLayout from "./sections/Layouts/StaffLayout.jsx";
@@ -80,7 +81,7 @@ const App = () => {
                   element={<FarmingSchedules />}
                 />
 
-                <Route path="/admin/users" element={<ManageUsers />} />
+                <Route path="/admin/users/detail" element={<AccountDetail />} />
                 {/* Route cho trang staff */}
 
                 <Route path="/admin/*" element={<AdminRoutes />} />

@@ -25,7 +25,7 @@ const AdminLayout = () => {
   const navigate = useNavigate();
 
   const handleViewDetail = (userId) => {
-    navigate(`/admin/users/${userId}`);
+    navigate(`/admin/users/detail`);
   };
 
   const handlePrevPage = () => {
