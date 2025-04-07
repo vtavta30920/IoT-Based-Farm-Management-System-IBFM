@@ -2,18 +2,24 @@ import React, { useContext, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
 import { SidebarContext } from "../../SidebarToggle";
-import { useGetAllAccount } from "../../api/AccountEndPoint";
+import { getUserByEmail, useGetAllAccount } from "../../api/AccountEndPoint";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AdminLayout = () => {
   const { user, logout } = useContext(UserContext);
   const { isSidebarOpen, toggleSidebar } = useContext(SidebarContext);
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
+
   const [currentMenu, setCurrentMenu] = useState(null);
 
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchResult, setSearchResult] = useState(null);
+
   const queryGetAllAccount = useGetAllAccount(currentPage, pageSize);
+
   const data = queryGetAllAccount.data;
   const users = data?.items;
   console.log(users);
@@ -43,9 +49,28 @@ const AdminLayout = () => {
     if (page !== currentPage) setCurrentPage(page);
   };
 
-  const handleSearch = () => {
-    // Thêm logic tìm kiếm tại đây
-    console.log("Searching...");
+  const handleSearch = async () => {
+    if (searchEmail.trim() === "") {
+      setSearchResult(null);
+      return;
+    }
+
+    try {
+      const result = await getUserByEmail(searchEmail.trim());
+      console.log("Search result:", result);
+
+      if (!result || Object.keys(result).length === 0) {
+        setSearchResult([]);
+      } else {
+        setSearchResult(Array.isArray(result) ? result : [result]);
+      }
+    } catch (error) {
+      console.error(
+        "Search failed:",
+        error?.response || error?.message || error
+      );
+      setSearchResult([]);
+    }
   };
 
   useEffect(() => {
@@ -60,6 +85,13 @@ const AdminLayout = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Lắng nghe sự thay đổi của searchEmail và reset kết quả khi trống
+  useEffect(() => {
+    if (searchEmail.trim() === "") {
+      setSearchResult(null); // Reset về danh sách người dùng ban đầu khi ô tìm kiếm trống
+    }
+  }, [searchEmail]); // Chạy lại mỗi khi searchEmail thay đổi
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -97,9 +129,12 @@ const AdminLayout = () => {
           <div className="flex items-center space-x-2">
             <input
               type="text"
-              placeholder="Search User"
+              value={searchEmail}
+              onChange={(e) => setSearchEmail(e.target.value)}
+              placeholder="Search User by Email"
               className="w-64 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             />
+
             <button
               onClick={handleSearch}
               className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
@@ -111,7 +146,7 @@ const AdminLayout = () => {
 
         {/* table */}
         <div className="flex justify-center mt-6">
-          <div className="w-full max-w-7xl overflow-x-auto rounded-lg shadow-sm bg-white">
+          <div className="w-full max-w-7xl overflow-x-auto rounded-lg shadow-sm bg-white min-h-[400px]">
             <table className="min-w-full divide-y divide-gray-200 text-sm text-center">
               <thead className="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                 <tr>
@@ -119,87 +154,92 @@ const AdminLayout = () => {
                   <th className="px-6 py-3">Fullname</th>
                   <th className="px-6 py-3">Role</th>
                   <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Actions</th>
+                  <th className="px-6 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {users?.map((user, index) => (
-                  <tr
-                    key={index}
-                    className={`hover:bg-gray-50 relative ${
-                      index % 2 === 0 ? "bg-gray-100" : "bg-white"
-                    }`} // Thêm màu nền cho dòng chẵn và lẻ
-                  >
-                    <td className="px-6 py-4 text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {user.accountProfile?.fullname || user.username}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">{user.role}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[user.status] ||
-                          "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                    </td>
-                    {/* Action menu */}
-                    <td className="px-6 py-4 text-right">
-                      <div className="relative inline-block text-left">
-                        <button
-                          onClick={() =>
-                            setCurrentMenu((prev) =>
-                              prev === index ? null : index
-                            )
-                          }
-                          className="p-1 rounded-full hover:bg-gray-200"
+                {(searchResult !== null ? searchResult : users)?.map(
+                  (user, index) => (
+                    <tr
+                      key={index}
+                      className={`hover:bg-gray-50 relative ${
+                        index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                      }`} // Thêm màu nền cho dòng chẵn và lẻ
+                    >
+                      <td className="px-6 py-4 text-gray-600">{user.email}</td>
+                      <td className="px-6 py-4 font-medium text-gray-900">
+                        {user.accountProfile?.fullname || user.username}
+                      </td>
+                      <td className="px-6 py-4 text-gray-700">{user.role}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            user.status === "ACTIVE"
+                              ? "bg-green-100 text-green-800"
+                              : user.status === "DEACTIVE"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-600" // Màu mặc định nếu không phải ACTIVE hay DEACTIVE
+                          }`}
                         >
-                          <svg
-                            className="w-5 h-5"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
+                          {user.status}
+                        </span>
+                      </td>
+                      {/* Action menu */}
+                      <td className="px-6 py-4 text-center">
+                        <div className="relative inline-block text-left">
+                          <button
+                            onClick={() =>
+                              setCurrentMenu((prev) =>
+                                prev === index ? null : index
+                              )
+                            }
+                            className="p-1 rounded-full hover:bg-gray-200"
                           >
-                            <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
-                          </svg>
-                        </button>
-
-                        {currentMenu === index && (
-                          <div
-                            ref={menuRef}
-                            className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10"
-                          >
-                            <button
-                              onClick={() => handleViewDetail(user.userId)}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                            <svg
+                              className="w-5 h-5"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
                             >
-                              <i className="fas fa-eye mr-2"></i> Detail
-                            </button>
-                            <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                              <i className="fas fa-edit mr-2"></i> Update
-                            </button>
-                            <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                              <i className="fas fa-user-shield mr-2"></i> Change
-                              Role
-                            </button>
-                            <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                              <i className="fas fa-sync-alt mr-2"></i> Change
-                              Status
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                              <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                            </svg>
+                          </button>
+
+                          {currentMenu === index && (
+                            <div
+                              ref={menuRef}
+                              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10"
+                            >
+                              <button
+                                onClick={() => handleViewDetail(user.userId)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                              >
+                                <i className="fas fa-eye mr-2"></i> Detail
+                              </button>
+                              <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+                                <i className="fas fa-edit mr-2"></i> Update
+                              </button>
+                              <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+                                <i className="fas fa-user-shield mr-2"></i>{" "}
+                                Change Role
+                              </button>
+                              <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+                                <i className="fas fa-sync-alt mr-2"></i> Change
+                                Status
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex justify-center items-center mt-4 space-x-2">
+        <div className="flex justify-center items-center mt-10 space-x-2">
           <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
