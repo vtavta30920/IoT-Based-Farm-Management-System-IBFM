@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+
 import axios from 'axios';
 
+// Hàm API get-by-account
 const fetchGetAllAccount = async (pageIndex, pageSize) => {
   const { data } = await axios.get(`https://localhost:7067/api/v1/account/get-all?pageSize=${pageSize}&pageIndex=${pageIndex}`);
   return data;
@@ -14,7 +16,7 @@ export const useGetAllAccount = (pageIndex, pageSize) => {
   });
 };
 
-// Hàm fetch API get-by-email
+// Hàm API get-by-email
 export const getUserByEmail = async (email) => {
   const response = await axios.get(`https://localhost:7067/api/v1/account/get-by-email?email=${email}`);
   return response.data;
@@ -27,5 +29,29 @@ export const useGetAccountByEmail = (email) => {
     queryFn: () => getUserByEmail(email), // <-- sửa lại tên hàm cho đúng
     enabled: !!email,
     staleTime: Infinity
+  });
+};
+
+// Hàm API để cập nhật trạng thái tài khoản chỉ cần truyền id
+export const updateStatus = async (userId) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/account/update-status?id=${userId}`
+  );
+  console.log(response)
+  return response.data;
+};
+
+// Hook React Query để gọi API cập nhật trạng thái tài khoản chỉ với id
+export const useUpdateStatus = () => {
+  return useMutation({
+    mutationFn: (userId) => updateStatus(userId), // Chỉ cần truyền id
+    onSuccess: (data) => {
+      // Xử lý thành công (Ví dụ: thông báo cho người dùng hoặc cập nhật UI)
+      console.log('Update status success:', data);
+    },
+    onError: (error) => {
+      // Xử lý lỗi nếu có
+      console.error('Update status failed:', error);
+    }
   });
 };

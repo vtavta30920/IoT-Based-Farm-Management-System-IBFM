@@ -22,7 +22,7 @@ export const UserProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      const {token} = await apiLogin(email, password);
+      const { token } = await apiLogin(email, password);
       setToken(token);
       const role = decodeJWT(token).role;
       setUser(role);

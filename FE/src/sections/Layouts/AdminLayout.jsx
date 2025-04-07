@@ -1,14 +1,12 @@
 import React, { useContext, useState } from "react";
-import { Link, Outlet } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
-import { SidebarContext } from "../../SidebarToggle";
 import { getUserByEmail, useGetAllAccount } from "../../api/AccountEndPoint";
+import { updateStatus } from "../../api/AccountEndPoint";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AdminLayout = () => {
-  const { user, logout } = useContext(UserContext);
-  const { isSidebarOpen, toggleSidebar } = useContext(SidebarContext);
+  const { user } = useContext(UserContext);
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
@@ -22,16 +20,9 @@ const AdminLayout = () => {
 
   const data = queryGetAllAccount.data;
   const users = data?.items;
-  console.log(users);
   const totalPages = data?.totalPagesCount || 1;
   const menuRef = useRef();
   const navigate = useNavigate();
-
-  const statusColors = {
-    Seated: "bg-green-100 text-green-800",
-    Suspended: "bg-red-100 text-red-800",
-    Unseated: "bg-yellow-100 text-yellow-800",
-  };
 
   const handleViewDetail = (userId) => {
     navigate(`/admin/users/${userId}`);
@@ -73,6 +64,26 @@ const AdminLayout = () => {
     }
   };
 
+  const handleStatusChange = async (userId, currentStatus) => {
+    const newStatus = currentStatus === "ACTIVE" ? "BANNED" : "ACTIVE"; // Toggle logic
+
+    try {
+      // Gọi API cập nhật trạng thái
+      await updateStatus(userId);
+
+      // Sau khi cập nhật thành công, cập nhật trạng thái trực tiếp trong UI
+      setSearchResult((prev) =>
+        prev?.map((user) =>
+          user.userId === userId ? { ...user, status: newStatus } : user
+        )
+      );
+
+      console.log(`User status updated to: ${newStatus}`);
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -86,41 +97,21 @@ const AdminLayout = () => {
     };
   }, []);
 
-  // Lắng nghe sự thay đổi của searchEmail và reset kết quả khi trống
   useEffect(() => {
     if (searchEmail.trim() === "") {
-      setSearchResult(null); // Reset về danh sách người dùng ban đầu khi ô tìm kiếm trống
+      setSearchResult(null);
     }
-  }, [searchEmail]); // Chạy lại mỗi khi searchEmail thay đổi
+  }, [searchEmail]);
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto py-4 px-6 flex justify-between items-center">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-lg hover:bg-gray-100 md:hidden"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
             <h2 className="text-xl font-semibold text-gray-800">
               Welcome,{" "}
               <span className="text-green-600">
-                {user?.fullname || user?.Email || "User"}
+                {user?.fullname || "Admin"}
               </span>
             </h2>
           </div>
@@ -144,7 +135,6 @@ const AdminLayout = () => {
           </div>
         </main>
 
-        {/* table */}
         <div className="flex justify-center mt-6">
           <div className="w-full max-w-7xl overflow-x-auto rounded-lg shadow-sm bg-white min-h-[400px]">
             <table className="min-w-full divide-y divide-gray-200 text-sm text-center">
@@ -164,7 +154,7 @@ const AdminLayout = () => {
                       key={index}
                       className={`hover:bg-gray-50 relative ${
                         index % 2 === 0 ? "bg-gray-100" : "bg-white"
-                      }`} // Thêm màu nền cho dòng chẵn và lẻ
+                      }`}
                     >
                       <td className="px-6 py-4 text-gray-600">{user.email}</td>
                       <td className="px-6 py-4 font-medium text-gray-900">
@@ -172,19 +162,21 @@ const AdminLayout = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-700">{user.role}</td>
                       <td className="px-6 py-4">
-                        <span
+                        <button
+                          onClick={() =>
+                            handleStatusChange(user.userId, user.status)
+                          }
                           className={`px-2 py-1 rounded-full text-xs font-semibold ${
                             user.status === "ACTIVE"
                               ? "bg-green-100 text-green-800"
-                              : user.status === "DEACTIVE"
+                              : user.status === "BANNED"
                               ? "bg-red-100 text-red-800"
-                              : "bg-gray-100 text-gray-600" // Màu mặc định nếu không phải ACTIVE hay DEACTIVE
+                              : "bg-gray-100 text-gray-600"
                           }`}
                         >
                           {user.status}
-                        </span>
+                        </button>
                       </td>
-                      {/* Action menu */}
                       <td className="px-6 py-4 text-center">
                         <div className="relative inline-block text-left">
                           <button
@@ -222,10 +214,6 @@ const AdminLayout = () => {
                                 <i className="fas fa-user-shield mr-2"></i>{" "}
                                 Change Role
                               </button>
-                              <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                                <i className="fas fa-sync-alt mr-2"></i> Change
-                                Status
-                              </button>
                             </div>
                           )}
                         </div>
@@ -238,7 +226,6 @@ const AdminLayout = () => {
           </div>
         </div>
 
-        {/* Pagination Controls */}
         <div className="flex justify-center items-center mt-10 space-x-2">
           <button
             onClick={handlePrevPage}
