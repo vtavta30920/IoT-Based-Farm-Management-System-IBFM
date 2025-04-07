@@ -119,4 +119,3 @@ export const createOrder = async (orderItems, shippingAddress, token) => {
 
   return response.json();
 };
-

@@ -67,22 +67,20 @@ export const clients = [
   {
     image: client1,
     name: "Nguyễn Văn Nam",
-    about:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
-    post: "Farmer",
+    about: "The pricing was competitive, and the value proposition was clear.",
+    post: "Customer",
   },
   {
     image: client2,
     name: "Trần Văn Việt",
     about:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
-    post: "Farmer",
+      "I love that I can trace the origin of the products. It gives me confidence in their quality.",
+    post: "Customer",
   },
   {
     image: client3,
     name: "Lê Văn Bình",
-    about:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida cursus",
-    post: "Farmer",
+    about: "The produce I received was fresh and of excellent quality.",
+    post: "Customer",
   },
 ];
