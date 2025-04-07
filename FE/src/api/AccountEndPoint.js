@@ -35,16 +35,15 @@ export const useGetAccountByEmail = (email) => {
 // Hàm API để cập nhật trạng thái tài khoản chỉ cần truyền id
 export const updateStatus = async (userId) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/account/update-status?id=${userId}`
+    `https://localhost:7067/api/v1/account/update-status/${userId}`
   );
-  console.log(response)
   return response.data;
 };
 
 // Hook React Query để gọi API cập nhật trạng thái tài khoản chỉ với id
-export const useUpdateStatus = () => {
+export const useUpdateStatus = (userId) => {
   return useMutation({
-    mutationFn: (userId) => updateStatus(userId), // Chỉ cần truyền id
+    mutationFn: () => updateStatus(userId), // Chỉ cần truyền id
     onSuccess: (data) => {
       // Xử lý thành công (Ví dụ: thông báo cho người dùng hoặc cập nhật UI)
       console.log('Update status success:', data);
@@ -52,6 +51,29 @@ export const useUpdateStatus = () => {
     onError: (error) => {
       // Xử lý lỗi nếu có
       console.error('Update status failed:', error);
+    }
+  });
+};
+
+// Hàm API để cập nhật role tài khoản chỉ cần truyền accountId và roleId
+export const updateRole = async (accountId, roleId) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/account/update-role?accountId=${accountId}&roleId=${roleId}`
+  );
+  return response.data;
+};
+
+// Hook React Query để gọi API cập nhật role chỉ với accountId và roleId
+export const useUpdateRole = (accountId, roleId) => {
+  return useMutation({
+    mutationFn: () => updateRole(accountId, roleId), // Truyền accountId và roleId
+    onSuccess: (data) => {
+      // Xử lý thành công (Ví dụ: thông báo cho người dùng hoặc cập nhật UI)
+      console.log('Update role success:', data);
+    },
+    onError: (error) => {
+      // Xử lý lỗi nếu có
+      console.error('Update role failed:', error);
     }
   });
 };

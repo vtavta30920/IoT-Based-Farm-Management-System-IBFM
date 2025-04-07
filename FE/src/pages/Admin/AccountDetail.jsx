@@ -1,24 +1,62 @@
-import React, { useContext, useEffect, useState } from "react";
-import { UserContext } from "../../contexts/UserContext";
-import defaultAvatar from "../../assets/avatardefault.jpg"; // Import ảnh mặc định
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import defaultAvatar from "../../assets/avatardefault.jpg";
 
 const AccountDetail = () => {
-  const { user } = useContext(UserContext);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const user = location.state?.user;
 
-  const [isPasswordVisible, setPasswordVisible] = useState(false); // State to toggle password visibility
+  const [isPasswordVisible, setPasswordVisible] = useState(false);
 
-  // Toggle password visibility
+  const [formData, setFormData] = useState({
+    fullname: "",
+    status: "",
+    email: "",
+    password: "",
+    role: "",
+    createdAt: "",
+    updatedAt: "",
+    gender: "",
+    phone: "",
+    address: "",
+    image: "",
+  });
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/admin");
+    } else {
+      setFormData({
+        fullname: user.accountProfile?.fullname || "",
+        status: user.status || "",
+        email: user.email || "",
+        password: user.password || "",
+        role: user.role || "",
+        createdAt: user.accountProfile?.createdAt || "",
+        updatedAt: user.accountProfile?.updatedAt || "",
+        gender: user.accountProfile?.gender || "",
+        phone: user.accountProfile?.phone || "",
+        address: user.accountProfile?.address || "",
+        image: user.accountProfile?.image || "",
+      });
+    }
+  }, [user, navigate]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const togglePasswordVisibility = () => {
     setPasswordVisible((prev) => !prev);
   };
 
-  useEffect(() => {
-    // You can add logic here to fetch account details if needed
-  }, [user]);
-
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto py-4 px-6 flex justify-center items-center">
@@ -31,104 +69,140 @@ const AccountDetail = () => {
         <main className="max-w-7xl mx-auto py-6 px-6">
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <div className="grid grid-cols-3 gap-6">
-              {/* Left Column - Profile Image and Info */}
-              <div className="col-span-1">
+              {/* LEFT: Avatar & Info */}
+              <div className="col-span-1 space-y-4">
                 <div className="flex flex-col items-center space-y-4 border p-4 rounded-lg shadow-md">
                   <img
-                    src={user?.accountProfile?.image || defaultAvatar} // Nếu không có ảnh của người dùng, dùng ảnh mặc định
+                    src={formData.image || defaultAvatar}
                     alt="Profile"
                     className="w-48 h-48 object-cover rounded-full border-2 border-gray-300"
                   />
-                  <div className="space-y-2 text-center">
-                    {/* Display Fullname */}
-                    <div className="flex justify-between">
-                      <label className="font-semibold text-gray-600">
-                        Fullname
-                      </label>
-                      <span>{user?.accountProfile?.fullname || "N/A"}</span>
+                  <div className="space-y-1 text-center w-full">
+                    <div className="flex justify-center">
+                      <span className="text-gray-700 font-semibold text-lg">
+                        {formData.email}
+                      </span>
                     </div>
+                    <div className="flex justify-center">
+                      <span
+                        className={`px-3 py-1 rounded-full font-medium text-white ${
+                          formData.status === "ACTIVE"
+                            ? "bg-green-500"
+                            : formData.status === "BANNED"
+                            ? "bg-red-500"
+                            : "bg-gray-400"
+                        }`}
+                      >
+                        {formData.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-center">
+                      <span className="text-gray-800 font-bold uppercase bg-green-100 px-3 py-1 rounded-full">
+                        {formData.role}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                    {/* Display Status */}
-                    <div className="flex justify-between">
-                      <label className="font-semibold text-gray-600">
-                        Status
-                      </label>
-                      <span>{user?.status || "N/A"}</span>
-                    </div>
+                {/* CreatedAt & UpdatedAt */}
+                <div className="border p-4 rounded-lg shadow-md space-y-2">
+                  <div className="flex justify-between">
+                    <label className="text-gray-600 font-medium">
+                      Created At:
+                    </label>
+                    <span className="text-gray-800">{formData.createdAt}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <label className="text-gray-600 font-medium">
+                      Updated At:
+                    </label>
+                    <span className="text-gray-800">
+                      {formData.updatedAt || "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column - Other Account Details */}
+              {/* RIGHT: Info Fields */}
               <div className="col-span-2">
                 <div className="space-y-4">
-                  {/* Display Email */}
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">Email</label>
-                    <span>{user?.email || "N/A"}</span>
+                  {/* Fullname */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
+                      Fullname
+                    </label>
+                    <input
+                      name="fullname"
+                      value={formData.fullname}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    />
                   </div>
 
-                  {/* Display Password (hidden by default, toggle visibility) */}
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">
+                  {/* Password */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
                       Password
                     </label>
-                    <div>
+                    <div className="flex items-center w-3/4">
                       <input
+                        name="password"
                         type={isPasswordVisible ? "text" : "password"}
-                        value={user?.password || "********"}
-                        readOnly
-                        className="w-48 px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
                       />
                       <button
                         onClick={togglePasswordVisibility}
-                        className="ml-2 text-blue-500 hover:text-blue-700"
+                        className="ml-3 text-blue-500 hover:text-blue-700"
                       >
                         {isPasswordVisible ? "Hide" : "Show"}
                       </button>
                     </div>
                   </div>
 
-                  {/* Display Role */}
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">Role</label>
-                    <span>{user?.role || "N/A"}</span>
-                  </div>
-
-                  {/* Display Creation and Update Date */}
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">
-                      Created At
-                    </label>
-                    <span>{user?.createdAt || "N/A"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">
-                      Updated At
-                    </label>
-                    <span>{user?.updatedAt || "N/A"}</span>
-                  </div>
-
-                  {/* Display Gender */}
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">
+                  {/* Gender */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
                       Gender
                     </label>
-                    <span>{user?.gender || "N/A"}</span>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Female">Female</option>
+                      <option value="Male">Male</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
 
-                  {/* Display Phone */}
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">Phone</label>
-                    <span>{user?.phone || "N/A"}</span>
+                  {/* Phone */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
+                      Phone
+                    </label>
+                    <input
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    />
                   </div>
 
-                  {/* Display Address */}
-                  <div className="flex justify-between">
-                    <label className="font-semibold text-gray-600">
+                  {/* Address */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
                       Address
                     </label>
-                    <span>{user?.accountProfile?.address || "N/A"}</span>
+                    <input
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    />
                   </div>
                 </div>
               </div>
