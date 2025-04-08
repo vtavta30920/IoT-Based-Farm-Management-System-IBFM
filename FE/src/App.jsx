@@ -33,7 +33,19 @@ import AdminLayout from "./sections/Layouts/AdminLayout.jsx";
 import StaffLayout from "./sections/Layouts/StaffLayout.jsx";
 import ManagerLayout from "./sections/Layouts/ManagerLayout.jsx";
 
+import IotMonitoring from "./sections/Manager/IotMonitoring.jsx";
 import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
+import InventoryManagement from "./sections/Manager/InventoryManagement.jsx";
+import Reports from "./sections/Manager/Reports.jsx";
+
+// Staff Pages
+import IotDevices from "./sections/Staff/IotDevices.jsx";
+import DeviceDetails from "./sections/Staff/DeviceDetails.jsx";
+import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
+import TaskDetails from "./sections/Staff/TaskDetails.jsx";
+import QualityControl from "./sections/Staff/QualityControl.jsx";
+import Logistics from "./sections/Staff/Logistics.jsx";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
@@ -77,19 +89,35 @@ const App = () => {
                 <Route path="/order-failed" element={<OrderFailed />} />
                 <Route path="/vnpay-callback" element={<VnPayCallback />} />
 
-                <Route
-                  path="/manager/farming-schedules"
-                  element={<FarmingSchedules />}
-                />
+                {/* Staff Routes */}
+                <Route path="/staff/*" element={<StaffLayout />}>
+                  <Route index element={<IotDevices />} />
+                  <Route path="iot-devices" element={<IotDevices />} />
+                  <Route path="iot-devices/:id" element={<DeviceDetails />} />
+                  <Route path="farming-tasks" element={<FarmingTasks />} />
+                  <Route path="farming-tasks/:id" element={<TaskDetails />} />
+                  <Route path="quality-control" element={<QualityControl />} />
+                  <Route path="logistics" element={<Logistics />} />
+                </Route>
+
+                {/* Manager Routes */}
+                <Route path="/manager/*" element={<ManagerLayout />}>
+                  <Route index element={<IotMonitoring />} />
+                  <Route path="iot-monitoring" element={<IotMonitoring />} />
+                  <Route
+                    path="farming-schedules"
+                    element={<FarmingSchedules />}
+                  />
+                  <Route path="inventory" element={<InventoryManagement />} />
+                  <Route path="reports" element={<Reports />} />
+                </Route>
 
                 <Route path="/admin/users/detail" element={<AccountDetail />} />
                 <Route path="/admin/users/create" element={<CreateAccount />} />
 
                 {/* Route cho trang staff */}
 
-                <Route path="/admin/*" element={<AdminRoutes />} />
-                <Route path="/staff/*" element={<StaffRoutes />} />
-                <Route path="/manager/*" element={<ManagerRoutes />} />
+                <Route path="/admin/*" element={<AdminLayout />} />
               </Routes>
               <Footer />
             </Router>
@@ -99,50 +127,5 @@ const App = () => {
     </QueryClientProvider>
   );
 };
-
-function AdminRoutes() {
-  return (
-    <AdminLayout>
-      <Routes>
-        <Route path="/" element={<AdminLayout />} />
-        {/* <Route path="/users" element={<ManageUsers />} /> */}
-        {/*<Route path="/settings" element={<SystemSettings />} />
-        <Route path="/performance" element={<SystemPerformance />} /> */}
-        {/* Thêm các route con khác của admin */}
-      </Routes>
-    </AdminLayout>
-  );
-}
-
-function StaffRoutes() {
-  return (
-    <StaffLayout>
-      <Routes>
-        <Route path="/" element={<StaffLayout />} />
-        {/* <Route path="/iot-devices" element={<IotDevices />} />
-        <Route path="/farming-tasks" element={<FarmingTasks />} />
-        <Route path="/quality-control" element={<QualityControl />} />
-        <Route path="/logistics" element={<Logistics />} /> */}
-        {/* Thêm các route con khác của staff */}
-      </Routes>
-    </StaffLayout>
-  );
-}
-
-function ManagerRoutes() {
-  return (
-    <ManagerLayout>
-      <Routes>
-        <Route path="/" element={<ManagerLayout />} />
-
-        {/* <Route path="/iot-monitoring" element={<IotMonitoring />} />
-       
-        <Route path="/inventory" element={<InventoryManagement />} />
-        <Route path="/reports" element={<Reports />} /> */}
-        {/* Thêm các route con khác của manager */}
-      </Routes>
-    </ManagerLayout>
-  );
-}
 
 export default App;
