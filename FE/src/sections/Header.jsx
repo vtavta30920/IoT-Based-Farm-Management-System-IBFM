@@ -32,11 +32,19 @@ const Header = () => {
     setIsDropdownOpen(false);
   };
 
-  const navItem = [
-    { link: "Home", path: "/" },
-    { link: "About", path: "/read-more" },
-    { link: "Products", path: "/products" },
-  ];
+  const storedRole = localStorage.getItem("role");
+
+  const navItem =
+    storedRole === "Admin"
+      ? [
+          { link: "Home", path: "/" },
+          { link: "Management", path: "/admin" },
+        ]
+      : [
+          { link: "Home", path: "/" },
+          { link: "About", path: "/read-more" },
+          { link: "Products", path: "/products" },
+        ];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
