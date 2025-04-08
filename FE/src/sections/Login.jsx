@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { UserContext } from "../UserContext";
+import { UserContext } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; // For password visibility toggle
 
@@ -33,8 +33,13 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      navigate("/");
+      const role = await login(email, password);
+      if(role === "Admin"){
+        navigate("/admin");
+      }
+      else{
+        navigate("/")
+      }
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
     } finally {

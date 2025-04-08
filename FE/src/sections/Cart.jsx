@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { CartContext } from "../CartContext";
+import { CartContext } from "../contexts/CartContext";
 import { FaTrash, FaEdit, FaShoppingCart, FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";

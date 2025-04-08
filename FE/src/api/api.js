@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const API_BASE_URL = "https://localhost:7067/api/v1";
 
 export const login = async (email, password) => {
@@ -12,7 +14,6 @@ export const login = async (email, password) => {
   if (!response.ok) {
     throw new Error("Login failed. Please check your credentials.");
   }
-
   return response.json();
 };
 
