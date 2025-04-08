@@ -1,150 +1,199 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../contexts/UserContext.jsx";
+import defaultAvatar from "../assets/avatardefault.jpg";
 
 const Profile = () => {
   const { user, updateProfile } = useContext(UserContext);
-  const [isEditing, setIsEditing] = useState(false);
-  const [updatedInfo, setUpdatedInfo] = useState({
-    accountId: user?.accountId || 0,
-    gender: user?.gender || 1, // Default to current user's gender
-    fullname: user?.fullname || "",
-    phone: user?.phone || "",
-    address: user?.address || "",
-    images: user?.images || "", // Default to current user's images
-  });
   const [message, setMessage] = useState("");
+
+  const [formData, setFormData] = useState({
+    email: "",
+    fullname: "",
+    status: "",
+    createdAt: "",
+    updatedAt: "",
+    gender: "",
+    phone: "",
+    address: "",
+    image: "",
+  });
 
   useEffect(() => {
     if (user) {
-      setUpdatedInfo({
-        accountId: user.accountId || 0,
-        gender: user.gender || 1,
+      setFormData({
+        email: user.email || "",
         fullname: user.fullname || "",
+        status: user.status || "",
+        createdAt: user.createdAt || "",
+        updatedAt: user.updatedAt || "",
+        gender: user.gender || "",
         phone: user.phone || "",
         address: user.address || "",
-        images: user.images || "",
+        image: user.images || "",
       });
     }
   }, [user]);
 
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setUpdatedInfo({
-      ...updatedInfo,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(""); // Clear previous message
+  const handleUpdate = async () => {
+    const updateData = {
+      email: formData.email,
+      gender:
+        formData.gender === "Male" ? 0 : formData.gender === "Female" ? 1 : 2,
+      phone: formData.phone,
+      fullname: formData.fullname,
+      address: formData.address,
+      images: formData.image || "string",
+    };
+    console.log(updateData);
     try {
-      console.log("Submitting updated info:", updatedInfo);
-      const updatedUser = await updateProfile(updatedInfo);
-      console.log("Updated User:", updatedUser);
-      setMessage("Profile updated successfully!");
-    } catch (error) {
-      console.error("Error in handleSubmit:", error.message);
-      setMessage(`Failed to update profile: ${error.message}`);
+      await updateProfile(updateData);
+      setMessage("Cập nhật thành công!");
+    } catch (err) {
+      setMessage("Cập nhật thất bại: " + err.message);
     }
   };
 
-  if (!user) {
-    return <div>Please log in to view your profile.</div>;
-  }
+  if (!user) return <div>Vui lòng đăng nhập để xem thông tin cá nhân.</div>;
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-96">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Profile</h2>
-        {message && (
-          <div
-            className={`mb-4 p-2 rounded text-white ${
-              message.includes("success") ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            {message}
+    <div className="flex h-screen bg-gray-50">
+      <div className="flex-1 overflow-auto">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto py-4 px-6 flex justify-center items-center">
+            <h2 className="text-3xl font-bold text-green-600 border-b-2 border-gray-300 pb-2 mb-6 text-center">
+              My Profile
+            </h2>
           </div>
-        )}
-        {isEditing ? (
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="fullname"
-                value={updatedInfo.fullname}
-                onChange={handleInputChange}
-                className="border rounded w-full py-2 px-3 text-gray-700 focus:outline-none"
-                required
-              />
+        </header>
+
+        <main className="max-w-7xl mx-auto py-6 px-6">
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="grid grid-cols-3 gap-6">
+              {/* LEFT: Avatar & Info */}
+              <div className="col-span-1 space-y-4">
+                <div className="w-full bg-gradient-to-br from-green-400 to-green-600 text-white flex flex-col items-center justify-center p-6 space-y-3 rounded-lg shadow-md">
+                  <img
+                    src={formData.image || defaultAvatar}
+                    alt="Avatar"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                  />
+
+                  {/* Email hiển thị đẹp */}
+                  <div className="px-3 py-1 bg-white text-green-700 rounded-full text-sm font-medium shadow-sm">
+                    {formData.email}
+                  </div>
+                </div>
+
+                {/* CreatedAt & UpdatedAt */}
+                <div className="border p-4 rounded-lg shadow-md space-y-2">
+                  <div className="flex justify-between">
+                    <label className="text-gray-600 font-medium">
+                      Created At:
+                    </label>
+                    <span className="text-gray-800">
+                      {formData.createdAt || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <label className="text-gray-600 font-medium">
+                      Updated At:
+                    </label>
+                    <span className="text-gray-800">
+                      {formData.updatedAt || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT: Info Fields */}
+              <div className="col-span-2">
+                <div className="space-y-4">
+                  {/* Fullname */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
+                      Fullname
+                    </label>
+                    <input
+                      name="fullname"
+                      value={formData.fullname}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
+                      Gender
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Female">Female</option>
+                      <option value="Male">Male</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
+                      Phone
+                    </label>
+                    <input
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    />
+                  </div>
+
+                  {/* Address */}
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-gray-600 w-1/4">
+                      Address
+                    </label>
+                    <input
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className="border px-2 py-2 rounded-md w-3/4"
+                    />
+                  </div>
+                </div>
+
+                {/* Update Button */}
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={handleUpdate}
+                    className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                  >
+                    Cập nhật
+                  </button>
+                </div>
+
+                {/* Message hiển thị khi update xong */}
+                {message && (
+                  <div className="mt-4 text-center text-sm text-green-600">
+                    {message}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Phone
-              </label>
-              <input
-                type="text"
-                name="phone"
-                value={updatedInfo.phone}
-                onChange={handleInputChange}
-                className="border rounded w-full py-2 px-3 text-gray-700 focus:outline-none"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Address
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={updatedInfo.address}
-                onChange={handleInputChange}
-                className="border rounded w-full py-2 px-3 text-gray-700 focus:outline-none"
-                required
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <button
-                type="submit"
-                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Exit
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div>
-            <p className="text-gray-700 mb-2">
-              <strong>Full Name:</strong> {user.fullname}
-            </p>
-            <p className="text-gray-700 mb-2">
-              <strong>Email:</strong> {user.email}
-            </p>
-            <p className="text-gray-700 mb-2">
-              <strong>Phone:</strong> {user.phone}
-            </p>
-            <p className="text-gray-700 mb-2">
-              <strong>Address:</strong> {user.address}
-            </p>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Edit Profile
-            </button>
           </div>
-        )}
+        </main>
       </div>
     </div>
   );

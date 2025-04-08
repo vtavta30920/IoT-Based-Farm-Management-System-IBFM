@@ -76,22 +76,30 @@ export const UserProvider = ({ children }) => {
 
       const profileUpdateData = {
         accountId: user?.accountId || 0,
-        gender: updatedInfo.gender || 1,
+        gender: updatedInfo.gender || 0,
         fullname: updatedInfo.fullname,
         phone: updatedInfo.phone,
         address: updatedInfo.address,
         images: updatedInfo.images || "",
       };
 
-      console.log("Sending update data:", profileUpdateData); // Log outgoing data
-      const updatedUser = await apiUpdateProfile(profileUpdateData, token);
-      console.log("Received updated user:", updatedUser); // Log incoming data
+      console.log("Sending update data:", profileUpdateData);
 
-      setUser(updatedUser); // Update state
-      return updatedUser;
+      const updatedUser = await apiUpdateProfile(profileUpdateData, token);
+      console.log("Received updated user:", updatedUser);
+
+      // Kết hợp user cũ + user mới (merge)
+      const fullUpdatedUser = {
+        ...user, // giữ lại tất cả dữ liệu cũ
+        ...updatedUser, // ghi đè những field mới
+      };
+
+      setUser(fullUpdatedUser); // cập nhật với dữ liệu đầy đủ
+
+      return fullUpdatedUser;
     } catch (error) {
-      console.error("Error in updateProfile:", error.message); // Detailed error logging
-      throw error; // Propagate the error to Profile.js
+      console.error("Error in updateProfile:", error.message);
+      throw error;
     }
   };
 
