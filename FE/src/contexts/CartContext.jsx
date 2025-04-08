@@ -25,19 +25,28 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart, user]);
 
+  const toastIdRef = React.useRef(null);
   const addToCart = (product) => {
     if (!user) {
-      toast.error("You must be logged in to add items to the cart.");
+      if (!toast.isActive(toastIdRef.current)) {
+        toastIdRef.current = toast.error(
+          "You must be logged in to add items to the cart."
+        );
+      }
       return;
     }
 
-    console.log("Product Received by addToCart:", product); // Log incoming product
     setCart((prevCart) => {
       const existingProduct = prevCart.find(
         (item) => item.productName === product.productName
       );
+
       if (existingProduct) {
-        toast.success(`${product.productName} quantity updated in cart.`);
+        if (!toast.isActive(toastIdRef.current)) {
+          toastIdRef.current = toast.success(
+            `${product.productName} quantity updated in cart.`
+          );
+        }
         return prevCart.map((item) =>
           item.productName === product.productName
             ? { ...item, quantity: item.quantity + 1 }
@@ -49,17 +58,20 @@ export const CartProvider = ({ children }) => {
         productId: product.productId || product.id, // Ensure productId is set
         quantity: 1,
       };
-      console.log("New Cart Item:", newItem); // Log new item
-      toast.success(`${product.productName} added to cart.`);
-      const updatedCart = [...prevCart, newItem];
-      console.log("Updated Cart:", updatedCart); // Log updated cart
-      return updatedCart;
+      if (!toast.isActive(toastIdRef.current)) {
+        toastIdRef.current = toast.success(
+          `${product.productName} added to cart.`
+        );
+      }
+      return [...prevCart, newItem];
     });
   };
 
   const updateCartItem = (productName, newQuantity) => {
     if (newQuantity < 1) {
-      toast.error("Quantity must be at least 1.");
+      toast.error("Quantity must be at least 1.", {
+        toastId: `quantity-error-${productName}`,
+      });
       return;
     }
     setCart((prevCart) =>
@@ -69,7 +81,9 @@ export const CartProvider = ({ children }) => {
           : item
       )
     );
-    toast.success(`${productName} quantity updated.`);
+    toast.success(`${productName} quantity updated.`, {
+      toastId: `quantity-update-${productName}`,
+    });
   };
 
   const removeFromCart = (productName) => {
@@ -85,7 +99,7 @@ export const CartProvider = ({ children }) => {
       localStorage.removeItem(`cart_${user.email}`);
     }
   };
-  
+
   return (
     <CartContext.Provider
       value={{ cart, addToCart, updateCartItem, removeFromCart, clearCart }}
@@ -93,4 +107,4 @@ export const CartProvider = ({ children }) => {
       {children}
     </CartContext.Provider>
   );
-}
+};

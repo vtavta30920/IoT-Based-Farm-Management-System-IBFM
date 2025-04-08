@@ -15,11 +15,10 @@ const Checkout = () => {
     firstName: "",
     lastName: "",
     streetAddress: "",
-    apartment: "",
+    ward: "",
+    district: "",
     city: "",
-    province: "",
     phoneNumber: "",
-    useAsBillingAddress: true,
   });
 
   const handleChange = (e) => {
@@ -73,8 +72,9 @@ const Checkout = () => {
         "firstName",
         "lastName",
         "streetAddress",
+        "ward",
+        "district",
         "city",
-        "province",
         "phoneNumber",
       ];
 
@@ -97,7 +97,7 @@ const Checkout = () => {
         price: item.price,
       }));
 
-      const shippingAddress = `${formData.streetAddress}, ${formData.city}, ${formData.province}`;
+      const shippingAddress = `${formData.streetAddress}, ${formData.ward}, ${formData.district}, ${formData.city}`;
 
       const orderResponse = await createOrder(
         orderItems,
@@ -117,7 +117,7 @@ const Checkout = () => {
     }
   };
 
-  const vietnamProvinces = [
+  const vietnamCities = [
     "An Giang",
     "Bà Rịa - Vũng Tàu",
     "Bắc Giang",
@@ -269,51 +269,54 @@ const Checkout = () => {
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   required
+                  placeholder="123 street ABC"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Apartment, Suite, or Other
-                </label>
-                <input
-                  type="text"
-                  name="apartment"
-                  value={formData.apartment}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ward *
+                  </label>
+                  <input
+                    type="text"
+                    name="ward"
+                    value={formData.ward}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    required
+                    placeholder="Enter ward"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    District *
+                  </label>
+                  <input
+                    type="text"
+                    name="district"
+                    value={formData.district}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    required
+                    placeholder="Enter district"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     City *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                     required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Province *
-                  </label>
-                  <select
-                    name="province"
-                    value={formData.province}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    required
                   >
-                    <option value="">Select Province</option>
-                    {vietnamProvinces.map((province) => (
-                      <option key={province} value={province}>
-                        {province}
+                    <option value="">Select City</option>
+                    {vietnamCities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
                       </option>
                     ))}
                   </select>
@@ -331,6 +334,7 @@ const Checkout = () => {
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   required
+                  placeholder="0987654321"
                 />
               </div>
             </form>

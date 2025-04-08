@@ -210,38 +210,6 @@ const Products = () => {
                   >
                     Stock: {product.stockQuantity}
                   </span>
-
-                  {product.stockQuantity > 0 && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        className={`bg-gray-200 text-gray-800 w-8 h-8 rounded flex items-center justify-center ${
-                          quantities[product.productId] <= 1
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-gray-300"
-                        }`}
-                        onClick={() => decrementQuantity(product.productId)}
-                        disabled={quantities[product.productId] <= 1}
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center">
-                        {quantities[product.productId] || 1}
-                      </span>
-                      <button
-                        className={`bg-gray-200 text-gray-800 w-8 h-8 rounded flex items-center justify-center ${
-                          quantities[product.productId] >= product.stockQuantity
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-gray-300"
-                        }`}
-                        onClick={() => incrementQuantity(product.productId)}
-                        disabled={
-                          quantities[product.productId] >= product.stockQuantity
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 <button

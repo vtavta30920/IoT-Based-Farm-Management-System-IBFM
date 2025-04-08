@@ -31,7 +31,7 @@ const Cart = () => {
   // Handle quantity change with validation
   const handleQuantityChange = (productName, newQuantity) => {
     const num = parseInt(newQuantity, 10);
-    if (num > 0 && num <= 100) {
+    if (num > 0 && num <= 999) {
       // Set reasonable limits
       setQuantities((prev) => ({
         ...prev,
@@ -50,7 +50,7 @@ const Cart = () => {
     const newQuantity = parseInt(quantities[productName], 10);
 
     if (isNaN(newQuantity) || newQuantity < 1) {
-      toast.error("Please enter a valid quantity (1-100).");
+      toast.error("Please enter a valid quantity (1-999).");
       return;
     }
 
@@ -184,20 +184,12 @@ const Cart = () => {
                           onBlur={() => handleUpdateQuantity(item.productName)}
                           className="w-20 px-3 py-2 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-green-500"
                           min="1"
-                          max="100"
+                          max="999"
                         />
                       </div>
 
                       {/* Action buttons */}
                       <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleUpdateQuantity(item.productName)}
-                          disabled={isUpdating}
-                          className="p-2 text-green-600 hover:text-green-800 transition-colors disabled:opacity-50"
-                          aria-label="Update quantity"
-                        >
-                          <FaEdit />
-                        </button>
                         <button
                           onClick={() => removeFromCart(item.productName)}
                           className="p-2 text-red-600 hover:text-red-800 transition-colors"

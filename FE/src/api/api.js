@@ -120,3 +120,80 @@ export const createOrder = async (orderItems, shippingAddress, token) => {
 
   return response.json();
 };
+export const createSchedule = async (scheduleData, token) => {
+  const response = await fetch(`${API_BASE_URL}/Schedule/schedule-create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(scheduleData),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to create schedule");
+  }
+
+  return response.json();
+};
+
+export const getSchedules = async (pageIndex = 0, pageSize = 10, token) => {
+  const response = await fetch(
+    `${API_BASE_URL}/Schedule/schedule-list?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch schedules.");
+  }
+
+  return response.json();
+};
+
+export const updateSchedule = async (scheduleId, updatedData, token) => {
+  const response = await fetch(
+    `${API_BASE_URL}/Schedule/schedule-update?scheduleId=${scheduleId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updatedData),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to update schedule");
+  }
+
+  return response.json();
+};
+// Adding the missing updateScheduleStatus function to match the API
+export const updateScheduleStatus = async (scheduleId, token) => {
+  const response = await fetch(
+    `${API_BASE_URL}/Schedule/schedule-update-status?scheduleId=${scheduleId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to update schedule status");
+  }
+
+  return response.json();
+};
