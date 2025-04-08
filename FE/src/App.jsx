@@ -27,6 +27,7 @@ import OrderFailed from "./sections/OrderFailed.jsx";
 import VnPayCallback from "./sections/VnPayCallback.jsx";
 
 import AccountDetail from "./pages/Admin/AccountDetail.jsx";
+import CreateAccount from "./pages/Admin/CreateAccount.jsx";
 
 import AdminLayout from "./sections/Layouts/AdminLayout.jsx";
 import StaffLayout from "./sections/Layouts/StaffLayout.jsx";
@@ -82,6 +83,8 @@ const App = () => {
                 />
 
                 <Route path="/admin/users/detail" element={<AccountDetail />} />
+                <Route path="/admin/users/create" element={<CreateAccount />} />
+
                 {/* Route cho trang staff */}
 
                 <Route path="/admin/*" element={<AdminRoutes />} />

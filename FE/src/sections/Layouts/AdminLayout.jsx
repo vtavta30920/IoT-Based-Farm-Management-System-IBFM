@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { UserContext } from "../../contexts/UserContext";
 import { getUserByEmail, useGetAllAccount } from "../../api/AccountEndPoint";
 import { updateStatus } from "../../api/AccountEndPoint";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AdminLayout = () => {
@@ -10,9 +10,6 @@ const AdminLayout = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-
-  const [currentMenu, setCurrentMenu] = useState(null);
-  const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
 
   const [searchEmail, setSearchEmail] = useState("");
   const [searchResult, setSearchResult] = useState(null);
@@ -22,12 +19,7 @@ const AdminLayout = () => {
   const data = queryGetAllAccount.data;
   const users = data?.items;
   const totalPages = data?.totalPagesCount || 1;
-  const menuRef = useRef();
   const navigate = useNavigate();
-
-  const toggleRoleMenu = () => {
-    setIsRoleMenuOpen((prev) => !prev); // Chuyển đổi trạng thái submenu
-  };
 
   const handleViewDetail = (user) => {
     navigate(`/admin/users/detail`, { state: { user } });
@@ -69,17 +61,6 @@ const AdminLayout = () => {
     }
   };
 
-  // Hàm xử lý khi chọn role từ submenu
-  const handleRoleChange = async (userId, newRole) => {
-    // Gọi API thay đổi role của người dùng
-    try {
-      await updateRole(userId, newRole);
-      console.log(`User role updated to: ${newRole}`);
-    } catch (error) {
-      console.error("Failed to update role:", error);
-    }
-  };
-
   const handleStatusChange = async (userId, currentStatus) => {
     const newStatus = currentStatus === "ACTIVE" ? "BANNED" : "ACTIVE"; // Toggle logic
 
@@ -101,19 +82,6 @@ const AdminLayout = () => {
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setCurrentMenu(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
     if (searchEmail.trim() === "") {
       setSearchResult(null);
     }
@@ -127,30 +95,34 @@ const AdminLayout = () => {
             <h3 className="text-3xl font-bold text-green-600 border-b-2 border-gray-300 pb-2 mb-4 text-center">
               Accounts Management
             </h3>
-            <h2 className="text-xl font-semibold text-gray-800 mt-2">
-              Welcome,{" "}
-              <span className="text-green-600">
-                {user?.fullname || "Admin"}
-              </span>
-            </h2>
           </div>
         </header>
 
         <main className="max-w-7xl mx-auto py-6 px-6">
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              value={searchEmail}
-              onChange={(e) => setSearchEmail(e.target.value)}
-              placeholder="Search User by Email"
-              className="w-64 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+          <div className="flex items-center justify-between">
+            {/* Phần: Search group */}
+            <div className="flex items-center space-x-4">
+              <input
+                type="text"
+                value={searchEmail}
+                onChange={(e) => setSearchEmail(e.target.value)}
+                placeholder="Search User by Email"
+                className="w-64 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <button
+                onClick={handleSearch}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
+              >
+                Search
+              </button>
+            </div>
 
+            {/* Phần: Create Account button */}
             <button
-              onClick={handleSearch}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
+              onClick={() => navigate("/admin/users/create")}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
             >
-              Search
+              Create Account
             </button>
           </div>
         </main>

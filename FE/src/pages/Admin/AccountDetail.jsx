@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useUpdateRole, useUpdateAccount } from "../../api/AccountEndPoint";
 import defaultAvatar from "../../assets/avatardefault.jpg";
 
 const AccountDetail = () => {
@@ -7,13 +8,12 @@ const AccountDetail = () => {
   const navigate = useNavigate();
   const user = location.state?.user;
 
-  const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const [roleId, setRoleId] = useState(user?.role || 0); // Sửa đổi giá trị ban đầu của roleId
 
   const [formData, setFormData] = useState({
     fullname: "",
     status: "",
     email: "",
-    password: "",
     role: "",
     createdAt: "",
     updatedAt: "",
@@ -27,21 +27,34 @@ const AccountDetail = () => {
     if (!user) {
       navigate("/admin");
     } else {
+      let roleNum = 0;
+      switch (user.role) {
+        case "Manager":
+          roleNum = 2;
+          break;
+        case "Staff":
+          roleNum = 3;
+          break;
+        default:
+          roleNum = 0;
+      }
+
+      setRoleId(roleNum); // cập nhật role ID đúng
+
       setFormData({
         fullname: user.accountProfile?.fullname || "",
         status: user.status || "",
         email: user.email || "",
-        password: user.password || "",
-        role: user.role || "",
+        role: roleNum, // dùng số ở đây
         createdAt: user.accountProfile?.createdAt || "",
         updatedAt: user.accountProfile?.updatedAt || "",
         gender: user.accountProfile?.gender || "",
         phone: user.accountProfile?.phone || "",
         address: user.accountProfile?.address || "",
-        image: user.accountProfile?.image || "",
+        image: user.accountProfile?.images || "",
       });
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,11 +62,12 @@ const AccountDetail = () => {
       ...prev,
       [name]: value,
     }));
+    setRoleId(value);
   };
 
-  const togglePasswordVisibility = () => {
-    setPasswordVisible((prev) => !prev);
-  };
+  const { mutateAsync, isPending } = useUpdateRole(user.accountId, roleId);
+  const { mutateAsync: updateAccountAsync, isPending: isUpdating } =
+    useUpdateAccount();
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -96,11 +110,6 @@ const AccountDetail = () => {
                         {formData.status}
                       </span>
                     </div>
-                    <div className="flex justify-center">
-                      <span className="text-gray-800 font-bold uppercase bg-green-100 px-3 py-1 rounded-full">
-                        {formData.role}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
@@ -139,24 +148,31 @@ const AccountDetail = () => {
                     />
                   </div>
 
-                  {/* Password */}
+                  {/* Role */}
                   <div className="flex justify-between items-center">
                     <label className="font-semibold text-gray-600 w-1/4">
-                      Password
+                      Role
                     </label>
                     <div className="flex items-center w-3/4">
-                      <input
-                        name="password"
-                        type={isPasswordVisible ? "text" : "password"}
-                        value={formData.password}
-                        onChange={handleChange}
+                      <select
+                        name="role"
+                        value={formData.role}
+                        onChange={(e) => {
+                          handleChange(e); // cập nhật formData.role
+                          setRoleId(parseInt(e.target.value)); // đảm bảo roleId cũng cập nhật đúng
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
-                      />
-                      <button
-                        onClick={togglePasswordVisibility}
-                        className="ml-3 text-blue-500 hover:text-blue-700"
                       >
-                        {isPasswordVisible ? "Hide" : "Show"}
+                        <option value={2}>Manager</option>
+                        <option value={3}>Staff</option>
+                        <option value={0}>Customer</option>
+                      </select>
+
+                      <button
+                        onClick={async () => await mutateAsync()}
+                        className="ml-3 text-red-400 hover:text-red-600 bg-red-100 hover:bg-red-200 px-4 py-2 rounded-md"
+                      >
+                        {isPending ? "loading..." : "Change"}
                       </button>
                     </div>
                   </div>
@@ -204,6 +220,41 @@ const AccountDetail = () => {
                       className="border px-2 py-2 rounded-md w-3/4"
                     />
                   </div>
+                </div>
+
+                {/* Nút Update Account Info */}
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={async () => {
+                      const updateData = {
+                        email: formData.email,
+                        gender:
+                          formData.gender === "Male"
+                            ? 0
+                            : formData.gender === "Female"
+                            ? 1
+                            : 2,
+                        phone: formData.phone,
+                        fullname: formData.fullname,
+                        address: formData.address,
+                        images: formData.image || "string",
+                      };
+
+                      try {
+                        await updateAccountAsync({
+                          userId: user.accountId,
+                          updateData,
+                        });
+                        alert("Update Succeed!");
+                      } catch (err) {
+                        alert("Update Failed!");
+                      }
+                    }}
+                    className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? "loading..." : "Update"}
+                  </button>
                 </div>
               </div>
             </div>
