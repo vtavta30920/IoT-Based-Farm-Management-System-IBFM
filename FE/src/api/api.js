@@ -177,8 +177,7 @@ export const updateSchedule = async (scheduleId, updatedData, token) => {
 
   return response.json();
 };
-// Adding the missing updateScheduleStatus function to match the API
-export const updateScheduleStatus = async (scheduleId, token) => {
+export const updateScheduleStatus = async (scheduleId, newStatus, token) => {
   const response = await fetch(
     `${API_BASE_URL}/Schedule/schedule-update-status?scheduleId=${scheduleId}`,
     {
@@ -187,6 +186,7 @@ export const updateScheduleStatus = async (scheduleId, token) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify(newStatus), // Send just the string value
     }
   );
 
