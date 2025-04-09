@@ -35,7 +35,6 @@ const FarmingSchedules = () => {
     farmActivityId: "",
     farmDetailsId: "",
     cropId: "",
-    dailyLogId: "",
   });
 
   // State for modal visibility
@@ -89,8 +88,7 @@ const FarmingSchedules = () => {
         name === "assignedTo" ||
         name === "farmActivityId" ||
         name === "farmDetailsId" ||
-        name === "cropId" ||
-        name === "dailyLogId"
+        name === "cropId"
           ? Number.parseInt(value, 10)
           : value,
     });
@@ -167,7 +165,6 @@ const FarmingSchedules = () => {
       farmActivityId: "",
       farmDetailsId: "",
       cropId: "",
-      dailyLogId: "",
     });
   };
 
@@ -181,10 +178,6 @@ const FarmingSchedules = () => {
       farmActivityId: schedule.farmActivityId,
       farmDetailsId: schedule.farmId,
       cropId: schedule.cropId,
-      dailyLogId:
-        schedule.dailyLog && schedule.dailyLog.length > 0
-          ? schedule.dailyLog[0].trackingId
-          : "",
     });
     setIsEditModalOpen(true);
   };
@@ -466,18 +459,6 @@ const FarmingSchedules = () => {
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Daily Log ID (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    name="dailyLogId"
-                    value={formData.dailyLogId}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
               </div>
               <div className="flex justify-end space-x-2 mt-4">
                 <button
@@ -588,18 +569,6 @@ const FarmingSchedules = () => {
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Daily Log ID (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    name="dailyLogId"
-                    value={formData.dailyLogId}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
                   />
                 </div>
               </div>
@@ -736,38 +705,6 @@ const FarmingSchedules = () => {
                 </div>
               </div>
             )}
-
-            {/* Daily Logs */}
-            {currentSchedule.dailyLog &&
-              currentSchedule.dailyLog.length > 0 && (
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold mb-2">Daily Logs</h3>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="py-2 px-4 border">ID</th>
-                          <th className="py-2 px-4 border">Date</th>
-                          <th className="py-2 px-4 border">Notes</th>
-                          <th className="py-2 px-4 border">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentSchedule.dailyLog.map((log) => (
-                          <tr key={log.trackingId} className="hover:bg-gray-50">
-                            <td className="py-2 px-4 border">
-                              {log.trackingId}
-                            </td>
-                            <td className="py-2 px-4 border">{log.date}</td>
-                            <td className="py-2 px-4 border">{log.notes}</td>
-                            <td className="py-2 px-4 border">{log.status}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
 
             <div className="flex justify-end mt-6">
               <button
