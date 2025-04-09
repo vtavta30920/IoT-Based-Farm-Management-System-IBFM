@@ -19,7 +19,14 @@ const FarmingSchedules = () => {
     totalPages: 0,
     totalItems: 0,
   });
-
+  const statusOptions = [
+    "ACTIVE",
+    "DEACTIVATED",
+    "SUSPENDED",
+    "BANNED",
+    "PAID",
+    "UNDISCHARGED",
+  ];
   // State for form data
   const [formData, setFormData] = useState({
     startDate: "",
@@ -136,23 +143,21 @@ const FarmingSchedules = () => {
   };
 
   // Handle update schedule status
-  const handleUpdateStatus = async (scheduleId) => {
+  const handleStatusChange = async (scheduleId, newStatus) => {
     try {
       setLoading(true);
-      setError(null);
-      const response = await updateScheduleStatus(scheduleId, token);
+      const response = await updateScheduleStatus(scheduleId, newStatus, token);
       if (response.status === 1) {
-        fetchSchedules();
+        fetchSchedules(); // Refresh the list
       } else {
-        setError(response.message || "Failed to update schedule status");
+        setError(response.message || "Failed to update status");
       }
     } catch (err) {
-      setError(err.message || "An error occurred while updating status");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
   // Reset form data
   const resetForm = () => {
     setFormData({
@@ -269,21 +274,39 @@ const FarmingSchedules = () => {
                   <td className="py-2 px-4 border">{schedule.startDate}</td>
                   <td className="py-2 px-4 border">{schedule.endDate}</td>
                   <td className="py-2 px-4 border">
-                    <span
+                    <select
+                      value={schedule.status}
+                      onChange={(e) =>
+                        handleStatusChange(schedule.scheduleId, e.target.value)
+                      }
                       className={`px-2 py-1 rounded text-xs ${
                         schedule.status === "ACTIVE"
                           ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          : schedule.status === "DEACTIVATED"
+                          ? "bg-red-100 text-red-800"
+                          : schedule.status === "SUSPENDED"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : schedule.status === "BANNED"
+                          ? "bg-purple-100 text-purple-800"
+                          : schedule.status === "PAID"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}
+                      disabled={loading}
                     >
-                      {schedule.status}
-                    </span>
-                    <button
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                      onClick={() => handleUpdateStatus(schedule.scheduleId)}
-                    >
-                      Toggle
-                    </button>
+                      {[
+                        "ACTIVE",
+                        "DEACTIVATED",
+                        "SUSPENDED",
+                        "BANNED",
+                        "PAID",
+                        "UNDISCHARGED",
+                      ].map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="py-2 px-4 border">
                     {schedule.cropView?.cropName || "N/A"}
