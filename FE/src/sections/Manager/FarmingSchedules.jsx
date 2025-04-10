@@ -16,18 +16,11 @@ const FarmingSchedules = () => {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 5,
     totalPages: 0,
     totalItems: 0,
   });
-  const statusOptions = [
-    "ACTIVE",
-    "DEACTIVATED",
-    "SUSPENDED",
-    "BANNED",
-    "PAID",
-    "UNDISCHARGED",
-  ];
+  const statusOptions = ["ACTIVE", "DEACTIVATED"];
   const [formData, setFormData] = useState({
     startDate: "",
     endDate: "",
@@ -236,7 +229,7 @@ const FarmingSchedules = () => {
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border">ID</th>
+              <th className="py-2 px-4 border">No</th>
               <th className="py-2 px-4 border">Staff</th>
               <th className="py-2 px-4 border">Start Date</th>
               <th className="py-2 px-4 border">End Date</th>
@@ -259,9 +252,11 @@ const FarmingSchedules = () => {
                 </td>
               </tr>
             ) : (
-              schedules.map((schedule) => (
+              schedules.map((schedule, index) => (
                 <tr key={schedule.scheduleId} className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border">{schedule.scheduleId}</td>
+                  <td className="py-2 px-4 border">
+                    {pagination.pageIndex * pagination.pageSize + index + 1}
+                  </td>
                   <td className="py-2 px-4 border">{schedule.fullNameStaff}</td>
                   <td className="py-2 px-4 border">{schedule.startDate}</td>
                   <td className="py-2 px-4 border">{schedule.endDate}</td>
@@ -274,7 +269,7 @@ const FarmingSchedules = () => {
                       className={`px-2 py-1 rounded text-xs ${
                         schedule.status === "ACTIVE"
                           ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                       disabled={loading}
                     >
@@ -628,7 +623,7 @@ const FarmingSchedules = () => {
                 <span className="font-medium">Created At:</span>{" "}
                 {currentSchedule.createdAt}
               </div>
-              <div className="mb-2">
+              {/* <div className="mb-2">
                 <span className="font-medium">Updated At:</span>{" "}
                 {currentSchedule.updatedAt}
               </div>
@@ -643,7 +638,7 @@ const FarmingSchedules = () => {
               <div className="mb-2">
                 <span className="font-medium">Crop ID:</span>{" "}
                 {currentSchedule.cropId}
-              </div>
+              </div> */}
             </div>
 
             {currentSchedule.cropView && (
