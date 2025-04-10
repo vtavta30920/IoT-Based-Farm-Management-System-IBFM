@@ -197,3 +197,33 @@ export const updateScheduleStatus = async (scheduleId, newStatus, token) => {
 
   return response.json();
 };
+export const getStaffAccounts = async (pageIndex = 0, pageSize = 10, token) => {
+  const response = await fetch(
+    `${API_BASE_URL}/account/get-all?pageSize=${pageSize}&pageIndex=${pageIndex}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch staff accounts.");
+  }
+
+  const data = await response.json();
+  // Filter only staff accounts
+  const staffAccounts = data.items.filter((item) => item.role === "Staff");
+  // Return the filtered data with pagination metadata
+  return {
+    totalItemCount: staffAccounts.length, // Adjust total count to filtered items
+    pageSize: data.pageSize,
+    totalPagesCount: Math.ceil(staffAccounts.length / pageSize), // Recalculate pages
+    pageIndex: data.pageIndex,
+    next: data.next && staffAccounts.length === pageSize, // Adjust next based on filtered items
+    previous: data.previous,
+    items: staffAccounts,
+  };
+};

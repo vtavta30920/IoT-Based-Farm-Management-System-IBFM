@@ -6,11 +6,12 @@ import {
   createSchedule,
   updateSchedule,
   updateScheduleStatus,
-} from "../../api/api"; // Using the provided API functions
+  getStaffAccounts, // Import the staff accounts function
+} from "../../api/api";
 
 const FarmingSchedules = () => {
-  // State for schedules list and pagination
   const [schedules, setSchedules] = useState([]);
+  const [staffList, setStaffList] = useState([]); // New state for staff accounts
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
@@ -27,7 +28,6 @@ const FarmingSchedules = () => {
     "PAID",
     "UNDISCHARGED",
   ];
-  // State for form data
   const [formData, setFormData] = useState({
     startDate: "",
     endDate: "",
@@ -36,32 +36,28 @@ const FarmingSchedules = () => {
     farmDetailsId: "",
     cropId: "",
   });
-
-  // State for modal visibility
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [currentSchedule, setCurrentSchedule] = useState(null);
 
-  // Get token from localStorage (assuming it's stored there after login)
   const token = localStorage.getItem("token");
 
-  // Fetch schedules on component mount and when pagination changes
+  // Fetch schedules and staff on component mount
   useEffect(() => {
     fetchSchedules();
+    fetchStaffAccounts();
   }, [pagination.pageIndex, pagination.pageSize]);
 
-  // Function to fetch schedules
   const fetchSchedules = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await getSchedules(
-        pagination.pageIndex + 1, // API expects 1-based index
+        pagination.pageIndex + 1,
         pagination.pageSize,
         token
       );
-
       if (response.status === 1) {
         setSchedules(response.data.items);
         setPagination({
@@ -79,7 +75,18 @@ const FarmingSchedules = () => {
     }
   };
 
-  // Handle form input changes
+  // Fetch staff accounts
+  const fetchStaffAccounts = async () => {
+    try {
+      const staffData = await getStaffAccounts(0, 100, token); // Fetch more staff if needed
+      setStaffList(staffData.items); // Store staff accounts
+    } catch (err) {
+      setError(
+        err.message || "An error occurred while fetching staff accounts"
+      );
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -94,7 +101,6 @@ const FarmingSchedules = () => {
     });
   };
 
-  // Handle create schedule
   const handleCreateSchedule = async (e) => {
     e.preventDefault();
     try {
@@ -115,7 +121,6 @@ const FarmingSchedules = () => {
     }
   };
 
-  // Handle update schedule
   const handleUpdateSchedule = async (e) => {
     e.preventDefault();
     try {
@@ -140,13 +145,12 @@ const FarmingSchedules = () => {
     }
   };
 
-  // Handle update schedule status
   const handleStatusChange = async (scheduleId, newStatus) => {
     try {
       setLoading(true);
       const response = await updateScheduleStatus(scheduleId, newStatus, token);
       if (response.status === 1) {
-        fetchSchedules(); // Refresh the list
+        fetchSchedules();
       } else {
         setError(response.message || "Failed to update status");
       }
@@ -156,7 +160,7 @@ const FarmingSchedules = () => {
       setLoading(false);
     }
   };
-  // Reset form data
+
   const resetForm = () => {
     setFormData({
       startDate: "",
@@ -168,7 +172,6 @@ const FarmingSchedules = () => {
     });
   };
 
-  // Open edit modal and populate form with schedule data
   const openEditModal = (schedule) => {
     setCurrentSchedule(schedule);
     setFormData({
@@ -182,20 +185,17 @@ const FarmingSchedules = () => {
     setIsEditModalOpen(true);
   };
 
-  // Open view modal
   const openViewModal = (schedule) => {
     setCurrentSchedule(schedule);
     setIsViewModalOpen(true);
   };
 
-  // Format date from API (DD/MM/YYYY) to input format (YYYY-MM-DD)
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     const [day, month, year] = dateString.split("/");
     return `${year}-${month}-${day}`;
   };
 
-  // Format date from input (YYYY-MM-DD) to display format (DD/MM/YYYY)
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -206,7 +206,6 @@ const FarmingSchedules = () => {
       .padStart(2, "0")}/${date.getFullYear()}`;
   };
 
-  // Handle pagination
   const handlePageChange = (newPage) => {
     setPagination({
       ...pagination,
@@ -275,26 +274,11 @@ const FarmingSchedules = () => {
                       className={`px-2 py-1 rounded text-xs ${
                         schedule.status === "ACTIVE"
                           ? "bg-green-100 text-green-800"
-                          : schedule.status === "DEACTIVATED"
-                          ? "bg-red-100 text-red-800"
-                          : schedule.status === "SUSPENDED"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : schedule.status === "BANNED"
-                          ? "bg-purple-100 text-purple-800"
-                          : schedule.status === "PAID"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-800"
+                          : "bg-yellow-100 text-yellow-800"
                       }`}
                       disabled={loading}
                     >
-                      {[
-                        "ACTIVE",
-                        "DEACTIVATED",
-                        "SUSPENDED",
-                        "BANNED",
-                        "PAID",
-                        "UNDISCHARGED",
-                      ].map((option) => (
+                      {statusOptions.map((option) => (
                         <option key={option} value={option}>
                           {option}
                         </option>
@@ -409,16 +393,22 @@ const FarmingSchedules = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
-                    Assigned To (Staff ID)
+                    Assigned To (Staff)
                   </label>
-                  <input
-                    type="number"
+                  <select
                     name="assignedTo"
                     value={formData.assignedTo}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Staff</option>
+                    {staffList.map((staff) => (
+                      <option key={staff.accountId} value={staff.accountId}>
+                        {staff.accountProfile.fullname} ({staff.email})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
@@ -521,16 +511,22 @@ const FarmingSchedules = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
-                    Assigned To (Staff ID)
+                    Assigned To (Staff)
                   </label>
-                  <input
-                    type="number"
+                  <select
                     name="assignedTo"
                     value={formData.assignedTo}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Staff</option>
+                    {staffList.map((staff) => (
+                      <option key={staff.accountId} value={staff.accountId}>
+                        {staff.accountProfile.fullname} ({staff.email})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
@@ -650,7 +646,6 @@ const FarmingSchedules = () => {
               </div>
             </div>
 
-            {/* Crop Information */}
             {currentSchedule.cropView && (
               <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2">Crop Information</h3>
@@ -679,7 +674,6 @@ const FarmingSchedules = () => {
               </div>
             )}
 
-            {/* Farm Activity Information */}
             {currentSchedule.farmActivityView && (
               <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2">

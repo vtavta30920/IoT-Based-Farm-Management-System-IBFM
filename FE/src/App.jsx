@@ -104,12 +104,12 @@ const App = () => {
 
                 {/* Manager Routes */}
                 <Route path="/manager/*" element={<ManagerLayout />}>
-                  <Route index element={<IotMonitoring />} />
-                  <Route path="iot-monitoring" element={<IotMonitoring />} />
+                  <Route index element={<FarmingSchedules />} />
                   <Route
                     path="farming-schedules"
                     element={<FarmingSchedules />}
                   />
+                  <Route path="iot-monitoring" element={<IotMonitoring />} />
                   <Route path="inventory" element={<InventoryManagement />} />
                   <Route path="reports" element={<Reports />} />
                 </Route>
@@ -118,8 +118,6 @@ const App = () => {
                 <Route path="/admin/users/create" element={<CreateAccount />} />
 
                 <Route path="/myOrders" element={<CurrentUserOrderList />} />
-
-                {/* Route cho trang staff */}
 
                 <Route path="/admin/*" element={<AdminLayout />} />
               </Routes>

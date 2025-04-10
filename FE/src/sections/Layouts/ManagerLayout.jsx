@@ -17,7 +17,7 @@ const ManagerLayout = () => {
       >
         <div className="p-4 flex items-center justify-between">
           {isSidebarOpen ? (
-            <h1 className="text-2xl font-bold">Manager Dashboard</h1>
+            <h1 className="text-2xl font-bold">Manager </h1>
           ) : (
             <div className="w-8 h-8 bg-green-800 rounded flex items-center justify-center">
               <span className="text-white font-bold">M</span>
@@ -60,7 +60,7 @@ const ManagerLayout = () => {
         </div>
         <nav className="mt-6">
           <ul className="space-y-2 px-2">
-            <li>
+            {/* <li>
               <Link
                 to="/manager/iot-monitoring"
                 className="flex items-center p-3 hover:bg-green-800 rounded-lg transition duration-200"
@@ -80,7 +80,7 @@ const ManagerLayout = () => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">IoT Monitoring</span>}
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link
                 to="/manager/farming-schedules"
@@ -104,7 +104,7 @@ const ManagerLayout = () => {
                 )}
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link
                 to="/manager/inventory"
                 className="flex items-center p-3 hover:bg-green-800 rounded-lg transition duration-200"
@@ -124,8 +124,8 @@ const ManagerLayout = () => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">Inventory</span>}
               </Link>
-            </li>
-            <li>
+            </li> */}
+            {/* <li>
               <Link
                 to="/manager/reports"
                 className="flex items-center p-3 hover:bg-green-800 rounded-lg transition duration-200"
@@ -145,7 +145,7 @@ const ManagerLayout = () => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">Reports</span>}
               </Link>
-            </li>
+            </li> */}
           </ul>
         </nav>
         <div className="mt-8 pt-4 border-t border-green-800 px-2">
