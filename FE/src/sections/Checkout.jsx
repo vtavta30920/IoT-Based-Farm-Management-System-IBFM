@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { FaArrowLeft } from "react-icons/fa";
 
 const Checkout = () => {
-  const { cart } = useContext(CartContext);
+  const { cart, clearCart } = useContext(CartContext);
   const { user, token } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -106,6 +106,8 @@ const Checkout = () => {
       );
 
       if (orderResponse.data?.paymentUrl) {
+        // Clear the cart before redirecting to payment
+        clearCart();
         window.location.href = orderResponse.data.paymentUrl;
       } else {
         throw new Error("Payment URL is missing in the response.");
