@@ -16,12 +16,6 @@ const About = () => {
       >
         <motion.h1
           variants={slideUpVariants}
-          className="text-green-500 text-2x1"
-        >
-          WELCOME TO
-        </motion.h1>
-        <motion.h1
-          variants={slideUpVariants}
           className="text-white uppercase text-[40px] font-bold"
         >
           IoT Farm website
