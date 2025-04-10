@@ -47,6 +47,7 @@ import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
 import TaskDetails from "./sections/Staff/TaskDetails.jsx";
 import QualityControl from "./sections/Staff/QualityControl.jsx";
 import Logistics from "./sections/Staff/Logistics.jsx";
+import OrderManagement from "./sections/Staff/OrdersManagement.jsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -100,6 +101,7 @@ const App = () => {
                   <Route path="farming-tasks/:id" element={<TaskDetails />} />
                   <Route path="quality-control" element={<QualityControl />} />
                   <Route path="logistics" element={<Logistics />} />
+                  <Route path="OrderManagement" element={<OrderManagement />} />
                 </Route>
 
                 {/* Manager Routes */}

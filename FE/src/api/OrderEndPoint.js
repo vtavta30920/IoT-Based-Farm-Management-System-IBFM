@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext'; // đường dẫn context
 
-// Hàm API gọi dữ liệu đơn giản
+// Hàm API order list theo current user
 const GetCurrentUserOrders = async (pageIndex, pageSize, token) => {
   const { data } = await axios.get(
     `https://localhost:7067/api/v1/Order/order-list-by-current-account?pageIndex=${pageIndex}&pageSize=${pageSize}`,
@@ -16,8 +16,7 @@ const GetCurrentUserOrders = async (pageIndex, pageSize, token) => {
   return data;
 };
 
-// Custom hook giống cũ: chỉ truyền pageIndex, pageSize
-export const useGetAllAccount = (pageIndex, pageSize) => {
+export const useGetCurrentUserOrder = (pageIndex, pageSize) => {
   const { token } = useContext(UserContext); // lấy token bên trong custom hook
 
   return useQuery({
@@ -26,3 +25,18 @@ export const useGetAllAccount = (pageIndex, pageSize) => {
     enabled: !!token, // chỉ gọi khi có token
   });
 };
+
+// Hàm API order list 
+const GetAllOrders = async (pageIndex, pageSize) => {
+    const { data } = await axios.get(
+      `https://localhost:7067/api/v1/Order/order-list?pageIndex=${pageIndex}&pageSize=${pageSize}`
+    );
+    return data;
+  };
+  
+  export const useGetAllOrder = (pageIndex, pageSize) => {
+    return useQuery({
+      queryKey: ['v1/Order/order-list', { pageIndex, pageSize }],
+      queryFn: () => GetAllOrders(pageIndex, pageSize),
+    });
+  };

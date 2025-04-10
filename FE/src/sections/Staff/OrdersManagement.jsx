@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { useGetCurrentUserOrder } from "../../api/OrderEndPoint";
+import { useGetAllOrder } from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
 
 const formatCurrency = (value) => {
@@ -15,16 +15,13 @@ const statusMap = {
   6: "PENDING",
 };
 
-const CurrentUserOrderList = () => {
+const OrdersManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const [expandedIndex, setExpandedIndex] = useState(null); // toggle chi tiết
   const pageSize = 5;
 
   const { token } = useContext(UserContext);
-  const { data, isLoading, isError } = useGetCurrentUserOrder(
-    pageIndex,
-    pageSize
-  );
+  const { data, isLoading, isError } = useGetAllOrder(pageIndex, pageSize);
 
   if (isLoading) {
     return <div className="p-6 bg-white">Loading...</div>;
@@ -44,8 +41,8 @@ const CurrentUserOrderList = () => {
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-        Your Order History
+      <h1 className="text-3xl font-bold text-center text-green-600 mb-6">
+        Order Management
       </h1>
 
       {/* Danh sách order - fixed height */}
@@ -171,4 +168,4 @@ const CurrentUserOrderList = () => {
   );
 };
 
-export default CurrentUserOrderList;
+export default OrdersManagement;
