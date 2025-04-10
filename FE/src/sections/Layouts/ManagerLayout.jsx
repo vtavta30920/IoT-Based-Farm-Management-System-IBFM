@@ -193,12 +193,6 @@ const ManagerLayout = () => {
                 />
               </svg>
             </button>
-            <h2 className="text-xl font-semibold text-gray-800">
-              Welcome,{" "}
-              <span className="text-green-800">
-                {user?.fullname || user?.email || "User"}
-              </span>
-            </h2>
           </div>
         </header>
 
