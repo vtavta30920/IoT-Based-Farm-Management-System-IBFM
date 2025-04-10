@@ -227,3 +227,51 @@ export const getStaffAccounts = async (pageIndex = 0, pageSize = 10, token) => {
     items: staffAccounts,
   };
 };
+
+export const getAllFarms = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/farm/get-all`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch farms.");
+  }
+
+  return response.json();
+};
+
+export const getAllFarmActivities = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/farm-activity/get-all`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch farm activities.");
+  }
+
+  return response.json();
+};
+
+export const getAllCrops = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/crop/get-all`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch crops.");
+  }
+
+  return response.json();
+};
