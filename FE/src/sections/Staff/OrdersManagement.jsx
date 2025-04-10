@@ -70,6 +70,9 @@ const OrdersManagement = () => {
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="p-2 border-r border-gray-300 w-1/6 text-center">
+                        Customer
+                      </th>
+                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
                         Order Date
                       </th>
                       <th className="p-2 border-r border-gray-300 w-1/6 text-center">
@@ -85,6 +88,9 @@ const OrdersManagement = () => {
                   </thead>
                   <tbody>
                     <tr>
+                      <td className="p-2 border-t text-center">
+                        {order.email}
+                      </td>
                       <td className="p-2 border-t text-center">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
