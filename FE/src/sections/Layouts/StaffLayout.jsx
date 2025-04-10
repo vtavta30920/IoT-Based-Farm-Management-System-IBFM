@@ -251,15 +251,6 @@ const StaffLayout = () => {
                 />
               </svg>
             </button>
-            <h2 className="text-xl font-semibold text-gray-800">
-              Welcome back,{" "}
-              <span className="text-green-600">
-                {user?.fullname || user?.email || "User"}
-              </span>
-            </h2>
-            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-medium">
-              {user?.fullname?.charAt(0) || user?.email?.charAt(0) || "U"}
-            </div>
           </div>
         </header>
         <main className="max-w-7xl mx-auto py-6 px-6">
