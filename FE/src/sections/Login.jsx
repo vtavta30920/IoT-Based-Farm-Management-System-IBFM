@@ -34,11 +34,14 @@ const Login = () => {
 
     try {
       const role = await login(email, password);
-      if(role === "Admin"){
+      if (role === "Admin") {
         navigate("/admin");
-      }
-      else{
-        navigate("/")
+      } else if (role === "Manager") {
+        navigate("/Manager");
+      } else if (role === "Staff") {
+        navigate("/Staff");
+      } else {
+        navigate("/");
       }
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
