@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { FaXmark, FaBars } from "react-icons/fa6";
-import { FaUser, FaShoppingCart } from "react-icons/fa";
+import { FaUser, FaShoppingCart, FaClipboardList } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext";
 
@@ -81,7 +81,6 @@ const Header = () => {
       <div className="md:flex hidden gap-3 items-center">
         {user ? (
           <div className="flex items-center gap-4" ref={dropdownRef}>
-            {/* Welcome text */}
             <h2 className="text-base font-semibold text-gray-800">
               Welcome,{" "}
               <span className="text-green-600">
@@ -89,7 +88,6 @@ const Header = () => {
               </span>
             </h2>
 
-            {/* Dropdown button */}
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -99,7 +97,7 @@ const Header = () => {
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg z-50">
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded shadow-lg z-50">
                   <Link
                     to="/profile"
                     className="block px-4 py-2 text-black hover:bg-green-500 hover:text-white uppercase font-semibold"
@@ -107,13 +105,27 @@ const Header = () => {
                   >
                     Profile
                   </Link>
-                  <Link
-                    to="/cart"
-                    className="block px-4 py-2 text-black hover:bg-green-500 hover:text-white uppercase font-semibold"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    <FaShoppingCart /> Cart
-                  </Link>
+
+                  {storedRole === "Customer" && (
+                    <>
+                      <Link
+                        to="/cart"
+                        className="flex items-center gap-2 px-4 py-2 text-black hover:bg-green-500 hover:text-white uppercase font-semibold"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <FaShoppingCart /> Cart
+                      </Link>
+
+                      <Link
+                        to="/myOrders"
+                        className="flex items-center gap-2 px-4 py-2 text-black hover:bg-green-500 hover:text-white uppercase font-semibold"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <FaClipboardList /> Order History
+                      </Link>
+                    </>
+                  )}
+
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-black hover:bg-green-500 hover:text-white uppercase font-semibold"
@@ -142,7 +154,6 @@ const Header = () => {
         )}
       </div>
 
-      {/* Mobile menu toggle */}
       <div
         className="flex justify-center items-center lg:hidden mt-3"
         onClick={toggleMenu}
@@ -154,7 +165,6 @@ const Header = () => {
         )}
       </div>
 
-      {/* Mobile menu dropdown */}
       <div
         className={`${
           isMenuOpen ? "flex" : "hidden"
@@ -185,6 +195,14 @@ const Header = () => {
               >
                 <FaShoppingCart /> CART
               </Link>
+              {storedRole === "Customer" && (
+                <Link
+                  to="/my-orders"
+                  className="text-black uppercase font-semibold cursor-pointer p-2 rounded-lg hover:bg-black hover:text-white w-full text-center"
+                >
+                  <FaClipboardList /> ORDER HISTORY
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="text-black uppercase font-semibold cursor-pointer p-2 rounded-lg hover:bg-black hover:text-white w-full text-center"

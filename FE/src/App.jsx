@@ -26,6 +26,8 @@ import OrderSuccess from "./sections/OrderSuccess.jsx";
 import OrderFailed from "./sections/OrderFailed.jsx";
 import VnPayCallback from "./sections/VnPayCallback.jsx";
 
+import CurrentUserOrderList from "./sections/User/CurrentUserOrderList.jsx";
+
 import AccountDetail from "./pages/Admin/AccountDetail.jsx";
 import CreateAccount from "./pages/Admin/CreateAccount.jsx";
 
@@ -114,6 +116,8 @@ const App = () => {
 
                 <Route path="/admin/users/detail" element={<AccountDetail />} />
                 <Route path="/admin/users/create" element={<CreateAccount />} />
+
+                <Route path="/myOrders" element={<CurrentUserOrderList />} />
 
                 {/* Route cho trang staff */}
 
