@@ -83,7 +83,7 @@ const Cart = () => {
 
   // Handle continue shopping
   const handleContinueShopping = () => {
-    navigate(-1); // Go back to previous page
+    navigate("/products"); // Go back to previous page
   };
 
   return (

@@ -11,7 +11,7 @@ import {
 
 const FarmingSchedules = () => {
   const [schedules, setSchedules] = useState([]);
-  const [staffList, setStaffList] = useState([]); // New state for staff accounts
+  const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
@@ -20,6 +20,8 @@ const FarmingSchedules = () => {
     totalPages: 0,
     totalItems: 0,
   });
+  const [searchTerm, setSearchTerm] = useState(""); // Added for filtering
+  const [statusFilter, setStatusFilter] = useState(""); // Added for status filtering
   const statusOptions = ["ACTIVE", "DEACTIVATED"];
   const [formData, setFormData] = useState({
     startDate: "",
@@ -36,12 +38,12 @@ const FarmingSchedules = () => {
 
   const token = localStorage.getItem("token");
 
-  // Fetch schedules and staff on component mount
   useEffect(() => {
     fetchSchedules();
     fetchStaffAccounts();
-  }, [pagination.pageIndex, pagination.pageSize]);
+  }, [pagination.pageIndex, pagination.pageSize, statusFilter]);
 
+  // Fetch staff accounts
   const fetchSchedules = async () => {
     try {
       setLoading(true);
@@ -52,45 +54,68 @@ const FarmingSchedules = () => {
         token
       );
       if (response.status === 1) {
-        setSchedules(response.data.items);
+        let filteredSchedules = response.data.items;
+
+        // Apply filters
+        if (searchTerm) {
+          filteredSchedules = filteredSchedules.filter(
+            (schedule) =>
+              schedule.fullNameStaff
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              schedule.cropView?.cropName
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())
+          );
+        }
+        if (statusFilter) {
+          filteredSchedules = filteredSchedules.filter(
+            (schedule) => schedule.status === statusFilter
+          );
+        }
+
+        setSchedules(filteredSchedules);
         setPagination({
           ...pagination,
           totalPages: response.data.totalPagesCount,
           totalItems: response.data.totalItemCount,
         });
       } else {
-        setError(response.message || "Failed to fetch schedules");
+        throw new Error(response.message || "Failed to fetch schedules");
       }
     } catch (err) {
-      setError(err.message || "An error occurred while fetching schedules");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch staff accounts
   const fetchStaffAccounts = async () => {
     try {
-      const staffData = await getStaffAccounts(0, 100, token); // Fetch more staff if needed
-      setStaffList(staffData.items); // Store staff accounts
+      const staffData = await getStaffAccounts(0, 100, token);
+      setStaffList(staffData.items);
     } catch (err) {
-      setError(
-        err.message || "An error occurred while fetching staff accounts"
-      );
+      setError(err.message);
     }
+  };
+
+  const validateNumber = (value) => {
+    const num = Number.parseInt(value, 10);
+    return !isNaN(num) && num >= 0 ? num : "";
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]:
-        name === "assignedTo" ||
-        name === "farmActivityId" ||
-        name === "farmDetailsId" ||
-        name === "cropId"
-          ? Number.parseInt(value, 10)
-          : value,
+      [name]: [
+        "assignedTo",
+        "farmActivityId",
+        "farmDetailsId",
+        "cropId",
+      ].includes(name)
+        ? validateNumber(value)
+        : value,
     });
   };
 
@@ -99,16 +124,22 @@ const FarmingSchedules = () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Additional validation
+      if (new Date(formData.startDate) > new Date(formData.endDate)) {
+        throw new Error("Start date cannot be after end date");
+      }
+
       const response = await createSchedule(formData, token);
       if (response.status === 1) {
         setIsCreateModalOpen(false);
         resetForm();
         fetchSchedules();
       } else {
-        setError(response.message || "Failed to create schedule");
+        throw new Error(response.message || "Failed to create schedule");
       }
     } catch (err) {
-      setError(err.message || "An error occurred while creating schedule");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -119,6 +150,11 @@ const FarmingSchedules = () => {
     try {
       setLoading(true);
       setError(null);
+
+      if (new Date(formData.startDate) > new Date(formData.endDate)) {
+        throw new Error("Start date cannot be after end date");
+      }
+
       const response = await updateSchedule(
         currentSchedule.scheduleId,
         formData,
@@ -129,15 +165,14 @@ const FarmingSchedules = () => {
         resetForm();
         fetchSchedules();
       } else {
-        setError(response.message || "Failed to update schedule");
+        throw new Error(response.message || "Failed to update schedule");
       }
     } catch (err) {
-      setError(err.message || "An error occurred while updating schedule");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
   const handleStatusChange = async (scheduleId, newStatus) => {
     try {
       setLoading(true);
@@ -207,35 +242,82 @@ const FarmingSchedules = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Farming Schedules</h1>
-        <button
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-          onClick={() => setIsCreateModalOpen(true)}
+    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Farming Schedules
+          </h1>
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            + New Schedule
+          </button>
+        </div>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search by staff or crop name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-          Create New Schedule
+          <option value="">All Status</option>
+          {statusOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={fetchSchedules}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
+          Filter
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
           {error}
         </div>
       )}
 
       {/* Schedules Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 border">No</th>
-              <th className="py-2 px-4 border">Staff</th>
-              <th className="py-2 px-4 border">Start Date</th>
-              <th className="py-2 px-4 border">End Date</th>
-              <th className="py-2 px-4 border">Status</th>
-              <th className="py-2 px-4 border">Crop</th>
-              <th className="py-2 px-4 border">Actions</th>
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="min-w-full bg-white">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+                No
+              </th>
+              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+                Staff
+              </th>
+              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+                Start Date
+              </th>
+              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+                End Date
+              </th>
+              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+                Status
+              </th>
+              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+                Crop
+              </th>
+              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -355,13 +437,15 @@ const FarmingSchedules = () => {
 
       {/* Create Schedule Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-4">Create New Schedule</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl w-full max-w-2xl shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              Create New Schedule
+            </h2>
             <form onSubmit={handleCreateSchedule}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Start Date
                   </label>
                   <input
@@ -369,7 +453,7 @@ const FarmingSchedules = () => {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -445,10 +529,10 @@ const FarmingSchedules = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-2 mt-4">
+              <div className="flex justify-end space-x-3 mt-6">
                 <button
                   type="button"
-                  className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded"
+                  className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded-lg text-gray-700 transition-colors"
                   onClick={() => {
                     setIsCreateModalOpen(false);
                     resetForm();
@@ -458,7 +542,7 @@ const FarmingSchedules = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
                   disabled={loading}
                 >
                   {loading ? "Creating..." : "Create Schedule"}

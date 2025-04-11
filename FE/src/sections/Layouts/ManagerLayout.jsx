@@ -2,11 +2,16 @@ import React, { useContext } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
 import { SidebarContext } from "../../SidebarToggle";
+import { useNavigate } from "react-router-dom";
 
 const ManagerLayout = () => {
   const { user, logout } = useContext(UserContext);
   const { isSidebarOpen, toggleSidebar } = useContext(SidebarContext);
-
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
@@ -150,7 +155,7 @@ const ManagerLayout = () => {
         </nav>
         <div className="mt-8 pt-4 border-t border-green-800 px-2">
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="flex items-center w-full p-3 hover:bg-green-800 rounded-lg transition duration-200"
           >
             <svg
