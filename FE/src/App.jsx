@@ -50,6 +50,8 @@ import Logistics from "./sections/Staff/Logistics.jsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import FarmManagement from "./sections/Manager/FarmManagement.jsx";
+import CropManagement from "./sections/Manager/CropManagement.jsx";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -112,6 +114,8 @@ const App = () => {
                   <Route path="iot-monitoring" element={<IotMonitoring />} />
                   <Route path="inventory" element={<InventoryManagement />} />
                   <Route path="reports" element={<Reports />} />
+                  <Route path="farms" element={<FarmManagement />} />
+                  <Route path="crops" element={<CropManagement />} />
                 </Route>
 
                 <Route path="/admin/users/detail" element={<AccountDetail />} />
