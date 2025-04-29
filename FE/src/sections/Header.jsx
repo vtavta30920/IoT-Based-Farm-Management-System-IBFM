@@ -41,7 +41,15 @@ const Header = () => {
           { link: "Management", path: "/admin" },
         ]
       : storedRole === "Manager"
-      ? []
+      ? [
+          { link: "Home", path: "/" },
+          { link: "Management", path: "/manager" },
+        ]
+      : storedRole === "Staff"
+      ? [
+          { link: "Home", path: "/" },
+          { link: "Tasks", path: "/staff" },
+        ]
       : [
           { link: "Home", path: "/" },
           { link: "About", path: "/read-more" },

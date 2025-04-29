@@ -33,15 +33,25 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const role = await login(email, password);
-      if (role === "Admin") {
-        navigate("/admin");
-      } else if (role === "Manager") {
-        navigate("/Manager");
-      } else if (role === "Staff") {
-        navigate("/Staff");
-      } else {
-        navigate("/");
+      const userData = await login(email, password);
+      const role = userData.role;
+
+      // Redirect based on role
+      switch (role) {
+        case "Admin":
+          navigate("/admin");
+          break;
+        case "Manager":
+          navigate("/manager");
+          break;
+        case "Staff":
+          navigate("/staff");
+          break;
+        case "Customer":
+          navigate("/");
+          break;
+        default:
+          navigate("/");
       }
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");

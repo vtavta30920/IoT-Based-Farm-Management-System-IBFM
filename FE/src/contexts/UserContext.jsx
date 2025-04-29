@@ -22,13 +22,19 @@ export const UserProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      const { token } = await apiLogin(email, password);
+      const response = await apiLogin(email, password);
+      const { token } = response;
+      const decodedToken = decodeJWT(token);
+
       setToken(token);
-      const role = decodeJWT(token).role;
-      setUser(role);
       localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      return role;
+
+      // Fetch full profile data
+      const profileData = await getProfile(token);
+      setUser(profileData);
+      localStorage.setItem("role", profileData.role);
+
+      return profileData; // Return full profile data including role
     } catch (error) {
       throw error;
     }

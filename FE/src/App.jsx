@@ -52,6 +52,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import FarmManagement from "./sections/Manager/FarmManagement.jsx";
 import CropManagement from "./sections/Manager/CropManagement.jsx";
+import Unauthorized from "./sections/Unauthorized.jsx";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -118,12 +119,12 @@ const App = () => {
                   <Route path="crops" element={<CropManagement />} />
                 </Route>
 
+                <Route path="/admin/*" element={<AdminLayout />} />
                 <Route path="/admin/users/detail" element={<AccountDetail />} />
                 <Route path="/admin/users/create" element={<CreateAccount />} />
 
                 <Route path="/myOrders" element={<CurrentUserOrderList />} />
-
-                <Route path="/admin/*" element={<AdminLayout />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
               </Routes>
               <Footer />
             </Router>
