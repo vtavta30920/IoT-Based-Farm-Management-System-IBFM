@@ -18,25 +18,48 @@ const statusMap = {
 const CurrentUserOrderList = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const [expandedIndex, setExpandedIndex] = useState(null); // toggle chi tiết
+  const [selectedStatus, setSelectedStatus] = useState(""); // Trạng thái lọc
   const pageSize = 5;
 
   const { token } = useContext(UserContext);
   const { data, isLoading, isError } = useGetCurrentUserOrder(
     pageIndex,
-    pageSize
+    pageSize,
+    token
   );
+
+  // Hàm lọc đơn hàng theo trạng thái
+  const filteredOrders = data?.data.items.filter((order) => {
+    if (selectedStatus) {
+      return statusMap[order.status] === selectedStatus;
+    }
+    return true;
+  });
 
   if (isLoading) {
     return <div className="p-6 bg-white">Loading...</div>;
   }
 
-  if (isError || !data?.data) {
+  if (data?.data == null) {
     return (
-      <div className="p-6 text-red-500 bg-white">Failed to load orders.</div>
+      <div className="p-6 bg-white min-h-screen flex flex-col">
+        <div className="p-6 bg-white flex flex-col items-center text-center">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">
+            Your Order History
+          </h1>
+
+          {/* Icon */}
+          <div className="text-6xl mb-4 text-gray-400">🛒</div>
+
+          <p className="text-xl text-gray-600 font-medium">
+            You have no orders yet!
+          </p>
+        </div>
+      </div>
     );
   }
 
-  const { items, totalPagesCount } = data.data;
+  const { totalPagesCount } = data.data;
 
   const toggleExpand = (index) => {
     setExpandedIndex((prev) => (prev === index ? null : index));
@@ -48,9 +71,29 @@ const CurrentUserOrderList = () => {
         Your Order History
       </h1>
 
+      {/* Dropdown lọc theo trạng thái */}
+      <div className="mb-4 flex justify-end">
+        <div className="flex items-center">
+          <label htmlFor="status" className="mr-2 text-gray-600 font-medium">
+            Filter by Status:
+          </label>
+          <select
+            id="status"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          >
+            <option value="">All</option>
+            <option value="PAID">Paid</option>
+            <option value="UNDISCHARGED">Undischarged</option>
+            <option value="PENDING">Pending</option>
+          </select>
+        </div>
+      </div>
+
       {/* Danh sách order - fixed height */}
       <div className="flex-1 overflow-y-auto space-y-4">
-        {items.map((order, index) => {
+        {filteredOrders.map((order, index) => {
           const status = statusMap[order.status];
           const bgColor =
             status === "PAID"

@@ -1,8 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { UserContext } from "../../contexts/UserContext";
-import { getUserByEmail, useGetAllAccount } from "../../api/AccountEndPoint";
-import { updateStatus } from "../../api/AccountEndPoint";
-import { useEffect } from "react";
+import {
+  getUserByEmail,
+  useGetAllAccount,
+  updateStatus,
+} from "../../api/AccountEndPoint";
 import { useNavigate } from "react-router-dom";
 
 const AdminLayout = () => {
@@ -14,12 +16,18 @@ const AdminLayout = () => {
   const [searchEmail, setSearchEmail] = useState("");
   const [searchResult, setSearchResult] = useState(null);
 
-  const queryGetAllAccount = useGetAllAccount(currentPage, pageSize);
+  const [roleFilter, setRoleFilter] = useState(""); // New state for role filter
+  const [statusFilter, setStatusFilter] = useState(""); // New state for status filter
 
+  const queryGetAllAccount = useGetAllAccount(currentPage, pageSize);
   const data = queryGetAllAccount.data;
   const users = data?.items;
   const totalPages = data?.totalPagesCount || 1;
   const navigate = useNavigate();
+
+  // Modal states
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const handleViewDetail = (user) => {
     navigate(`/admin/users/detail`, { state: { user } });
@@ -45,41 +53,48 @@ const AdminLayout = () => {
 
     try {
       const result = await getUserByEmail(searchEmail.trim());
-      console.log("Search result:", result);
-
       if (!result || Object.keys(result).length === 0) {
         setSearchResult([]);
       } else {
         setSearchResult(Array.isArray(result) ? result : [result]);
       }
     } catch (error) {
-      console.error(
-        "Search failed:",
-        error?.response || error?.message || error
-      );
+      console.error("Search failed:", error);
       setSearchResult([]);
     }
   };
 
-  const handleStatusChange = async (userId, currentStatus) => {
+  const handleStatusChange = (userId, currentStatus) => {
     const newStatus = currentStatus === "ACTIVE" ? "BANNED" : "ACTIVE"; // Toggle logic
+    setSelectedUser({ userId, currentStatus, newStatus });
+    setShowStatusModal(true);
+  };
 
-    const isConfirmed = window.confirm(
-      `Are you sure you want to change the status to ${newStatus}?`
-    );
-
-    if (isConfirmed) {
-      try {
-        await updateStatus(userId); // Cập nhật trạng thái người dùng
-        await queryGetAllAccount.refetch(); // Làm mới danh sách người dùng sau khi thay đổi
-        console.log(`User status updated to: ${newStatus}`);
-      } catch (error) {
-        console.error("Failed to update status:", error);
-      }
-    } else {
-      console.log("Status change was canceled.");
+  const confirmStatusChange = async () => {
+    const { userId, newStatus } = selectedUser;
+    try {
+      await updateStatus(userId); // Update the user status
+      await queryGetAllAccount.refetch(); // Refresh the user list
+      console.log(`User status updated to: ${newStatus}`);
+      setShowStatusModal(false); // Close the modal
+    } catch (error) {
+      console.error("Failed to update status:", error);
     }
   };
+
+  const handleCloseModal = () => {
+    setShowStatusModal(false);
+    setSelectedUser(null);
+  };
+
+  // Filter function to apply filters based on role and status
+  const filteredUsers = (searchResult !== null ? searchResult : users)?.filter(
+    (user) => {
+      const roleMatch = roleFilter ? user.role === roleFilter : true;
+      const statusMatch = statusFilter ? user.status === statusFilter : true;
+      return roleMatch && statusMatch;
+    }
+  );
 
   useEffect(() => {
     if (searchEmail.trim() === "") {
@@ -117,6 +132,29 @@ const AdminLayout = () => {
               </button>
             </div>
 
+            {/* Filter group for Role and Status */}
+            <div className="flex items-center space-x-4">
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">All Role</option>
+                <option value="Customer">Customer</option>
+                <option value="Manager">Manager</option>
+                <option value="Staff">Staff</option>
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">All Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="BANNED">Banned</option>
+              </select>
+            </div>
+
             {/* Phần: Create Account button */}
             <button
               onClick={() => navigate("/admin/users/create")}
@@ -140,53 +178,48 @@ const AdminLayout = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {(searchResult !== null ? searchResult : users)?.map(
-                  (user, index) => (
-                    <tr
-                      key={index}
-                      className={`hover:bg-gray-50 relative ${
-                        index % 2 === 0 ? "bg-gray-100" : "bg-white"
-                      }`}
-                    >
-                      <td className="px-6 py-4 text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 font-medium text-gray-900">
-                        {user.accountProfile?.fullname || user.username}
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          className={`px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800`}
-                        >
-                          {user.role}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={
-                            () =>
-                              handleStatusChange(user?.accountId, user.status) // Truyền đúng userId và status
-                          }
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            user.status === "ACTIVE"
-                              ? "bg-green-100 text-green-800"
-                              : user.status === "BANNED"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {user.status}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleViewDetail(user)}
-                          className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600"
-                        >
-                          Detail
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                )}
+                {filteredUsers?.map((user, index) => (
+                  <tr
+                    key={index}
+                    className={`hover:bg-gray-50 relative ${
+                      index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                    }`}
+                  >
+                    <td className="px-6 py-4 text-gray-600">{user.email}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">
+                      {user.accountProfile?.fullname || user.username}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                        {user.role}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() =>
+                          handleStatusChange(user?.accountId, user.status)
+                        }
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          user.status === "ACTIVE"
+                            ? "bg-green-100 text-green-800"
+                            : user.status === "BANNED"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {user.status}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => handleViewDetail(user)}
+                        className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                      >
+                        Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -206,9 +239,7 @@ const AdminLayout = () => {
               key={i + 1}
               onClick={() => handlePageClick(i + 1)}
               className={`px-3 py-1 border rounded-md ${
-                currentPage === i + 1
-                  ? "bg-blue-500 text-white"
-                  : "border-gray-300 hover:bg-gray-100"
+                i + 1 === currentPage ? "bg-green-500 text-white" : "bg-white"
               }`}
             >
               {i + 1}
@@ -224,6 +255,31 @@ const AdminLayout = () => {
           </button>
         </div>
       </div>
+
+      {/* Status Change Modal */}
+      {showStatusModal && selectedUser && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
+          <div className="bg-white p-8 rounded-md w-96 shadow-lg">
+            <h3 className="text-lg font-semibold text-center mb-4">
+              Are you sure you want to change the status of this user?
+            </h3>
+            <div className="flex justify-around space-x-4">
+              <button
+                onClick={confirmStatusChange}
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

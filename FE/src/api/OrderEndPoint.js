@@ -17,14 +17,16 @@ const GetCurrentUserOrders = async (pageIndex, pageSize, token) => {
 };
 
 export const useGetCurrentUserOrder = (pageIndex, pageSize) => {
-  const { token } = useContext(UserContext); // lấy token bên trong custom hook
+  const { token } = useContext(UserContext);
 
   return useQuery({
-    queryKey: ['v1/Order/order-list-by-current-account', { pageIndex, pageSize }],
+    queryKey: ['v1/Order/order-list-by-current-account', { pageIndex, pageSize, token }], // ✅ token được đưa vào queryKey
     queryFn: () => GetCurrentUserOrders(pageIndex, pageSize, token),
-    enabled: !!token, // chỉ gọi khi có token
+    enabled: !!token,
+    keepPreviousData: false,
   });
 };
+
 
 // Hàm API order list 
 const GetAllOrders = async (pageIndex, pageSize) => {
