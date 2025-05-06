@@ -4,7 +4,6 @@ import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext'; // đường dẫn context
 
 // Hàm API order list theo current user
-// Thêm status làm tham số
 const GetCurrentUserOrders = async (pageIndex, pageSize, token, status) => {
   const statusParam = status ? `&status=${status}` : "";
   const { data } = await axios.get(
@@ -34,16 +33,17 @@ export const useGetCurrentUserOrder = (pageIndex, pageSize, status) => {
 
 
 // Hàm API order list 
-const GetAllOrders = async (pageIndex, pageSize) => {
-    const { data } = await axios.get(
-      `https://localhost:7067/api/v1/Order/order-list?pageIndex=${pageIndex}&pageSize=${pageSize}`
-    );
-    return data;
-  };
-  
-  export const useGetAllOrder = (pageIndex, pageSize) => {
-    return useQuery({
-      queryKey: ['v1/Order/order-list', { pageIndex, pageSize }],
-      queryFn: () => GetAllOrders(pageIndex, pageSize),
-    });
-  };
+const GetAllOrders = async (pageIndex, pageSize, status) => {
+  const statusParam = status !== undefined && status !== null ? `&status=${status}` : "";
+  const { data } = await axios.get(
+    `https://localhost:7067/api/v1/Order/order-list?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`
+  );
+  return data;
+};
+
+export const useGetAllOrder = (pageIndex, pageSize, status) => {
+  return useQuery({
+    queryKey: ['v1/Order/order-list', { pageIndex, pageSize, status }],
+    queryFn: () => GetAllOrders(pageIndex, pageSize, status),
+  });
+};

@@ -17,11 +17,16 @@ const statusMap = {
 
 const OrdersManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
-  const [expandedIndex, setExpandedIndex] = useState(null); // toggle chi tiết
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(""); // Filter cho trạng thái đơn hàng
   const pageSize = 5;
 
   const { token } = useContext(UserContext);
-  const { data, isLoading, isError } = useGetAllOrder(pageIndex, pageSize);
+  const { data, isLoading, isError } = useGetAllOrder(
+    pageIndex,
+    pageSize,
+    statusFilter // Truyền statusFilter vào API
+  );
 
   if (isLoading) {
     return <div className="p-6 bg-white">Loading...</div>;
@@ -39,13 +44,38 @@ const OrdersManagement = () => {
     setExpandedIndex((prev) => (prev === index ? null : index));
   };
 
+  const handleStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPageIndex(1); // reset về trang đầu khi filter
+  };
+
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
       <h1 className="text-3xl font-bold text-center text-green-600 mb-6">
         Order Management
       </h1>
 
-      {/* Danh sách order - fixed height */}
+      {/* Dropdown lọc theo trạng thái */}
+      <div className="mb-4 flex justify-end">
+        <div className="flex items-center">
+          <label htmlFor="status" className="mr-2 text-gray-600 font-medium">
+            Sort by Status:
+          </label>
+          <select
+            id="status"
+            value={statusFilter} // Đảm bảo sử dụng statusFilter
+            onChange={handleStatusChange} // Gọi hàm xử lý khi thay đổi filter
+            className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          >
+            <option value="">All</option>
+            <option value="PAID">Paid</option>
+            <option value="UNDISCHARGED">Undischarged</option>
+            <option value="PENDING">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Danh sách đơn hàng */}
       <div className="flex-1 overflow-y-auto space-y-4">
         {items.map((order, index) => {
           const status = statusMap[order.status];
@@ -61,7 +91,7 @@ const OrdersManagement = () => {
               key={index}
               className={`border rounded-md shadow-sm ${bgColor}`}
             >
-              {/* Bảng tổng quát - click để toggle */}
+              {/* Table tổng quát */}
               <div
                 className="cursor-pointer hover:bg-opacity-50"
                 onClick={() => toggleExpand(index)}
@@ -69,21 +99,15 @@ const OrdersManagement = () => {
                 <table className="w-full table-fixed border border-gray-300 text-sm mb-2">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
+                      <th className="p-2 border-r w-1/6 text-center">
                         Customer
                       </th>
-                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
+                      <th className="p-2 border-r w-1/6 text-center">
                         Order Date
                       </th>
-                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
-                        Total
-                      </th>
-                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
-                        Status
-                      </th>
-                      <th className="p-2 border-r border-gray-300 text-center">
-                        Address
-                      </th>
+                      <th className="p-2 border-r w-1/6 text-center">Total</th>
+                      <th className="p-2 border-r w-1/6 text-center">Status</th>
+                      <th className="p-2 text-center">Address</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -122,20 +146,16 @@ const OrdersManagement = () => {
               {expandedIndex === index && (
                 <div className="px-4 py-2 bg-white rounded-b-md">
                   <h2 className="font-semibold text-sm mb-2">Order Details</h2>
-
-                  {/* Header chi tiết */}
                   <div className="grid grid-cols-3 font-semibold text-gray-700 border-b border-gray-300 pb-1 text-sm text-center">
                     <span>Product Name</span>
                     <span>Price</span>
                     <span>Quantity</span>
                   </div>
-
-                  {/* Items */}
                   <ul className="space-y-1 text-sm">
                     {order.orderItems.map((item, i) => (
                       <li
                         key={i}
-                        className="grid grid-cols-3 justify-between border-b border-gray-200 pb-1 text-center"
+                        className="grid grid-cols-3 border-b border-gray-200 pb-1 text-center"
                       >
                         <span>{item.productName}</span>
                         <span>{formatCurrency(item.price)}</span>
