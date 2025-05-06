@@ -8,8 +8,6 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const AdminLayout = () => {
-  const { user } = useContext(UserContext);
-
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
@@ -19,7 +17,12 @@ const AdminLayout = () => {
   const [roleFilter, setRoleFilter] = useState(""); // New state for role filter
   const [statusFilter, setStatusFilter] = useState(""); // New state for status filter
 
-  const queryGetAllAccount = useGetAllAccount(currentPage, pageSize);
+  const queryGetAllAccount = useGetAllAccount(
+    currentPage,
+    pageSize,
+    roleFilter,
+    statusFilter
+  );
   const data = queryGetAllAccount.data;
   const users = data?.items;
   const totalPages = data?.totalPagesCount || 1;
@@ -87,14 +90,11 @@ const AdminLayout = () => {
     setSelectedUser(null);
   };
 
-  // Filter function to apply filters based on role and status
-  const filteredUsers = (searchResult !== null ? searchResult : users)?.filter(
-    (user) => {
-      const roleMatch = roleFilter ? user.role === roleFilter : true;
-      const statusMatch = statusFilter ? user.status === statusFilter : true;
-      return roleMatch && statusMatch;
-    }
-  );
+  const filteredUsers = searchResult !== null ? searchResult : users;
+
+  useEffect(() => {
+    queryGetAllAccount.refetch();
+  }, [roleFilter, statusFilter, currentPage]);
 
   useEffect(() => {
     if (searchEmail.trim() === "") {
@@ -134,6 +134,12 @@ const AdminLayout = () => {
 
             {/* Filter group for Role and Status */}
             <div className="flex items-center space-x-4">
+              <label
+                htmlFor="status"
+                className="mr-2 text-gray-600 font-medium"
+              >
+                Sort by:
+              </label>
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
