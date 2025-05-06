@@ -4,9 +4,11 @@ import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext'; // đường dẫn context
 
 // Hàm API order list theo current user
-const GetCurrentUserOrders = async (pageIndex, pageSize, token) => {
+// Thêm status làm tham số
+const GetCurrentUserOrders = async (pageIndex, pageSize, token, status) => {
+  const statusParam = status ? `&status=${status}` : "";
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/Order/order-list-by-current-account?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    `https://localhost:7067/api/v1/Order/order-list-by-current-account?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -16,12 +18,15 @@ const GetCurrentUserOrders = async (pageIndex, pageSize, token) => {
   return data;
 };
 
-export const useGetCurrentUserOrder = (pageIndex, pageSize) => {
+export const useGetCurrentUserOrder = (pageIndex, pageSize, status) => {
   const { token } = useContext(UserContext);
 
   return useQuery({
-    queryKey: ['v1/Order/order-list-by-current-account', { pageIndex, pageSize, token }], // ✅ token được đưa vào queryKey
-    queryFn: () => GetCurrentUserOrders(pageIndex, pageSize, token),
+    queryKey: [
+      "v1/Order/order-list-by-current-account",
+      { pageIndex, pageSize, status, token },
+    ],
+    queryFn: () => GetCurrentUserOrders(pageIndex, pageSize, token, status),
     enabled: !!token,
     keepPreviousData: false,
   });

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { useGetCurrentUserOrder } from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
 
@@ -17,40 +17,35 @@ const statusMap = {
 
 const CurrentUserOrderList = () => {
   const [pageIndex, setPageIndex] = useState(1);
-  const [expandedIndex, setExpandedIndex] = useState(null); // toggle chi tiết
-  const [selectedStatus, setSelectedStatus] = useState(""); // Trạng thái lọc
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(""); // trạng thái lọc
   const pageSize = 5;
 
-  const { token } = useContext(UserContext);
-  const { data, isLoading, isError } = useGetCurrentUserOrder(
+  const { data, isLoading } = useGetCurrentUserOrder(
     pageIndex,
     pageSize,
-    token
+    selectedStatus
   );
 
-  // Hàm lọc đơn hàng theo trạng thái
-  const filteredOrders = data?.data.items.filter((order) => {
-    if (selectedStatus) {
-      return statusMap[order.status] === selectedStatus;
-    }
-    return true;
-  });
+  const orders = data?.data.items ?? [];
+  const totalPagesCount = data?.data.totalPagesCount ?? 1;
+
+  const toggleExpand = (index) => {
+    setExpandedIndex((prev) => (prev === index ? null : index));
+  };
 
   if (isLoading) {
     return <div className="p-6 bg-white">Loading...</div>;
   }
 
-  if (data?.data == null) {
+  if (!orders.length) {
     return (
       <div className="p-6 bg-white min-h-screen flex flex-col">
         <div className="p-6 bg-white flex flex-col items-center text-center">
           <h1 className="text-3xl font-bold text-gray-800 mb-4">
             Your Order History
           </h1>
-
-          {/* Icon */}
           <div className="text-6xl mb-4 text-gray-400">🛒</div>
-
           <p className="text-xl text-gray-600 font-medium">
             You have no orders yet!
           </p>
@@ -58,12 +53,6 @@ const CurrentUserOrderList = () => {
       </div>
     );
   }
-
-  const { totalPagesCount } = data.data;
-
-  const toggleExpand = (index) => {
-    setExpandedIndex((prev) => (prev === index ? null : index));
-  };
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
@@ -75,12 +64,15 @@ const CurrentUserOrderList = () => {
       <div className="mb-4 flex justify-end">
         <div className="flex items-center">
           <label htmlFor="status" className="mr-2 text-gray-600 font-medium">
-            Filter by Status:
+            Sort by Status:
           </label>
           <select
             id="status"
             value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
+            onChange={(e) => {
+              setSelectedStatus(e.target.value);
+              setPageIndex(1); // Reset về trang đầu khi lọc
+            }}
             className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
             <option value="">All</option>
@@ -91,9 +83,9 @@ const CurrentUserOrderList = () => {
         </div>
       </div>
 
-      {/* Danh sách order - fixed height */}
+      {/* Danh sách đơn hàng */}
       <div className="flex-1 overflow-y-auto space-y-4">
-        {filteredOrders.map((order, index) => {
+        {orders.map((order, index) => {
           const status = statusMap[order.status];
           const bgColor =
             status === "PAID"
@@ -107,7 +99,6 @@ const CurrentUserOrderList = () => {
               key={index}
               className={`border rounded-md shadow-sm ${bgColor}`}
             >
-              {/* Bảng tổng quát - click để toggle */}
               <div
                 className="cursor-pointer hover:bg-opacity-50"
                 onClick={() => toggleExpand(index)}
@@ -162,15 +153,11 @@ const CurrentUserOrderList = () => {
               {expandedIndex === index && (
                 <div className="px-4 py-2 bg-white rounded-b-md">
                   <h2 className="font-semibold text-sm mb-2">Order Details</h2>
-
-                  {/* Header chi tiết */}
                   <div className="grid grid-cols-3 font-semibold text-gray-700 border-b border-gray-300 pb-1 text-sm text-center">
                     <span>Product Name</span>
                     <span>Price</span>
                     <span>Quantity</span>
                   </div>
-
-                  {/* Items */}
                   <ul className="space-y-1 text-sm">
                     {order.orderItems.map((item, i) => (
                       <li
