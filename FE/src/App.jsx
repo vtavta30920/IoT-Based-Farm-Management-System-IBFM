@@ -94,15 +94,16 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/order-failed" element={<OrderFailed />} />
+                <Route path="/vnpay-callback" element={<VnPayCallback />} />
 
                 {/* Customer Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/order-success" element={<OrderSuccess />} />
-                  <Route path="/order-failed" element={<OrderFailed />} />
-                  <Route path="/vnpay-callback" element={<VnPayCallback />} />
+
                   <Route path="/myOrders" element={<CurrentUserOrderList />} />
                 </Route>
 
