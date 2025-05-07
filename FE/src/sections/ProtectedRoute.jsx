@@ -7,7 +7,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   const storedRole = localStorage.getItem("role");
 
   if (!user || !storedRole) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (!allowedRoles.includes(storedRole)) {
