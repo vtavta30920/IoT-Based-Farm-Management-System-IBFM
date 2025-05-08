@@ -1,5 +1,11 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { UserProvider } from "./contexts/UserContext.jsx";
 import { CartProvider } from "./contexts/CartContext.jsx";
 import { SidebarProvider } from "./SidebarToggle.jsx";
@@ -52,6 +58,10 @@ import ProductsManagement from "./sections/Staff/ProductsManagement.jsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import FarmManagement from "./sections/Manager/FarmManagement.jsx";
+import CropManagement from "./sections/Manager/CropManagement.jsx";
+import Unauthorized from "./sections/Unauthorized.jsx";
+import ProtectedRoute from "./sections/ProtectedRoute.jsx";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -62,12 +72,11 @@ const App = () => {
       <UserProvider>
         <CartProvider>
           <SidebarProvider>
-            {" "}
-            {/* Wrap with SidebarProvider */}
             <Router>
               <Header />
               <ToastContainer />
               <Routes>
+                {/* Public Routes */}
                 <Route
                   path="/"
                   element={
@@ -86,47 +95,84 @@ const App = () => {
                 <Route path="/policy" element={<Policy />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/order-failed" element={<OrderFailed />} />
                 <Route path="/vnpay-callback" element={<VnPayCallback />} />
+                <Route path="/profile" element={<Profile />} />
+
+
+                {/* Customer Protected Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/myOrders" element={<CurrentUserOrderList />} />
 
                 {/* Staff Routes */}
-                <Route path="/staff/*" element={<StaffLayout />}>
-                  <Route index element={<IotDevices />} />
-                  <Route path="iot-devices" element={<IotDevices />} />
-                  <Route path="iot-devices/:id" element={<DeviceDetails />} />
-                  <Route path="farming-tasks" element={<FarmingTasks />} />
-                  <Route path="farming-tasks/:id" element={<TaskDetails />} />
-                  <Route path="quality-control" element={<QualityControl />} />
-                  <Route path="logistics" element={<Logistics />} />
-                  <Route path="OrderManagement" element={<OrderManagement />} />
+//                 <Route path="/staff/*" element={<StaffLayout />}>
+//                   <Route index element={<IotDevices />} />
+//                   <Route path="iot-devices" element={<IotDevices />} />
+//                   <Route path="iot-devices/:id" element={<DeviceDetails />} />
+//                   <Route path="farming-tasks" element={<FarmingTasks />} />
+//                   <Route path="farming-tasks/:id" element={<TaskDetails />} />
+//                   <Route path="quality-control" element={<QualityControl />} />
+//                   <Route path="logistics" element={<Logistics />} />
+//                   <Route path="OrderManagement" element={<OrderManagement />} />
+//                   <Route
+//                     path="ProductsManagement"
+//                     element={<ProductsManagement />}
+//                   />
+// >>>>>>> main
+//                 </Route>
+
+                {/* Staff Protected Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
+                  <Route path="/staff/*" element={<StaffLayout />}>
+                    <Route index element={<IotDevices />} />
+                    <Route path="iot-devices" element={<IotDevices />} />
+                    <Route path="iot-devices/:id" element={<DeviceDetails />} />
+                    <Route path="farming-tasks" element={<FarmingTasks />} />
+                    <Route path="farming-tasks/:id" element={<TaskDetails />} />
+                    <Route
+                      path="quality-control"
+                      element={<QualityControl />}
+                    />
+                    <Route path="logistics" element={<Logistics />} />
+                    <Route path="OrderManagement" element={<OrderManagement />} />
+                  </Route>
+                </Route>
+
+                {/* Manager Protected Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["Manager"]} />}>
+                  <Route path="/manager/*" element={<ManagerLayout />}>
+                    <Route index element={<FarmingSchedules />} />
+                    <Route
+                      path="farming-schedules"
+                      element={<FarmingSchedules />}
+                    />
+                    <Route path="iot-monitoring" element={<IotMonitoring />} />
+                    <Route path="inventory" element={<InventoryManagement />} />
+                    <Route path="reports" element={<Reports />} />
+                    <Route path="farms" element={<FarmManagement />} />
+                    <Route path="crops" element={<CropManagement />} />
+                  </Route>
+                </Route>
+
+                {/* Admin Protected Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
+                  <Route path="/admin/*" element={<AdminLayout />} />
                   <Route
-                    path="ProductsManagement"
-                    element={<ProductsManagement />}
+                    path="/admin/users/detail"
+                    element={<AccountDetail />}
+                  />
+                  <Route
+                    path="/admin/users/create"
+                    element={<CreateAccount />}
                   />
                 </Route>
 
-                {/* Manager Routes */}
-                <Route path="/manager/*" element={<ManagerLayout />}>
-                  <Route index element={<FarmingSchedules />} />
-                  <Route
-                    path="farming-schedules"
-                    element={<FarmingSchedules />}
-                  />
-                  <Route path="iot-monitoring" element={<IotMonitoring />} />
-                  <Route path="inventory" element={<InventoryManagement />} />
-                  <Route path="reports" element={<Reports />} />
-                </Route>
-
-                <Route path="/admin/users/detail" element={<AccountDetail />} />
-                <Route path="/admin/users/create" element={<CreateAccount />} />
-
-                <Route path="/myOrders" element={<CurrentUserOrderList />} />
-
-                <Route path="/admin/*" element={<AdminLayout />} />
+                {/* Fallback route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <Footer />
             </Router>

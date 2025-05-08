@@ -6,12 +6,18 @@ import {
   createSchedule,
   updateSchedule,
   updateScheduleStatus,
-  getStaffAccounts, // Import the staff accounts function
+  getStaffAccounts,
+  getAllFarms,
+  getAllFarmActivities,
+  getAllCrops,
 } from "../../api/api";
 
 const FarmingSchedules = () => {
   const [schedules, setSchedules] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [farms, setFarms] = useState([]); // New state for farms
+  const [farmActivities, setFarmActivities] = useState([]); // New state for farm activities
+  const [crops, setCrops] = useState([]); // New state for crops
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
@@ -20,8 +26,8 @@ const FarmingSchedules = () => {
     totalPages: 0,
     totalItems: 0,
   });
-  const [searchTerm, setSearchTerm] = useState(""); // Added for filtering
-  const [statusFilter, setStatusFilter] = useState(""); // Added for status filtering
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const statusOptions = ["ACTIVE", "DEACTIVATED"];
   const [formData, setFormData] = useState({
     startDate: "",
@@ -37,11 +43,41 @@ const FarmingSchedules = () => {
   const [currentSchedule, setCurrentSchedule] = useState(null);
 
   const token = localStorage.getItem("token");
-
   useEffect(() => {
     fetchSchedules();
     fetchStaffAccounts();
+    fetchFarms();
+    fetchFarmActivities();
+    fetchCrops();
   }, [pagination.pageIndex, pagination.pageSize, statusFilter]);
+
+  // Fetch all necessary data
+  const fetchFarms = async () => {
+    try {
+      const response = await getAllFarms(token);
+      setFarms(response);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const fetchFarmActivities = async () => {
+    try {
+      const response = await getAllFarmActivities(token);
+      setFarmActivities(response);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const fetchCrops = async () => {
+    try {
+      const response = await getAllCrops(token);
+      setCrops(response);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   // Fetch staff accounts
   const fetchSchedules = async () => {
@@ -491,42 +527,63 @@ const FarmingSchedules = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
-                    Farm Activity ID
+                    Farm Activity
                   </label>
-                  <input
-                    type="number"
+                  <select
                     name="farmActivityId"
                     value={formData.farmActivityId}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Farm Activity</option>
+                    {farmActivities.map((activity) => (
+                      <option
+                        key={activity.farmActivitiesId}
+                        value={activity.farmActivitiesId}
+                      >
+                        {activity.activityType} (
+                        {formatDateForDisplay(activity.startDate)} -{" "}
+                        {formatDateForDisplay(activity.endDate)})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Farm Details ID
-                  </label>
-                  <input
-                    type="number"
+                  <label className="block text-sm font-medium mb-1">Farm</label>
+                  <select
                     name="farmDetailsId"
                     value={formData.farmDetailsId}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Farm</option>
+                    {farms.map((farm) => (
+                      <option key={farm.farmId} value={farm.farmId}>
+                        {farm.farmName} ({farm.location})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Crop ID
-                  </label>
-                  <input
-                    type="number"
+                  <label className="block text-sm font-medium mb-1">Crop</label>
+                  <select
                     name="cropId"
                     value={formData.cropId}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Crop</option>
+                    {crops.map((crop) => (
+                      <option key={crop.cropId} value={crop.cropId}>
+                        {crop.cropName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="flex justify-end space-x-3 mt-6">
@@ -609,42 +666,63 @@ const FarmingSchedules = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
-                    Farm Activity ID
+                    Farm Activity
                   </label>
-                  <input
-                    type="number"
+                  <select
                     name="farmActivityId"
                     value={formData.farmActivityId}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Farm Activity</option>
+                    {farmActivities.map((activity) => (
+                      <option
+                        key={activity.farmActivitiesId}
+                        value={activity.farmActivitiesId}
+                      >
+                        {activity.activityType} (
+                        {formatDateForDisplay(activity.startDate)} -{" "}
+                        {formatDateForDisplay(activity.endDate)})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Farm Details ID
-                  </label>
-                  <input
-                    type="number"
+                  <label className="block text-sm font-medium mb-1">Farm</label>
+                  <select
                     name="farmDetailsId"
                     value={formData.farmDetailsId}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Farm</option>
+                    {farms.map((farm) => (
+                      <option key={farm.farmId} value={farm.farmId}>
+                        {farm.farmName} ({farm.location})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Crop ID
-                  </label>
-                  <input
-                    type="number"
+                  <label className="block text-sm font-medium mb-1">Crop</label>
+                  <select
                     name="cropId"
                     value={formData.cropId}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required
-                  />
+                  >
+                    <option value="">Select Crop</option>
+                    {crops.map((crop) => (
+                      <option key={crop.cropId} value={crop.cropId}>
+                        {crop.cropName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="flex justify-end space-x-2 mt-4">
