@@ -101,7 +101,6 @@ const App = () => {
                 <Route path="/vnpay-callback" element={<VnPayCallback />} />
                 <Route path="/profile" element={<Profile />} />
 
-
                 {/* Customer Protected Routes */}
                 {/* Customer Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
@@ -137,7 +136,10 @@ const App = () => {
                       element={<QualityControl />}
                     />
                     <Route path="logistics" element={<Logistics />} />
-                    <Route path="OrderManagement" element={<OrderManagement />} />
+                    <Route
+                      path="OrderManagement"
+                      element={<OrderManagement />}
+                    />
                   </Route>
                 </Route>
 
