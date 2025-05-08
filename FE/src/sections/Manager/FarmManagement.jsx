@@ -1,30 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAllFarms } from "../../api/api";
 
 const FarmManagement = () => {
-  const [farms, setFarms] = useState([
-    {
-      id: 1,
-      name: "Main Farm",
-      location: "Hanoi",
-      size: "10 hectares",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Northern Farm",
-      location: "Haiphong",
-      size: "5 hectares",
-      status: "Active",
-    },
-  ]);
+  const [farms, setFarms] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentFarm, setCurrentFarm] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleDelete = (id) => {
+  useEffect(() => {
+    const fetchFarms = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const data = await getAllFarms(token);
+        setFarms(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFarms();
+  }, []);
+
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this farm?")) {
-      setFarms(farms.filter((farm) => farm.id !== id));
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/farm/delete/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete farm");
+        }
+
+        setFarms(farms.filter((farm) => farm.farmId !== id));
+      } catch (err) {
+        setError(err.message);
+      }
     }
   };
 
@@ -33,30 +54,58 @@ const FarmManagement = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const farmData = Object.fromEntries(formData);
 
-    if (currentFarm) {
-      // Update existing farm
-      setFarms(
-        farms.map((farm) =>
-          farm.id === currentFarm.id ? { ...farm, ...farmData } : farm
-        )
-      );
-    } else {
-      // Add new farm
-      const newFarm = {
-        id: farms.length + 1,
-        ...farmData,
-        status: "Active",
-      };
-      setFarms([...farms, newFarm]);
+    try {
+      const token = localStorage.getItem("token");
+      let response;
+
+      if (currentFarm) {
+        // Update existing farm
+        response = await fetch(
+          `${API_BASE_URL}/farm/update/${currentFarm.farmId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(farmData),
+          }
+        );
+      } else {
+        // Add new farm
+        response = await fetch(`${API_BASE_URL}/farm/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(farmData),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          currentFarm ? "Failed to update farm" : "Failed to create farm"
+        );
+      }
+
+      // Refresh farm list
+      const data = await getAllFarms(token);
+      setFarms(data);
+      setIsModalOpen(false);
+      setCurrentFarm(null);
+    } catch (err) {
+      setError(err.message);
     }
-    setIsModalOpen(false);
-    setCurrentFarm(null);
   };
+
+  if (isLoading) return <div>Loading farms...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="p-6">
@@ -84,10 +133,10 @@ const FarmManagement = () => {
                 Location
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Size
+                Created At
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Status
+                Updated At
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Actions
@@ -96,29 +145,20 @@ const FarmManagement = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {farms.map((farm) => (
-              <tr key={farm.id}>
+              <tr key={farm.farmId}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {farm.name}
+                    {farm.farmName}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500">{farm.location}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{farm.size}</div>
+                  <div className="text-sm text-gray-500">{farm.createdAt}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${
-                      farm.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {farm.status}
-                  </span>
+                  <div className="text-sm text-gray-500">{farm.updatedAt}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
@@ -128,7 +168,7 @@ const FarmManagement = () => {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(farm.id)}
+                    onClick={() => handleDelete(farm.farmId)}
                     className="text-red-600 hover:text-red-900"
                   >
                     Delete
@@ -155,8 +195,8 @@ const FarmManagement = () => {
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    defaultValue={currentFarm?.name || ""}
+                    name="farmName"
+                    defaultValue={currentFarm?.farmName || ""}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   />
@@ -169,18 +209,6 @@ const FarmManagement = () => {
                     type="text"
                     name="location"
                     defaultValue={currentFarm?.location || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Size
-                  </label>
-                  <input
-                    type="text"
-                    name="size"
-                    defaultValue={currentFarm?.size || ""}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   />
