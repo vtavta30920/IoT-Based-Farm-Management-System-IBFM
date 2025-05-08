@@ -3,10 +3,11 @@ import axios from 'axios';
 import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext'; // đường dẫn context
 
-// Hàm API gọi dữ liệu đơn giản
-const GetCurrentUserOrders = async (pageIndex, pageSize, token) => {
+// Hàm API order list theo current user
+const GetCurrentUserOrders = async (pageIndex, pageSize, token, status) => {
+  const statusParam = status ? `&status=${status}` : "";
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/Order/order-list-by-current-account?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    `https://localhost:7067/api/v1/Order/order-list-by-current-account?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -16,13 +17,33 @@ const GetCurrentUserOrders = async (pageIndex, pageSize, token) => {
   return data;
 };
 
-// Custom hook giống cũ: chỉ truyền pageIndex, pageSize
-export const useGetAllAccount = (pageIndex, pageSize) => {
-  const { token } = useContext(UserContext); // lấy token bên trong custom hook
+export const useGetCurrentUserOrder = (pageIndex, pageSize, status) => {
+  const { token } = useContext(UserContext);
 
   return useQuery({
-    queryKey: ['v1/Order/order-list-by-current-account', { pageIndex, pageSize }],
-    queryFn: () => GetCurrentUserOrders(pageIndex, pageSize, token),
-    enabled: !!token, // chỉ gọi khi có token
+    queryKey: [
+      "v1/Order/order-list-by-current-account",
+      { pageIndex, pageSize, status, token },
+    ],
+    queryFn: () => GetCurrentUserOrders(pageIndex, pageSize, token, status),
+    enabled: !!token,
+    keepPreviousData: false,
+  });
+};
+
+
+// Hàm API order list 
+const GetAllOrders = async (pageIndex, pageSize, status) => {
+  const statusParam = status !== undefined && status !== null ? `&status=${status}` : "";
+  const { data } = await axios.get(
+    `https://localhost:7067/api/v1/Order/order-list?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`
+  );
+  return data;
+};
+
+export const useGetAllOrder = (pageIndex, pageSize, status) => {
+  return useQuery({
+    queryKey: ['v1/Order/order-list', { pageIndex, pageSize, status }],
+    queryFn: () => GetAllOrders(pageIndex, pageSize, status),
   });
 };

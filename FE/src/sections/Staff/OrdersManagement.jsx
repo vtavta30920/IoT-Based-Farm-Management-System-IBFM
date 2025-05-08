@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useGetCurrentUserOrder } from "../../api/OrderEndPoint";
+import React, { useState, useContext } from "react";
+import { useGetAllOrder } from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
 
 const formatCurrency = (value) => {
@@ -15,49 +15,44 @@ const statusMap = {
   6: "PENDING",
 };
 
-const CurrentUserOrderList = () => {
+const OrdersManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState(""); // trạng thái lọc
+  const [statusFilter, setStatusFilter] = useState(""); // Filter cho trạng thái đơn hàng
   const pageSize = 5;
 
-  const { data, isLoading } = useGetCurrentUserOrder(
+  const { token } = useContext(UserContext);
+  const { data, isLoading, isError } = useGetAllOrder(
     pageIndex,
     pageSize,
-    selectedStatus
+    statusFilter // Truyền statusFilter vào API
   );
-
-  const orders = data?.data.items ?? [];
-  const totalPagesCount = data?.data.totalPagesCount ?? 1;
-
-  const toggleExpand = (index) => {
-    setExpandedIndex((prev) => (prev === index ? null : index));
-  };
 
   if (isLoading) {
     return <div className="p-6 bg-white">Loading...</div>;
   }
 
-  if (!orders.length) {
+  if (isError || !data?.data) {
     return (
-      <div className="p-6 bg-white min-h-screen flex flex-col">
-        <div className="p-6 bg-white flex flex-col items-center text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">
-            Your Order History
-          </h1>
-          <div className="text-6xl mb-4 text-gray-400">🛒</div>
-          <p className="text-xl text-gray-600 font-medium">
-            You have no orders yet!
-          </p>
-        </div>
-      </div>
+      <div className="p-6 text-red-500 bg-white">Failed to load orders.</div>
     );
   }
 
+  const { items, totalPagesCount } = data.data;
+
+  const toggleExpand = (index) => {
+    setExpandedIndex((prev) => (prev === index ? null : index));
+  };
+
+  const handleStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPageIndex(1); // reset về trang đầu khi filter
+  };
+
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-        Your Order History
+      <h1 className="text-3xl font-bold text-center text-green-600 mb-6">
+        Order Management
       </h1>
 
       {/* Dropdown lọc theo trạng thái */}
@@ -68,11 +63,8 @@ const CurrentUserOrderList = () => {
           </label>
           <select
             id="status"
-            value={selectedStatus}
-            onChange={(e) => {
-              setSelectedStatus(e.target.value);
-              setPageIndex(1); // Reset về trang đầu khi lọc
-            }}
+            value={statusFilter} // Đảm bảo sử dụng statusFilter
+            onChange={handleStatusChange} // Gọi hàm xử lý khi thay đổi filter
             className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
             <option value="">All</option>
@@ -85,7 +77,7 @@ const CurrentUserOrderList = () => {
 
       {/* Danh sách đơn hàng */}
       <div className="flex-1 overflow-y-auto space-y-4">
-        {orders.map((order, index) => {
+        {items.map((order, index) => {
           const status = statusMap[order.status];
           const bgColor =
             status === "PAID"
@@ -99,6 +91,7 @@ const CurrentUserOrderList = () => {
               key={index}
               className={`border rounded-md shadow-sm ${bgColor}`}
             >
+              {/* Table tổng quát */}
               <div
                 className="cursor-pointer hover:bg-opacity-50"
                 onClick={() => toggleExpand(index)}
@@ -106,22 +99,22 @@ const CurrentUserOrderList = () => {
                 <table className="w-full table-fixed border border-gray-300 text-sm mb-2">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
+                      <th className="p-2 border-r w-1/6 text-center">
+                        Customer
+                      </th>
+                      <th className="p-2 border-r w-1/6 text-center">
                         Order Date
                       </th>
-                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
-                        Total
-                      </th>
-                      <th className="p-2 border-r border-gray-300 w-1/6 text-center">
-                        Status
-                      </th>
-                      <th className="p-2 border-r border-gray-300 text-center">
-                        Address
-                      </th>
+                      <th className="p-2 border-r w-1/6 text-center">Total</th>
+                      <th className="p-2 border-r w-1/6 text-center">Status</th>
+                      <th className="p-2 text-center">Address</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
+                      <td className="p-2 border-t text-center">
+                        {order.email}
+                      </td>
                       <td className="p-2 border-t text-center">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
@@ -162,7 +155,7 @@ const CurrentUserOrderList = () => {
                     {order.orderItems.map((item, i) => (
                       <li
                         key={i}
-                        className="grid grid-cols-3 justify-between border-b border-gray-200 pb-1 text-center"
+                        className="grid grid-cols-3 border-b border-gray-200 pb-1 text-center"
                       >
                         <span>{item.productName}</span>
                         <span>{formatCurrency(item.price)}</span>
@@ -201,4 +194,4 @@ const CurrentUserOrderList = () => {
   );
 };
 
-export default CurrentUserOrderList;
+export default OrdersManagement;

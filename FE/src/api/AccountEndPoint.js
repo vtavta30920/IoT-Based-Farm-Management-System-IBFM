@@ -3,16 +3,25 @@ import axios from 'axios';
 
 //const queryClient = useQueryClient()
 
-// Hàm API get-by-account
-const fetchGetAllAccount = async (pageIndex, pageSize) => {
-  const { data } = await axios.get(`https://localhost:7067/api/v1/account/get-all?pageSize=${pageSize}&pageIndex=${pageIndex}`);
+// Hàm API get-by-account có thêm role và status
+const fetchGetAllAccount = async (pageIndex, pageSize, role, status) => {
+  const params = new URLSearchParams({
+    pageSize: pageSize.toString(),
+    pageIndex: pageIndex.toString(),
+  });
+
+  if (role) params.append("role", role);
+  if (status) params.append("status", status);
+
+  const { data } = await axios.get(`https://localhost:7067/api/v1/account/get-all?${params.toString()}`);
   return data;
 };
 
-export const useGetAllAccount = (pageIndex, pageSize) => {
+// Hook react-query có thêm role và status
+export const useGetAllAccount = (pageIndex, pageSize, role, status) => {
   return useQuery({
-    queryKey: ['v1/account/get-all', { pageIndex, pageSize }],
-    queryFn: () => fetchGetAllAccount(pageIndex, pageSize),
+    queryKey: ['v1/account/get-all', { pageIndex, pageSize, role, status }],
+    queryFn: () => fetchGetAllAccount(pageIndex, pageSize, role, status),
   });
 };
 

@@ -53,6 +53,8 @@ import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
 import TaskDetails from "./sections/Staff/TaskDetails.jsx";
 import QualityControl from "./sections/Staff/QualityControl.jsx";
 import Logistics from "./sections/Staff/Logistics.jsx";
+import OrderManagement from "./sections/Staff/OrdersManagement.jsx";
+import ProductsManagement from "./sections/Staff/ProductsManagement.jsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -99,12 +101,29 @@ const App = () => {
                 <Route path="/vnpay-callback" element={<VnPayCallback />} />
                 <Route path="/profile" element={<Profile />} />
 
+
                 {/* Customer Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/myOrders" element={<CurrentUserOrderList />} />
-                </Route>
+
+                {/* Staff Routes */}
+//                 <Route path="/staff/*" element={<StaffLayout />}>
+//                   <Route index element={<IotDevices />} />
+//                   <Route path="iot-devices" element={<IotDevices />} />
+//                   <Route path="iot-devices/:id" element={<DeviceDetails />} />
+//                   <Route path="farming-tasks" element={<FarmingTasks />} />
+//                   <Route path="farming-tasks/:id" element={<TaskDetails />} />
+//                   <Route path="quality-control" element={<QualityControl />} />
+//                   <Route path="logistics" element={<Logistics />} />
+//                   <Route path="OrderManagement" element={<OrderManagement />} />
+//                   <Route
+//                     path="ProductsManagement"
+//                     element={<ProductsManagement />}
+//                   />
+// >>>>>>> main
+//                 </Route>
 
                 {/* Staff Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
@@ -119,6 +138,7 @@ const App = () => {
                       element={<QualityControl />}
                     />
                     <Route path="logistics" element={<Logistics />} />
+                    <Route path="OrderManagement" element={<OrderManagement />} />
                   </Route>
                 </Route>
 

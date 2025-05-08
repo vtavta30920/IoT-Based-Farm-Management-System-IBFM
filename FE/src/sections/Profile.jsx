@@ -18,6 +18,9 @@ const Profile = () => {
     image: "",
   });
 
+  const [showModal, setShowModal] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -42,7 +45,33 @@ const Profile = () => {
     }));
   };
 
+  const validateForm = () => {
+    if (!formData.fullname.trim()) {
+      setMessage("❌ Fullname is required.");
+      return false;
+    }
+    if (!formData.gender) {
+      setMessage("❌ Please select your gender.");
+      return false;
+    }
+    if (!formData.phone.trim()) {
+      setMessage("❌ Phone number is required.");
+      return false;
+    }
+    if (!/^\d{9,}$/.test(formData.phone)) {
+      setMessage("❌ Phone number must be at least 9 digits.");
+      return false;
+    }
+    if (!formData.address.trim()) {
+      setMessage("❌ Address is required.");
+      return false;
+    }
+    return true;
+  };
+
   const handleUpdate = async () => {
+    if (!validateForm()) return;
+
     const updateData = {
       email: formData.email,
       gender:
@@ -52,16 +81,16 @@ const Profile = () => {
       address: formData.address,
       images: formData.image || "string",
     };
-    console.log(updateData);
+
     try {
       await updateProfile(updateData);
-      setMessage("Cập nhật thành công!");
+      setMessage("✅ Profile updated successfully!");
     } catch (err) {
-      setMessage("Cập nhật thất bại: " + err.message);
+      setMessage("❌ Update failed: " + err.message);
     }
   };
 
-  if (!user) return <div>Vui lòng đăng nhập để xem thông tin cá nhân.</div>;
+  if (!user) return <div>Please log in to view your profile.</div>;
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -83,16 +112,14 @@ const Profile = () => {
                   <img
                     src={formData.image || defaultAvatar}
                     alt="Avatar"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                    onClick={() => setShowModal(true)}
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer hover:opacity-90 transition"
                   />
-
-                  {/* Email hiển thị đẹp */}
                   <div className="px-3 py-1 bg-white text-green-700 rounded-full text-sm font-medium shadow-sm">
                     {formData.email}
                   </div>
                 </div>
 
-                {/* CreatedAt & UpdatedAt */}
                 <div className="border p-4 rounded-lg shadow-md space-y-2">
                   <div className="flex justify-between">
                     <label className="text-gray-600 font-medium">
@@ -116,7 +143,6 @@ const Profile = () => {
               {/* RIGHT: Info Fields */}
               <div className="col-span-2">
                 <div className="space-y-4">
-                  {/* Fullname */}
                   <div className="flex justify-between items-center">
                     <label className="font-semibold text-gray-600 w-1/4">
                       Fullname
@@ -129,7 +155,6 @@ const Profile = () => {
                     />
                   </div>
 
-                  {/* Gender */}
                   <div className="flex justify-between items-center">
                     <label className="font-semibold text-gray-600 w-1/4">
                       Gender
@@ -147,7 +172,6 @@ const Profile = () => {
                     </select>
                   </div>
 
-                  {/* Phone */}
                   <div className="flex justify-between items-center">
                     <label className="font-semibold text-gray-600 w-1/4">
                       Phone
@@ -160,7 +184,6 @@ const Profile = () => {
                     />
                   </div>
 
-                  {/* Address */}
                   <div className="flex justify-between items-center">
                     <label className="font-semibold text-gray-600 w-1/4">
                       Address
@@ -174,7 +197,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Update Button */}
                 <div className="flex justify-end mt-6">
                   <button
                     onClick={handleUpdate}
@@ -184,9 +206,8 @@ const Profile = () => {
                   </button>
                 </div>
 
-                {/* Message hiển thị khi update xong */}
                 {message && (
-                  <div className="mt-4 text-center text-sm text-green-600">
+                  <div className="mt-4 text-center text-sm text-red-500">
                     {message}
                   </div>
                 )}
@@ -194,6 +215,43 @@ const Profile = () => {
             </div>
           </div>
         </main>
+
+        {/* Modal nhập link ảnh */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 shadow-lg w-96">
+              <h3 className="text-lg font-semibold mb-4 text-center">
+                Enter new image URL
+              </h3>
+              <input
+                type="text"
+                placeholder="https://example.com/image.jpg"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                className="w-full border px-3 py-2 rounded-md mb-4"
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, image: newImageUrl }));
+                    setShowModal(false);
+                    setNewImageUrl("");
+                    setMessage("Press Update To Save Image!");
+                  }}
+                  className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
+                >
+                  Set Image
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
