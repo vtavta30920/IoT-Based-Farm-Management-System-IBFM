@@ -101,14 +101,13 @@ const App = () => {
                 <Route path="/vnpay-callback" element={<VnPayCallback />} />
                 <Route path="/profile" element={<Profile />} />
 
-
                 {/* Customer Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/myOrders" element={<CurrentUserOrderList />} />
-
-                {/* Staff Routes */}
+                </Route>
+                {/* Staff Routes
 //                 <Route path="/staff/*" element={<StaffLayout />}>
 //                   <Route index element={<IotDevices />} />
 //                   <Route path="iot-devices" element={<IotDevices />} />
@@ -122,9 +121,7 @@ const App = () => {
 //                     path="ProductsManagement"
 //                     element={<ProductsManagement />}
 //                   />
-// >>>>>>> main
-//                 </Route>
-
+// >>>>>>> main*/}
                 {/* Staff Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
                   <Route path="/staff/*" element={<StaffLayout />}>
@@ -138,7 +135,10 @@ const App = () => {
                       element={<QualityControl />}
                     />
                     <Route path="logistics" element={<Logistics />} />
-                    <Route path="OrderManagement" element={<OrderManagement />} />
+                    <Route
+                      path="OrderManagement"
+                      element={<OrderManagement />}
+                    />
                   </Route>
                 </Route>
 
