@@ -103,12 +103,13 @@ const App = () => {
 
 
                 {/* Customer Protected Routes */}
+                {/* Customer Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/myOrders" element={<CurrentUserOrderList />} />
-
-                {/* Staff Routes */}
+                </Route>
+                {/* Staff Routes
 //                 <Route path="/staff/*" element={<StaffLayout />}>
 //                   <Route index element={<IotDevices />} />
 //                   <Route path="iot-devices" element={<IotDevices />} />
@@ -122,9 +123,7 @@ const App = () => {
 //                     path="ProductsManagement"
 //                     element={<ProductsManagement />}
 //                   />
-// >>>>>>> main
-//                 </Route>
-
+// >>>>>>> main*/}
                 {/* Staff Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
                   <Route path="/staff/*" element={<StaffLayout />}>
