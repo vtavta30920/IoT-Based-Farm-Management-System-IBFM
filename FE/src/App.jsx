@@ -103,7 +103,6 @@ const App = () => {
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
-
                   <Route path="/myOrders" element={<CurrentUserOrderList />} />
                 </Route>
 
