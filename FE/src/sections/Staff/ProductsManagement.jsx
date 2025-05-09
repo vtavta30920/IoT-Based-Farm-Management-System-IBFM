@@ -1,11 +1,18 @@
 import React, { useState } from "react";
-import { useGetAllProducts } from "../../api/ProductEndPoint";
+import {
+  useGetAllProducts,
+  useGetProductById,
+} from "../../api/ProductEndPoint";
 import defaultAvatar from "../../assets/avatardefault.jpg";
+import ProductDetailModal from "./ProductDetailModal";
 
 const ProductsManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [sortByStockAsc, setSortByStockAsc] = useState(true);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const pageSize = 6;
   const categoryId = null;
 
@@ -21,15 +28,18 @@ const ProductsManagement = () => {
     true
   );
 
-  if (isLoading)
-    return <div className="text-center mt-10">Loading products...</div>;
-  if (isError)
-    return (
-      <div className="text-center mt-10 text-red-500">Failed to load data.</div>
-    );
+  const { data: productDetailData, isLoading: isLoadingDetail } =
+    useGetProductById(selectedProductId);
 
   const products = data?.data?.items || [];
   const totalPagesCount = data?.data?.totalPagesCount || 1;
+
+  const selectedProduct = productDetailData?.data;
+
+  const handleProductClick = (productId) => {
+    setSelectedProductId(productId);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
@@ -39,7 +49,6 @@ const ProductsManagement = () => {
 
       {/* Filter + Sort */}
       <div className="flex justify-end mb-6 gap-4">
-        {/* Filters Section */}
         <div className="flex gap-4">
           <select
             value={statusFilter}
@@ -77,43 +86,74 @@ const ProductsManagement = () => {
           return (
             <div
               key={product.productId}
-              className={`border ${cardColor} shadow-md rounded-xl p-4 hover:shadow-lg transition-shadow duration-200`}
+              className={`border ${cardColor} shadow-md rounded-xl p-4 hover:shadow-lg transition-shadow duration-200 cursor-pointer`}
+              onClick={() => handleProductClick(product.productId)}
             >
-              <img
-                src={product.images || defaultAvatar}
-                alt={product.productName}
-                className="w-full h-40 object-cover rounded-lg mb-3"
-              />
-              <h3 className="text-lg font-semibold">{product.productName}</h3>
-              <p className="text-sm text-gray-700">
-                Stock quantity: {product.stockQuantity}
-              </p>
-              <p className="text-sm mt-1">
-                Status:{" "}
-                <span className={isActive ? "text-green-600" : "text-red-600"}>
-                  {isActive ? "Active" : "Inactive"}
-                </span>
-              </p>
-              {/* Warning Icon for low stock */}
-              {product.stockQuantity < 100 && (
-                <div className="mt-3 flex items-center gap-2 bg-yellow-100 text-yellow-800 border border-yellow-400 px-3 py-2 rounded shadow animate-pulse">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-yellow-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
+              <div className="flex flex-col items-center">
+                {/* Image on Top */}
+                <img
+                  src={product.images || defaultAvatar}
+                  alt={product.productName}
+                  className="w-40 h-40 object-cover rounded-lg mb-3"
+                />
+
+                {/* Product Name */}
+                <h3 className="text-lg font-semibold">{product.productName}</h3>
+                <p className="text-sm text-gray-700">
+                  Stock: {product.stockQuantity}
+                </p>
+                {/* Status */}
+                <p className="text-sm text-gray-700">
+                  Status:{" "}
+                  <span
+                    className={isActive ? "text-green-600" : "text-red-600"}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v2m0 4h.01M4.293 17.707A1 1 0 015 17h14a1 1 0 01.707 1.707l-7 7a1 1 0 01-1.414 0l-7-7z"
-                    />
-                  </svg>
-                  <span className="font-medium">Low Stock!</span>
+                    {isActive ? "Active" : "Inactive"}
+                  </span>
+                </p>
+
+                {/* Information Below */}
+                <div className="flex flex-col items-start w-full mt-3">
+                  {/* Stock Warning (Low Stock) */}
+                  {product.stockQuantity < 100 ? (
+                    <div className="flex items-center justify-between w-full bg-yellow-100 text-yellow-800 border border-yellow-400 px-3 py-2 rounded-md shadow animate-pulse mt-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-yellow-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v2m0 4h.01M4.293 17.707A1 1 0 015 17h14a1 1 0 01.707 1.707l-7 7a1 1 0 01-1.414 0l-7-7z"
+                        />
+                      </svg>
+                      <span className="font-medium text-xs">Low Stock!</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between w-full bg-blue-200 text-blue-800 border border-blue-400 px-3 py-2 rounded-md shadow-lg mt-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-blue-800"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v2m0 4h.01M4.293 17.707A1 1 0 015 17h14a1 1 0 01.707 1.707l-7 7a1 1 0 01-1.414 0l-7-7z"
+                        />
+                      </svg>
+                      <span className="font-medium text-xs">Stock Normal</span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
@@ -139,6 +179,13 @@ const ProductsManagement = () => {
           Next
         </button>
       </div>
+
+      {isModalOpen && selectedProduct && !isLoadingDetail && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

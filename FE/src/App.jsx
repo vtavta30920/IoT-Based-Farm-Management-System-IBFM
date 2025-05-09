@@ -140,6 +140,10 @@ const App = () => {
                       path="OrderManagement"
                       element={<OrderManagement />}
                     />
+                    <Route
+                      path="ProductsManagement"
+                      element={<ProductsManagement />}
+                    />
                   </Route>
                 </Route>
 
