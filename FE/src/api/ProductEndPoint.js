@@ -98,3 +98,34 @@ export const useCreateProduct = () => {
     },
   });
 };
+
+// Thêm hàm gọi API update product
+export const updateProduct = async ({ productId, productData }) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/products/update/${productId}`,
+    productData,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  return response.data;
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, productData }) => updateProduct({ productId, productData }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['v1/products/product-filter']);
+    },
+    onError: (error) => {
+      if (error.response) {
+        console.error('Update product failed:', error.response.data, error.response.status, error.response.config.url);
+      } else {
+        console.error('Update product failed:', error.message);
+      }
+    },
+  });
+};

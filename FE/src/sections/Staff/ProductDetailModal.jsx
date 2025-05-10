@@ -1,43 +1,22 @@
 import React, { useState, useEffect } from "react";
 import defaultAvatar from "../../assets/avatardefault.jpg";
-import { useGetAllCrops } from "../../api/CropEndPoint";
-import { useUpdateProductStatus } from "../../api/ProductEndPoint"; // Import API hook
-import { useCategories } from "../../api/CategoryEndPoint"; // Import API hook
-
-// Dropdown chọn Crop
-const CropDropdown = ({ selectedCropId, onCropChange }) => {
-  const { data: crops = [], isLoading } = useGetAllCrops();
-
-  if (isLoading) return <p>Loading crops...</p>;
-
-  return (
-    <select
-      value={selectedCropId}
-      onChange={(e) => onCropChange(Number(e.target.value))}
-      className="w-full border rounded px-3 py-2"
-    >
-      <option value="">Select a crop</option>
-      {crops.map((crop) => (
-        <option key={crop.cropId} value={crop.cropId}>
-          {crop.cropName}
-        </option>
-      ))}
-    </select>
-  );
-};
+import {
+  useUpdateProductStatus,
+  useUpdateProduct,
+} from "../../api/ProductEndPoint";
+import { useCategories } from "../../api/CategoryEndPoint";
 
 // Modal đổi URL ảnh
 const ImageUrlModal = ({ currentImageUrl, onChangeImageUrl, onClose }) => {
-  const [newImageUrl, setNewImageUrl] = useState(""); // Mặc định là rỗng
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   useEffect(() => {
-    // Reset giá trị newImageUrl mỗi khi modal mở (hoặc currentImageUrl thay đổi)
     setNewImageUrl("");
   }, [currentImageUrl]);
 
   const handleSubmit = () => {
     onChangeImageUrl(newImageUrl);
-    onClose(); // Đóng modal sau khi lưu thay đổi
+    onClose();
   };
 
   return (
@@ -65,7 +44,7 @@ const ImageUrlModal = ({ currentImageUrl, onChangeImageUrl, onClose }) => {
           <div className="flex justify-end space-x-2">
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded"
-              onClick={handleSubmit} // Thêm onClick ở đây
+              onClick={handleSubmit}
             >
               Save
             </button>
@@ -177,7 +156,7 @@ const CategoryDropdown = ({
 // Modal chi tiết sản phẩm
 const ProductDetailModal = ({ product, onClose }) => {
   const [showImageUrlModal, setShowImageUrlModal] = useState(false);
-  const [showConfirmStatusModal, setShowConfirmStatusModal] = useState(false); // State for confirm modal
+  const [showConfirmStatusModal, setShowConfirmStatusModal] = useState(false);
   const [imageUrl, setImageUrl] = useState(product?.images || defaultAvatar);
   const [categoryId, setCategoryId] = useState(
     product?.categoryId ? String(product.categoryId) : ""
@@ -187,10 +166,13 @@ const ProductDetailModal = ({ product, onClose }) => {
   const [price, setPrice] = useState(product?.price || 0);
   const [stock, setStock] = useState(product?.stockQuantity || 0);
   const [description, setDescription] = useState(product?.description || "");
-  const [cropId, setCropId] = useState(product?.cropId || "");
+  const [cropName, setCropName] = useState(product?.cropName || "");
+  const [errors, setErrors] = useState({});
 
   const { mutate: updateStatus, isLoading: isUpdatingStatus } =
-    useUpdateProductStatus(); // Use mutation hook
+    useUpdateProductStatus();
+  const { mutate: updateProduct, isLoading: isUpdatingProduct } =
+    useUpdateProduct();
 
   const handleImageClick = () => setShowImageUrlModal(true);
 
@@ -211,32 +193,56 @@ const ProductDetailModal = ({ product, onClose }) => {
 
     updateStatus(product.productId, {
       onSuccess: () => {
-        setStatus(status === 1 ? 0 : 1); // Update local state on success
+        setStatus(status === 1 ? 0 : 1);
         setShowConfirmStatusModal(false);
       },
       onError: (error) => {
-        console.error("Failed to update status:", error); // Handle error
+        console.error("Failed to update status:", error);
         setShowConfirmStatusModal(false);
       },
     });
   };
 
+  const validate = () => {
+    const newErrors = {};
+    if (!name.trim()) newErrors.name = "Name is required.";
+    if (!description.trim()) newErrors.description = "Description is required.";
+    if (!categoryId) newErrors.categoryId = "Category is required.";
+    if (!cropName.trim()) newErrors.cropName = "Crop is required.";
+    if (price === "" || isNaN(price)) newErrors.price = "Price is required.";
+    else if (Number(price) < 10000)
+      newErrors.price = "Price must be at least 10,000.";
+    else if (Number(price) < 0) newErrors.price = "Price cannot be negative.";
+    if (stock === "" || isNaN(stock)) newErrors.stock = "Stock is required.";
+    else if (Number(stock) < 0) newErrors.stock = "Stock cannot be negative.";
+    return newErrors;
+  };
+
   const handleSaveChanges = () => {
-    const updatedProduct = {
-      ...product,
-      cropId,
-      images: imageUrl,
-      categoryId,
-      status,
+    const newErrors = validate();
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    const payload = {
       productName: name,
-      price,
-      stockQuantity: stock,
+      price: Number(price),
+      images: imageUrl,
+      stockQuantity: Number(stock),
       description,
+      categoryId:
+        categoryId && !isNaN(Number(categoryId))
+          ? Number(categoryId)
+          : undefined,
     };
 
-    console.log("Product to save:", updatedProduct);
-    // Gửi lên API nếu cần
-    onClose();
+    updateProduct(
+      { productId: product.productId, productData: payload },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+      }
+    );
   };
 
   if (!product) return null;
@@ -265,7 +271,6 @@ const ProductDetailModal = ({ product, onClose }) => {
               onClick={handleImageClick}
             />
             <div className="mt-4 w-full">
-              {/* Nút trạng thái */}
               <button
                 className={`w-full px-4 py-2 rounded font-semibold transition-colors duration-200 ${
                   status === 1
@@ -273,7 +278,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                     : "bg-red-600 text-white hover:bg-red-700"
                 }`}
                 onClick={handleStatusClick}
-                disabled={isUpdatingStatus} // Disable button while updating
+                disabled={isUpdatingStatus}
               >
                 {isUpdatingStatus
                   ? "Updating..."
@@ -288,7 +293,16 @@ const ProductDetailModal = ({ product, onClose }) => {
           <div className="flex-grow space-y-4">
             <div>
               <label className="block font-medium">Crop</label>
-              <CropDropdown selectedCropId={cropId} onCropChange={setCropId} />
+              <input
+                type="text"
+                value={cropName}
+                readOnly
+                className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
+                placeholder="Enter crop name"
+              />
+              {errors.cropName && (
+                <div className="text-red-600 text-sm mt-1">{errors.cropName}</div>
+              )}
             </div>
             <div>
               <label className="block font-medium">Name</label>
@@ -298,24 +312,47 @@ const ProductDetailModal = ({ product, onClose }) => {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full border rounded px-3 py-2"
               />
+              {errors.name && (
+                <div className="text-red-600 text-sm mt-1">{errors.name}</div>
+              )}
             </div>
             <div>
               <label className="block font-medium">Price</label>
               <input
-                type="number"
+                type="text"
                 value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  setPrice(val === "" ? "" : val);
+                }}
                 className="w-full border rounded px-3 py-2"
+                min={10000}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
               />
+              {errors.price && (
+                <div className="text-red-600 text-sm mt-1">{errors.price}</div>
+              )}
             </div>
             <div>
               <label className="block font-medium">Stock</label>
               <input
-                type="number"
+                type="text"
                 value={stock}
-                onChange={(e) => setStock(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  setStock(val === "" ? "" : val);
+                }}
                 className="w-full border rounded px-3 py-2"
+                min={0}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
               />
+              {errors.stock && (
+                <div className="text-red-600 text-sm mt-1">{errors.stock}</div>
+              )}
             </div>
             <div>
               <label className="block font-medium">Description</label>
@@ -324,6 +361,9 @@ const ProductDetailModal = ({ product, onClose }) => {
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full border rounded px-3 py-2"
               />
+              {errors.description && (
+                <div className="text-red-600 text-sm mt-1">{errors.description}</div>
+              )}
             </div>
             <div>
               <label className="block font-medium">Category</label>
@@ -332,6 +372,9 @@ const ProductDetailModal = ({ product, onClose }) => {
                 selectedCategoryName={product?.categoryName}
                 onCategoryChange={(val) => setCategoryId(String(val))}
               />
+              {errors.categoryId && (
+                <div className="text-red-600 text-sm mt-1">{errors.categoryId}</div>
+              )}
             </div>
           </div>
         </div>
@@ -340,14 +383,16 @@ const ProductDetailModal = ({ product, onClose }) => {
           <button
             className="bg-gray-600 text-white px-6 py-2 rounded"
             onClick={onClose}
+            disabled={isUpdatingProduct}
           >
             Cancel
           </button>
           <button
             className="bg-green-600 text-white px-6 py-2 rounded"
             onClick={handleSaveChanges}
+            disabled={isUpdatingProduct}
           >
-            Save Changes
+            {isUpdatingProduct ? "Saving..." : "Save Changes"}
           </button>
         </div>
 
