@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import {
   useGetAllProducts,
   useGetProductById,
+  useCreateProduct,
 } from "../../api/ProductEndPoint";
 import defaultAvatar from "../../assets/avatardefault.jpg";
 import ProductDetailModal from "./ProductDetailModal";
+import CreateProductModal from "./CreateProductModal";
 
 const ProductsManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
@@ -12,6 +14,17 @@ const ProductsManagement = () => {
   const [sortByStockAsc, setSortByStockAsc] = useState(true);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const { mutate: createProduct, isLoading: isCreating } = useCreateProduct();
+
+  const handleCreateProduct = (productData) => {
+    createProduct(productData, {
+      onSuccess: () => {
+        setIsCreateModalOpen(false);
+      },
+    });
+  };
 
   const pageSize = 6;
   const categoryId = null;
@@ -47,7 +60,7 @@ const ProductsManagement = () => {
         Product Management
       </h1>
 
-      {/* Filter + Sort */}
+      {/* Filter + Sort + Create */}
       <div className="flex justify-end mb-6 gap-4">
         <div className="flex gap-4">
           <select
@@ -73,6 +86,12 @@ const ProductsManagement = () => {
             Sort Stock: {sortByStockAsc ? "Ascending ↑" : "Descending ↓"}
           </button>
         </div>
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
+          Create
+        </button>
       </div>
 
       {/* Product List */}
@@ -184,6 +203,14 @@ const ProductsManagement = () => {
         <ProductDetailModal
           product={selectedProduct}
           onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      {isCreateModalOpen && (
+        <CreateProductModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateProduct}
+          isSubmitting={isCreating}
         />
       )}
     </div>

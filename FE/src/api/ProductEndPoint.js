@@ -58,3 +58,40 @@ const GetAllProducts = async (pageIndex, pageSize, status, categoryId, sortBySto
       },
     });
   };
+
+export const createProduct = async (product) => {
+  console.log("Create Product API payload:", product);
+  const response = await axios.post(
+    'https://localhost:7067/api/v1/products/create',
+    product,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  console.log("Create Product API response:", response);
+  return response.data;
+};
+
+export const useCreateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (product) => {
+      console.log("Calling createProduct with:", product);
+      return createProduct(product);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['v1/products/product-filter']);
+      console.log('Product created successfully:', data);
+    },
+    onError: (error) => {
+      if (error.response) {
+        console.error('Create product failed:', error.response.data, error.response.status, error.response.config.url);
+      } else {
+        console.error('Create product failed:', error.message);
+      }
+    },
+  });
+};

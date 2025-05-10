@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import defaultAvatar from "../../assets/avatardefault.jpg";
 import { useGetAllCrops } from "../../api/CropEndPoint";
 import { useUpdateProductStatus } from "../../api/ProductEndPoint"; // Import API hook
+import { useCategories } from "../../api/CategoryEndPoint"; // Import API hook
 
 // Dropdown chọn Crop
 const CropDropdown = ({ selectedCropId, onCropChange }) => {
@@ -119,18 +120,54 @@ const ConfirmStatusModal = ({ currentStatus, onConfirm, onClose }) => {
 };
 
 // Dropdown chọn danh mục
-const CategoryDropdown = ({ selectedCategory, onCategoryChange }) => {
-  const categories = ["Electronics", "Clothing", "Furniture", "Books"];
-
+const CategoryDropdown = ({
+  selectedCategoryId,
+  onCategoryChange,
+  selectedCategoryName,
+}) => {
+  const { data, isLoading, isError } = useCategories();
+  let categories = [];
+  if (Array.isArray(data)) {
+    categories = data;
+  } else if (data && Array.isArray(data.data)) {
+    categories = data.data;
+  }
+  if (isLoading) {
+    return (
+      <select className="w-full border rounded px-3 py-2" disabled>
+        <option>Loading...</option>
+      </select>
+    );
+  }
+  if (isError) {
+    return (
+      <select className="w-full border rounded px-3 py-2" disabled>
+        <option>Failed to load categories</option>
+      </select>
+    );
+  }
+  if (!categories.length) {
+    return (
+      <select
+        value={selectedCategoryId || ""}
+        onChange={(e) => onCategoryChange(e.target.value)}
+        className="w-full border rounded px-3 py-2"
+      >
+        <option value={selectedCategoryId || ""}>
+          {selectedCategoryName || "No categories"}
+        </option>
+      </select>
+    );
+  }
   return (
     <select
-      value={selectedCategory}
+      value={selectedCategoryId || ""}
       onChange={(e) => onCategoryChange(e.target.value)}
       className="w-full border rounded px-3 py-2"
     >
-      {categories.map((category, index) => (
-        <option key={index} value={category}>
-          {category}
+      {categories.map((category) => (
+        <option key={category.categoryId} value={String(category.categoryId)}>
+          {category.categoryName}
         </option>
       ))}
     </select>
@@ -142,7 +179,9 @@ const ProductDetailModal = ({ product, onClose }) => {
   const [showImageUrlModal, setShowImageUrlModal] = useState(false);
   const [showConfirmStatusModal, setShowConfirmStatusModal] = useState(false); // State for confirm modal
   const [imageUrl, setImageUrl] = useState(product?.images || defaultAvatar);
-  const [category, setCategory] = useState(product?.category || "");
+  const [categoryId, setCategoryId] = useState(
+    product?.categoryId ? String(product.categoryId) : ""
+  );
   const [status, setStatus] = useState(product?.status || 0);
   const [name, setName] = useState(product?.productName || "");
   const [price, setPrice] = useState(product?.price || 0);
@@ -187,7 +226,7 @@ const ProductDetailModal = ({ product, onClose }) => {
       ...product,
       cropId,
       images: imageUrl,
-      category,
+      categoryId,
       status,
       productName: name,
       price,
@@ -289,8 +328,9 @@ const ProductDetailModal = ({ product, onClose }) => {
             <div>
               <label className="block font-medium">Category</label>
               <CategoryDropdown
-                selectedCategory={category}
-                onCategoryChange={setCategory}
+                selectedCategoryId={categoryId}
+                selectedCategoryName={product?.categoryName}
+                onCategoryChange={(val) => setCategoryId(String(val))}
               />
             </div>
           </div>
