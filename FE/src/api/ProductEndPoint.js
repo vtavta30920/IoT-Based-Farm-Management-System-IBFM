@@ -38,10 +38,13 @@ const GetAllProducts = async (pageIndex, pageSize, status, categoryId, sortBySto
     if (!productId) {
       throw new Error("Product ID is required to update status.");
     }
-    const response = await axios.post(
-      `https://localhost:7067/api/v1/products/change-product-status/${productId}`
+    // Đổi từ POST sang PUT (hoặc PATCH) nếu backend yêu cầu, hoặc kiểm tra lại endpoint
+    // Nếu backend chỉ nhận POST nhưng không có body, thêm {} làm body
+    const response = await axios.put(
+      `https://localhost:7067/api/v1/products/change-product-status/${productId}`,
+      {} // Thêm body rỗng để tránh lỗi 405 nếu backend yêu cầu body
     );
-    return response.data; // Ensure the API returns the updated product or status
+    return response.data;
   };
   
   export const useUpdateProductStatus = () => {
