@@ -1,6 +1,28 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import { useGetAllOrder } from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend,
+  TimeScale,
+  CategoryScale,
+} from "chart.js";
+import "chartjs-adapter-date-fns";
+
+ChartJS.register(
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend,
+  TimeScale,
+  CategoryScale
+);
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -15,18 +37,129 @@ const statusMap = {
   6: "PENDING",
 };
 
+function getDaysInMonth(year, month) {
+  const days = [];
+  const lastDay = new Date(year, month, 0).getDate();
+  for (let d = 1; d <= lastDay; d++) {
+    days.push(
+      `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`
+    );
+  }
+  return days;
+}
+
 const OrdersManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [statusFilter, setStatusFilter] = useState(""); // Filter cho trạng thái đơn hàng
+  const [statusFilter, setStatusFilter] = useState("");
   const pageSize = 5;
 
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+
   const { token } = useContext(UserContext);
+
+  const { data: allOrderData } = useGetAllOrder(1, 10000, undefined);
   const { data, isLoading, isError } = useGetAllOrder(
     pageIndex,
     pageSize,
-    statusFilter // Truyền statusFilter vào API
+    statusFilter
   );
+
+  const revenueLineData = useMemo(() => {
+    const items = allOrderData?.data?.items;
+    if (!items) return { labels: [], datasets: [] };
+
+    const filtered = items.filter((order) => {
+      const date = new Date(order.createdAt);
+      return (
+        date.getFullYear() === Number(selectedYear) &&
+        date.getMonth() + 1 === Number(selectedMonth) &&
+        order.status === 4
+      );
+    });
+
+    const dateMap = {};
+    filtered.forEach((order) => {
+      const date = new Date(order.createdAt);
+      const dateStr = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      if (!dateMap[dateStr]) dateMap[dateStr] = 0;
+      dateMap[dateStr] += order.totalPrice;
+    });
+
+    const days = getDaysInMonth(selectedYear, selectedMonth);
+    const values = days.map((d) => dateMap[d] || 0);
+
+    return {
+      labels: days,
+      datasets: [
+        {
+          label: "Revenue by Day",
+          data: values,
+          fill: false,
+          borderColor: "rgba(34,197,94,1)",
+          backgroundColor: "rgba(34,197,94,0.2)",
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: "rgba(34,197,94,1)",
+        },
+      ],
+    };
+  }, [allOrderData, selectedMonth, selectedYear]);
+
+  const revenueLineOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `Revenue: ${formatCurrency(ctx.parsed.y)}`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        title: { display: true, text: "Date" },
+        type: "category",
+        ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 },
+      },
+      y: {
+        title: { display: true, text: "Revenue (VND)" },
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return formatCurrency(value);
+          },
+        },
+      },
+    },
+    maintainAspectRatio: false,
+    elements: { point: { radius: 3 } },
+    layout: { padding: 0 },
+  };
+
+  const { totalRevenue, paidOrderCount } = useMemo(() => {
+    const items = allOrderData?.data?.items;
+    if (!items) return { totalRevenue: 0, paidOrderCount: 0 };
+
+    let total = 0;
+    let count = 0;
+    items.forEach((order) => {
+      const date = new Date(order.createdAt);
+      if (
+        date.getFullYear() === Number(selectedYear) &&
+        date.getMonth() + 1 === Number(selectedMonth) &&
+        order.status === 4 // PAID
+      ) {
+        total += order.totalPrice;
+        count += 1;
+      }
+    });
+    return { totalRevenue: total, paidOrderCount: count };
+  }, [allOrderData, selectedMonth, selectedYear]);
 
   if (isLoading) {
     return <div className="p-6 bg-white">Loading...</div>;
@@ -46,8 +179,14 @@ const OrdersManagement = () => {
 
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
-    setPageIndex(1); // reset về trang đầu khi filter
+    setPageIndex(1);
   };
+
+  const yearOptions = [];
+  for (let y = now.getFullYear(); y >= now.getFullYear() - 5; y--) {
+    yearOptions.push(y);
+  }
+  const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
@@ -55,7 +194,103 @@ const OrdersManagement = () => {
         Order Management
       </h1>
 
-      {/* Dropdown lọc theo trạng thái */}
+      <div className="flex flex-wrap gap-4 mb-4 items-center justify-center">
+        <label className="font-medium">Month:</label>
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(Number(e.target.value))}
+          className="border rounded px-2 py-1"
+        >
+          {monthOptions.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <label className="font-medium">Year:</label>
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="border rounded px-2 py-1"
+        >
+          {yearOptions.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-wrap gap-8 mb-4 items-center justify-center">
+        <div className="bg-green-100 border border-green-400 rounded-lg px-6 py-4 text-center shadow">
+          <div className="text-lg font-semibold text-green-700">
+            Total Revenue In Month
+          </div>
+          <div className="text-2xl font-bold text-green-900 mt-1">
+            {formatCurrency(totalRevenue)}
+          </div>
+        </div>
+        <div className="bg-blue-100 border border-blue-400 rounded-lg px-6 py-4 text-center shadow">
+          <div className="text-lg font-semibold text-blue-700">
+            Completed Orders
+          </div>
+          <div className="text-2xl font-bold text-blue-900 mt-1">
+            {paidOrderCount}
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-8 bg-white rounded shadow p-4 flex justify-center items-center">
+        <div style={{ width: 700, height: 250, maxWidth: "100%" }}>
+          <h2 className="text-lg font-semibold mb-2 text-green-700 text-center">
+            Revenue by Day
+          </h2>
+          <Line
+            data={{
+              ...revenueLineData,
+              labels: revenueLineData.labels.map((dateStr) => {
+                const parts = dateStr.split("-");
+                return parts[2];
+              }),
+            }}
+            options={{
+              ...revenueLineOptions,
+              maintainAspectRatio: false,
+              elements: { point: { radius: 3 } },
+              layout: { padding: { left: 0, right: 0 } },
+              plugins: {
+                ...revenueLineOptions.plugins,
+                legend: { display: false },
+              },
+              scales: {
+                ...revenueLineOptions.scales,
+                x: {
+                  ...revenueLineOptions.scales.x,
+                  type: "category",
+                  title: { display: true, text: "Day" },
+                  ticks: {
+                    ...revenueLineOptions.scales.x.ticks,
+                    autoSkip: false,
+                    maxRotation: 0,
+                    minRotation: 0,
+                  },
+                },
+                y: {
+                  ...revenueLineOptions.scales.y,
+                  ticks: {
+                    callback: function (value) {
+                      return formatCurrency(value);
+                    },
+                  },
+                },
+              },
+            }}
+            height={250}
+            width={700}
+          />
+        </div>
+      </div>
+
       <div className="mb-4 flex justify-end">
         <div className="flex items-center">
           <label htmlFor="status" className="mr-2 text-gray-600 font-medium">
@@ -63,8 +298,8 @@ const OrdersManagement = () => {
           </label>
           <select
             id="status"
-            value={statusFilter} // Đảm bảo sử dụng statusFilter
-            onChange={handleStatusChange} // Gọi hàm xử lý khi thay đổi filter
+            value={statusFilter}
+            onChange={handleStatusChange}
             className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
             <option value="">All</option>
@@ -75,7 +310,6 @@ const OrdersManagement = () => {
         </div>
       </div>
 
-      {/* Danh sách đơn hàng */}
       <div className="flex-1 overflow-y-auto space-y-4">
         {items.map((order, index) => {
           const status = statusMap[order.status];
@@ -91,7 +325,6 @@ const OrdersManagement = () => {
               key={index}
               className={`border rounded-md shadow-sm ${bgColor}`}
             >
-              {/* Table tổng quát */}
               <div
                 className="cursor-pointer hover:bg-opacity-50"
                 onClick={() => toggleExpand(index)}
@@ -142,7 +375,6 @@ const OrdersManagement = () => {
                 </table>
               </div>
 
-              {/* Chi tiết đơn hàng */}
               {expandedIndex === index && (
                 <div className="px-4 py-2 bg-white rounded-b-md">
                   <h2 className="font-semibold text-sm mb-2">Order Details</h2>
@@ -170,7 +402,6 @@ const OrdersManagement = () => {
         })}
       </div>
 
-      {/* Pagination */}
       <div className="flex justify-center items-center gap-4 mt-6">
         <button
           disabled={pageIndex === 1}

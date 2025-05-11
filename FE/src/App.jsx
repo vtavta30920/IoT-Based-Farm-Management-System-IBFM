@@ -102,27 +102,12 @@ const App = () => {
                 <Route path="/profile" element={<Profile />} />
 
                 {/* Customer Protected Routes */}
-                {/* Customer Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/myOrders" element={<CurrentUserOrderList />} />
                 </Route>
-                {/* Staff Routes
-//                 <Route path="/staff/*" element={<StaffLayout />}>
-//                   <Route index element={<IotDevices />} />
-//                   <Route path="iot-devices" element={<IotDevices />} />
-//                   <Route path="iot-devices/:id" element={<DeviceDetails />} />
-//                   <Route path="farming-tasks" element={<FarmingTasks />} />
-//                   <Route path="farming-tasks/:id" element={<TaskDetails />} />
-//                   <Route path="quality-control" element={<QualityControl />} />
-//                   <Route path="logistics" element={<Logistics />} />
-//                   <Route path="OrderManagement" element={<OrderManagement />} />
-//                   <Route
-//                     path="ProductsManagement"
-//                     element={<ProductsManagement />}
-//                   />
-// >>>>>>> main*/}
+
                 {/* Staff Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
                   <Route path="/staff/*" element={<StaffLayout />}>
@@ -136,10 +121,6 @@ const App = () => {
                       element={<QualityControl />}
                     />
                     <Route path="logistics" element={<Logistics />} />
-                    <Route
-                      path="OrderManagement"
-                      element={<OrderManagement />}
-                    />
                     <Route
                       path="ProductsManagement"
                       element={<ProductsManagement />}
@@ -160,6 +141,10 @@ const App = () => {
                     <Route path="reports" element={<Reports />} />
                     <Route path="farms" element={<FarmManagement />} />
                     <Route path="crops" element={<CropManagement />} />
+                    <Route
+                      path="OrderManagement"
+                      element={<OrderManagement />}
+                    />
                   </Route>
                 </Route>
 

@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation, Navigate } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
 import { SidebarContext } from "../../SidebarToggle";
 import { useNavigate } from "react-router-dom";
@@ -8,10 +8,18 @@ const ManagerLayout = () => {
   const { user, logout } = useContext(UserContext);
   const { isSidebarOpen, toggleSidebar } = useContext(SidebarContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
   const handleLogout = () => {
     logout();
     navigate("/");
   };
+
+  // Nếu đang ở đúng /manager thì redirect sang /manager/OrderManagement
+  if (location.pathname === "/manager") {
+    return <Navigate to="/manager/OrderManagement" replace />;
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
@@ -65,27 +73,31 @@ const ManagerLayout = () => {
         </div>
         <nav className="mt-6">
           <ul className="space-y-2 px-2">
-            {/* <li>
+            <li>
               <Link
-                to="/manager/iot-monitoring"
-                className="flex items-center p-3 hover:bg-green-800 rounded-lg transition duration-200"
+                to="/manager/OrderManagement"
+                className="flex items-center p-3 hover:bg-green-600 rounded-lg transition duration-200"
               >
                 <svg
-                  className="w-5 h-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
                   fill="none"
-                  stroke="currentColor"
                   viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
+                  <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                    strokeWidth={2}
+                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
                   />
                 </svg>
-                {isSidebarOpen && <span className="ml-3">IoT Monitoring</span>}
+                {isSidebarOpen && (
+                  <span className="ml-3">Order Management</span>
+                )}
               </Link>
-            </li> */}
+            </li>
             <li>
               <Link
                 to="/manager/farming-schedules"
@@ -151,48 +163,6 @@ const ManagerLayout = () => {
                 {isSidebarOpen && <span className="ml-3">Crop Management</span>}
               </Link>
             </li>
-            {/* <li>
-              <Link
-                to="/manager/inventory"
-                className="flex items-center p-3 hover:bg-green-800 rounded-lg transition duration-200"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                  />
-                </svg>
-                {isSidebarOpen && <span className="ml-3">Inventory</span>}
-              </Link>
-            </li> */}
-            {/* <li>
-              <Link
-                to="/manager/reports"
-                className="flex items-center p-3 hover:bg-green-800 rounded-lg transition duration-200"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                {isSidebarOpen && <span className="ml-3">Reports</span>}
-              </Link>
-            </li> */}
           </ul>
         </nav>
         <div className="mt-8 pt-4 border-t border-green-800 px-2">

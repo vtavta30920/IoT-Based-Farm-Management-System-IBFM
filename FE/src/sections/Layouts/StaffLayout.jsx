@@ -178,7 +178,7 @@ const StaffLayout = () => {
                 {isSidebarOpen && <span className="ml-3">Logistics</span>}
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link
                 to="/staff/OrderManagement"
                 className="flex items-center p-3 hover:bg-green-600 rounded-lg transition duration-200"
@@ -202,7 +202,7 @@ const StaffLayout = () => {
                   <span className="ml-3">Order Management</span>
                 )}
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link
                 to="/staff/ProductsManagement"
