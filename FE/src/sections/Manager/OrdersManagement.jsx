@@ -1,5 +1,5 @@
 import React, { useState, useContext, useMemo } from "react";
-import { useGetAllOrder } from "../../api/OrderEndPoint";
+import { useGetAllOrder, useGetOrdersByEmail } from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
 import { Line } from "react-chartjs-2";
 import {
@@ -58,6 +58,11 @@ const OrdersManagement = () => {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchPageIndex, setSearchPageIndex] = useState(1);
+  const searchPageSize = 10;
+
   const { token } = useContext(UserContext);
 
   const { data: allOrderData } = useGetAllOrder(1, 10000, undefined);
@@ -65,6 +70,17 @@ const OrdersManagement = () => {
     pageIndex,
     pageSize,
     statusFilter
+  );
+
+  const {
+    data: searchData,
+    isLoading: isSearchLoading,
+    isError: isSearchError,
+  } = useGetOrdersByEmail(
+    searchEmail,
+    searchPageIndex,
+    searchPageSize,
+    searching
   );
 
   const revenueLineData = useMemo(() => {
@@ -161,6 +177,18 @@ const OrdersManagement = () => {
     return { totalRevenue: total, paidOrderCount: count };
   }, [allOrderData, selectedMonth, selectedYear]);
 
+  const handleSearchOrderByEmail = (e) => {
+    e.preventDefault();
+    setSearching(true);
+    setSearchPageIndex(1);
+  };
+
+  const handleClearSearch = () => {
+    setSearchEmail("");
+    setSearching(false);
+    setSearchPageIndex(1);
+  };
+
   if (isLoading) {
     return <div className="p-6 bg-white">Loading...</div>;
   }
@@ -187,6 +215,27 @@ const OrdersManagement = () => {
     yearOptions.push(y);
   }
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  // Lấy danh sách order để hiển thị (ưu tiên kết quả search)
+  let displayOrders = items;
+  let displayTotalPages = totalPagesCount;
+  let displayPageIndex = pageIndex;
+  let setDisplayPageIndex = setPageIndex;
+
+  if (searching && searchEmail) {
+    if (Array.isArray(searchData?.data)) {
+      displayOrders = searchData.data;
+      displayTotalPages = 1;
+    } else if (Array.isArray(searchData?.data?.items)) {
+      displayOrders = searchData.data.items;
+      displayTotalPages = searchData.data.totalPagesCount || 1;
+    } else {
+      displayOrders = [];
+      displayTotalPages = 1;
+    }
+    displayPageIndex = searchPageIndex;
+    setDisplayPageIndex = setSearchPageIndex;
+  }
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
@@ -291,7 +340,35 @@ const OrdersManagement = () => {
         </div>
       </div>
 
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap justify-between items-center gap-4">
+        <form
+          className="flex items-center gap-2"
+          onSubmit={handleSearchOrderByEmail}
+        >
+          <input
+            type="text"
+            placeholder="Search by customer email"
+            value={searchEmail}
+            onChange={(e) => setSearchEmail(e.target.value)}
+            className="border rounded px-3 py-2 w-64"
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            disabled={isSearchLoading || !searchEmail}
+          >
+            {isSearchLoading ? "Searching..." : "Search"}
+          </button>
+          {searching && (
+            <button
+              type="button"
+              className="ml-2 bg-gray-400 text-white px-3 py-2 rounded"
+              onClick={handleClearSearch}
+            >
+              Clear
+            </button>
+          )}
+        </form>
         <div className="flex items-center">
           <label htmlFor="status" className="mr-2 text-gray-600 font-medium">
             Sort by Status:
@@ -311,7 +388,7 @@ const OrdersManagement = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-4">
-        {items.map((order, index) => {
+        {displayOrders.map((order, index) => {
           const status = statusMap[order.status];
           const bgColor =
             status === "PAID"
@@ -322,7 +399,7 @@ const OrdersManagement = () => {
 
           return (
             <div
-              key={index}
+              key={order.orderId || index}
               className={`border rounded-md shadow-sm ${bgColor}`}
             >
               <div
@@ -404,18 +481,18 @@ const OrdersManagement = () => {
 
       <div className="flex justify-center items-center gap-4 mt-6">
         <button
-          disabled={pageIndex === 1}
-          onClick={() => setPageIndex((prev) => Math.max(prev - 1, 1))}
+          disabled={displayPageIndex === 1}
+          onClick={() => setDisplayPageIndex((prev) => Math.max(prev - 1, 1))}
           className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
         >
           Previous
         </button>
         <span>
-          Page {pageIndex} / {totalPagesCount}
+          Page {displayPageIndex} / {displayTotalPages}
         </span>
         <button
-          disabled={pageIndex === totalPagesCount}
-          onClick={() => setPageIndex((prev) => prev + 1)}
+          disabled={displayPageIndex === displayTotalPages}
+          onClick={() => setDisplayPageIndex((prev) => prev + 1)}
           className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
         >
           Next

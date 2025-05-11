@@ -45,6 +45,7 @@ import IotMonitoring from "./sections/Manager/IotMonitoring.jsx";
 import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
 import InventoryManagement from "./sections/Manager/InventoryManagement.jsx";
 import Reports from "./sections/Manager/Reports.jsx";
+import OrderManagement from "./sections/Manager/OrdersManagement.jsx";
 
 // Staff Pages
 import IotDevices from "./sections/Staff/IotDevices.jsx";
@@ -53,7 +54,6 @@ import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
 import TaskDetails from "./sections/Staff/TaskDetails.jsx";
 import QualityControl from "./sections/Staff/QualityControl.jsx";
 import Logistics from "./sections/Staff/Logistics.jsx";
-import OrderManagement from "./sections/Staff/OrdersManagement.jsx";
 import ProductsManagement from "./sections/Staff/ProductsManagement.jsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
