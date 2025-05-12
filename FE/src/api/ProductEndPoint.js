@@ -129,3 +129,25 @@ export const useUpdateProduct = () => {
     },
   });
 };
+
+export const getProductByName = async (productName) => {
+  // Nếu productName rỗng hoặc chỉ chứa khoảng trắng, trả về object rỗng
+  if (!productName || productName.trim() === "") {
+    return { data: { items: [], totalPagesCount: 1 } };
+  }
+  // Đúng format: /search-product/{productName}?pageIndex=1&pageSize=10
+  const response = await axios.get(
+    `https://localhost:7067/api/v1/products/search-product/${encodeURIComponent(productName)}?pageIndex=1&pageSize=10`
+  );
+  return response.data;
+};
+
+export const useGetProductByName = (productName) => {
+  // Chỉ enable khi productName hợp lệ (không rỗng, không chỉ chứa khoảng trắng)
+  const isValid = !!productName && productName.trim() !== "";
+  return useQuery({
+    queryKey: ['v1/products/search-product', productName],
+    queryFn: () => getProductByName(productName),
+    enabled: isValid,
+  });
+};
