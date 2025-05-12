@@ -49,20 +49,23 @@ export const useGetAllOrder = (pageIndex, pageSize, status) => {
   });
 };
 
-// Hàm API order list theo email
-const GetOrdersByEmail = async (email, pageIndex = 1, pageSize = 10) => {
-  // Đúng URL: /order-list-by-emal/{email}?pageIndex=1&pageSize=10
-  const url = `https://localhost:7067/api/v1/Order/order-list-by-emal/${encodeURIComponent(email)}?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+// Hàm API order list theo email, có filter status
+const GetOrdersByEmail = async (email, pageIndex = 1, pageSize = 5, status) => {
+  // Đúng URL: /order-list-by-emal/{email}?status=4&pageIndex=1&pageSize=10
+  let url = `https://localhost:7067/api/v1/Order/order-list-by-emal/${encodeURIComponent(email)}?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+  if (status !== undefined && status !== null && status !== "") {
+    url += `&status=${status}`;
+  }
   console.log("[DEBUG] Call API:", url);
   const { data } = await axios.get(url);
   console.log("[DEBUG] API response data:", data);
   return data;
 };
 
-export const useGetOrdersByEmail = (email, pageIndex = 1, pageSize = 10, enabled = false) => {
+export const useGetOrdersByEmail = (email, pageIndex = 1, pageSize = 5, enabled = false, status) => {
   return useQuery({
-    queryKey: ['v1/Order/order-list-by-emal/cus', { email, pageIndex, pageSize }],
-    queryFn: () => GetOrdersByEmail(email, pageIndex, pageSize),
+    queryKey: ['v1/Order/order-list-by-emal', { email, pageIndex, pageSize, status }],
+    queryFn: () => GetOrdersByEmail(email, pageIndex, pageSize, status),
     enabled: !!email && enabled,
     keepPreviousData: false,
   });

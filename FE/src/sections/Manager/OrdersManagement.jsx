@@ -61,7 +61,7 @@ const OrdersManagement = () => {
   const [searchEmail, setSearchEmail] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchPageIndex, setSearchPageIndex] = useState(1);
-  const searchPageSize = 10;
+  const searchPageSize = 5;
 
   const { token } = useContext(UserContext);
 
@@ -72,6 +72,13 @@ const OrdersManagement = () => {
     statusFilter
   );
 
+  // Convert statusFilter to correct value for API (number or string)
+  let searchStatus = statusFilter;
+  if (searchStatus === "PAID") searchStatus = 4;
+  else if (searchStatus === "UNDISCHARGED") searchStatus = 5;
+  else if (searchStatus === "PENDING") searchStatus = 6;
+  else if (searchStatus === "") searchStatus = undefined;
+
   const {
     data: searchData,
     isLoading: isSearchLoading,
@@ -80,7 +87,8 @@ const OrdersManagement = () => {
     searchEmail,
     searchPageIndex,
     searchPageSize,
-    searching
+    searching,
+    searchStatus
   );
 
   const revenueLineData = useMemo(() => {
