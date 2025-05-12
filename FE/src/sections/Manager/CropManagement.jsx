@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getAllCrops, getAllFarms } from "../../api/api";
-import { changeCropStatus } from "../../api/CropEndPoint";
+import { changeCropStatus, useCreateCrop } from "../../api/CropEndPoint";
 
 const CropManagement = () => {
   const [crops, setCrops] = useState([]);
@@ -11,6 +11,8 @@ const CropManagement = () => {
   const [error, setError] = useState(null);
   const [statusModal, setStatusModal] = useState({ open: false, crop: null });
   const [isChanging, setIsChanging] = useState(false);
+  const { mutate: createCrop, isLoading: isCreating } = useCreateCrop();
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,32 +34,48 @@ const CropManagement = () => {
     fetchData();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this crop?")) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE_URL}/crop/delete/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to delete crop");
-        }
-
-        setCrops(crops.filter((crop) => crop.cropId !== id));
-      } catch (err) {
-        setError(err.message);
-      }
-    }
-  };
-
   const handleEdit = (crop) => {
     setCurrentCrop(crop);
     setIsModalOpen(true);
+  };
+
+  const validateForm = (cropData) => {
+    const errors = {};
+    if (!cropData.quantity || isNaN(Number(cropData.quantity))) {
+      errors.quantity = "Quantity is required and must be a number";
+    } else if (Number(cropData.quantity) <= 0) {
+      errors.quantity = "Quantity must be a positive number";
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (!cropData.plantingDate) {
+      errors.plantingDate = "Planting date is required";
+    } else {
+      const plantingDate = new Date(cropData.plantingDate);
+      if (plantingDate < today) {
+        errors.plantingDate = "Planting date cannot be in the past";
+      }
+    }
+
+    if (!cropData.harvestDate) {
+      errors.harvestDate = "Harvest date is required";
+    } else {
+      const harvestDate = new Date(cropData.harvestDate);
+      if (harvestDate < today) {
+        errors.harvestDate = "Harvest date cannot be in the past";
+      } else if (cropData.plantingDate) {
+        const plantingDate = new Date(cropData.plantingDate);
+        const diffTime = harvestDate.getTime() - plantingDate.getTime();
+        const diffDays = diffTime / (1000 * 3600 * 24);
+        if (diffDays < 30) {
+          errors.harvestDate =
+            "Harvest date must be at least 1 month after planting date";
+        }
+      }
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e) => {
@@ -65,12 +83,16 @@ const CropManagement = () => {
     const formData = new FormData(e.target);
     const cropData = Object.fromEntries(formData);
 
-    try {
-      const token = localStorage.getItem("token");
-      let response;
+    cropData.quantity = Number(cropData.quantity);
 
+    const errors = validateForm(cropData);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    try {
       if (currentCrop) {
-        response = await fetch(
+        const token = localStorage.getItem("token");
+        let response = await fetch(
           `${API_BASE_URL}/crop/update/${currentCrop.cropId}`,
           {
             method: "PUT",
@@ -81,27 +103,29 @@ const CropManagement = () => {
             body: JSON.stringify(cropData),
           }
         );
+        if (!response.ok) {
+          throw new Error("Failed to update crop");
+        }
+        const cropsData = await getAllCrops(token);
+        setCrops(cropsData);
+        setIsModalOpen(false);
+        setCurrentCrop(null);
+        setFormErrors({});
       } else {
-        response = await fetch(`${API_BASE_URL}/crop/create`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        createCrop(cropData, {
+          onSuccess: async () => {
+            const token = localStorage.getItem("token");
+            const cropsData = await getAllCrops(token);
+            setCrops(cropsData);
+            setIsModalOpen(false);
+            setCurrentCrop(null);
+            setFormErrors({});
           },
-          body: JSON.stringify(cropData),
+          onError: (err) => {
+            setError(err.message);
+          },
         });
       }
-
-      if (!response.ok) {
-        throw new Error(
-          currentCrop ? "Failed to update crop" : "Failed to create crop"
-        );
-      }
-
-      const cropsData = await getAllCrops(token);
-      setCrops(cropsData);
-      setIsModalOpen(false);
-      setCurrentCrop(null);
     } catch (err) {
       setError(err.message);
     }
@@ -232,7 +256,7 @@ const CropManagement = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {currentCrop ? "Edit Crop" : "Add New Crop"}
               </h3>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Crop Name
@@ -264,10 +288,30 @@ const CropManagement = () => {
                   <input
                     type="number"
                     name="quantity"
+                    min="1"
+                    step="1"
                     defaultValue={currentCrop?.quantity || ""}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
+                    pattern="[0-9]*"
+                    onKeyDown={e => {
+                      // Không cho nhập e, E, +, -, .
+                      if (
+                        ["e", "E", "+", "-", "."].includes(e.key)
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onInput={e => {
+                      // Xóa ký tự không phải số
+                      e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    }}
                   />
+                  {formErrors.quantity && (
+                    <p className="text-red-600 text-xs mt-1">
+                      {formErrors.quantity}
+                    </p>
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -279,7 +323,13 @@ const CropManagement = () => {
                     defaultValue={currentCrop?.plantingDate || ""}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
+                    min={new Date().toISOString().split("T")[0]}
                   />
+                  {formErrors.plantingDate && (
+                    <p className="text-red-600 text-xs mt-1">
+                      {formErrors.plantingDate}
+                    </p>
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -291,26 +341,21 @@ const CropManagement = () => {
                     defaultValue={currentCrop?.harvestDate || ""}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
+                    min={new Date().toISOString().split("T")[0]}
                   />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    defaultValue={currentCrop?.status || "ACTIVE"}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  >
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                  </select>
+                  {formErrors.harvestDate && (
+                    <p className="text-red-600 text-xs mt-1">
+                      {formErrors.harvestDate}
+                    </p>
+                  )}
                 </div>
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setFormErrors({});
+                    }}
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
@@ -318,8 +363,9 @@ const CropManagement = () => {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    disabled={isCreating}
                   >
-                    {currentCrop ? "Update" : "Save"}
+                    {currentCrop ? "Update" : isCreating ? "Saving..." : "Save"}
                   </button>
                 </div>
               </form>

@@ -40,3 +40,33 @@ export const useChangeCropStatus = () => {
     },
   });
 };
+
+export const createCrop = async (cropData) => {
+  const response = await axios.post(
+    'https://localhost:7067/api/v1/crop/create',
+    cropData,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  return response.data;
+};
+
+export const useCreateCrop = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createCrop,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["getAllCrops"]);
+    },
+    onError: (error) => {
+      if (error.response) {
+        console.error('Create crop failed:', error.response.data, error.response.status, error.response.config.url);
+      } else {
+        console.error('Create crop failed:', error.message);
+      }
+    },
+  });
+};
