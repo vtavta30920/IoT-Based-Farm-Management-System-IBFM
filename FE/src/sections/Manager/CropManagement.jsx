@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getAllCrops, getAllFarms } from "../../api/api";
+import { changeCropStatus } from "../../api/CropEndPoint";
 
 const CropManagement = () => {
   const [crops, setCrops] = useState([]);
@@ -8,6 +9,8 @@ const CropManagement = () => {
   const [currentCrop, setCurrentCrop] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusModal, setStatusModal] = useState({ open: false, crop: null });
+  const [isChanging, setIsChanging] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,7 +70,6 @@ const CropManagement = () => {
       let response;
 
       if (currentCrop) {
-        // Update existing crop
         response = await fetch(
           `${API_BASE_URL}/crop/update/${currentCrop.cropId}`,
           {
@@ -80,7 +82,6 @@ const CropManagement = () => {
           }
         );
       } else {
-        // Add new crop
         response = await fetch(`${API_BASE_URL}/crop/create`, {
           method: "POST",
           headers: {
@@ -97,13 +98,29 @@ const CropManagement = () => {
         );
       }
 
-      // Refresh crop list
-      const data = await getAllCrops(token);
-      setCrops(data);
+      const cropsData = await getAllCrops(token);
+      setCrops(cropsData);
       setIsModalOpen(false);
       setCurrentCrop(null);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleChangeStatus = async () => {
+    if (!statusModal.crop) return;
+    setIsChanging(true);
+    try {
+      await changeCropStatus(statusModal.crop.cropId);
+      const token = localStorage.getItem("token");
+      const cropsData = await getAllCrops(token);
+      setCrops(cropsData);
+      setStatusModal({ open: false, crop: null });
+    } catch (err) {
+      setError(err.message);
+      setStatusModal({ open: false, crop: null });
+    } finally {
+      setIsChanging(false);
     }
   };
 
@@ -129,25 +146,25 @@ const CropManagement = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Description
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Quantity
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Planting Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Harvest Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Actions
               </th>
             </tr>
@@ -155,53 +172,50 @@ const CropManagement = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {crops.map((crop) => (
               <tr key={crop.cropId}>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm font-medium text-gray-900">
                     {crop.cropName}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm text-gray-500">
                     {crop.description}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm text-gray-500">{crop.quantity}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm text-gray-500">
                     {crop.plantingDate}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm text-gray-500">
                     {crop.harvestDate}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${
-                      crop.status === "ACTIVE"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <button
+                    className={`px-2 py-1 rounded-full text-xs font-semibold
+                      ${
+                        crop.status === "ACTIVE"
+                          ? "bg-green-100 text-green-800 border border-green-400"
+                          : "bg-red-100 text-red-800 border border-red-400"
+                      }
+                    `}
+                    disabled={isChanging}
+                    onClick={() => setStatusModal({ open: true, crop })}
                   >
                     {crop.status}
-                  </span>
+                  </button>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                   <button
                     onClick={() => handleEdit(crop)}
                     className="text-blue-600 hover:text-blue-900 mr-3"
                   >
                     Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(crop.cropId)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
                   </button>
                 </td>
               </tr>
@@ -309,6 +323,37 @@ const CropManagement = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirm đổi trạng thái */}
+      {statusModal.open && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-xl font-semibold mb-4 text-blue-600">
+              Confirm Change Status
+            </h2>
+            <p className="mb-6">
+              Are you sure you want to change status for crop{" "}
+              <span className="font-bold">{statusModal.crop?.cropName}</span>?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded bg-gray-300"
+                onClick={() => setStatusModal({ open: false, crop: null })}
+                disabled={isChanging}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-blue-600 text-white"
+                onClick={handleChangeStatus}
+                disabled={isChanging}
+              >
+                {isChanging ? "Changing..." : "Change"}
+              </button>
             </div>
           </div>
         </div>
