@@ -294,15 +294,13 @@ const CropManagement = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                     pattern="[0-9]*"
-                    onKeyDown={e => {
+                    onKeyDown={(e) => {
                       // Không cho nhập e, E, +, -, .
-                      if (
-                        ["e", "E", "+", "-", "."].includes(e.key)
-                      ) {
+                      if (["e", "E", "+", "-", "."].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
-                    onInput={e => {
+                    onInput={(e) => {
                       // Xóa ký tự không phải số
                       e.target.value = e.target.value.replace(/[^0-9]/g, "");
                     }}
