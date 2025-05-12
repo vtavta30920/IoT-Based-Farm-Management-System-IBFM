@@ -46,6 +46,7 @@ import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
 import InventoryManagement from "./sections/Manager/InventoryManagement.jsx";
 import Reports from "./sections/Manager/Reports.jsx";
 import OrderManagement from "./sections/Manager/OrdersManagement.jsx";
+import CategoryManagement from "./sections/Manager/CategoryManagement.jsx";
 
 // Staff Pages
 import IotDevices from "./sections/Staff/IotDevices.jsx";
@@ -144,6 +145,10 @@ const App = () => {
                     <Route
                       path="OrderManagement"
                       element={<OrderManagement />}
+                    />
+                    <Route
+                      path="CategoryManagement"
+                      element={<CategoryManagement />}
                     />
                   </Route>
                 </Route>
