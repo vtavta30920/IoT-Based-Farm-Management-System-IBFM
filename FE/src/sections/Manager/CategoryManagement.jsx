@@ -1,12 +1,21 @@
 import React, { useState } from "react";
-import { useCategories, useCreateCategory } from "../../api/CategoryEndPoint";
+import {
+  useCategories,
+  useCreateCategory,
+  useDeleteCategory,
+} from "../../api/CategoryEndPoint";
 
 const CategoryManagement = () => {
   const { data, isLoading, isError } = useCategories();
   const { mutate: createCategory, isLoading: isCreating } = useCreateCategory();
+  const { mutate: deleteCategory, isLoading: isDeleting } = useDeleteCategory();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    category: null,
+  });
 
   if (isLoading) {
     return <div className="p-6">Loading categories...</div>;
@@ -25,6 +34,18 @@ const CategoryManagement = () => {
       onSuccess: () => {
         setIsModalOpen(false);
         setNewCategoryName("");
+      },
+    });
+  };
+
+  const handleDelete = () => {
+    if (!deleteModal.category) return;
+    deleteCategory(deleteModal.category.categoryId, {
+      onSuccess: () => {
+        setDeleteModal({ open: false, category: null });
+      },
+      onSettled: () => {
+        setDeleteModal({ open: false, category: null });
       },
     });
   };
@@ -48,12 +69,13 @@ const CategoryManagement = () => {
             <tr>
               <th className="px-4 py-2 text-left">No.</th>
               <th className="px-4 py-2 text-left">Category Name</th>
+              <th className="px-4 py-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {categories.length === 0 && (
               <tr>
-                <td colSpan={2} className="text-gray-500 px-4 py-2">
+                <td colSpan={3} className="text-gray-500 px-4 py-2">
                   No categories found.
                 </td>
               </tr>
@@ -66,12 +88,23 @@ const CategoryManagement = () => {
                 <td className="border-b border-gray-200 px-4 py-2 font-medium">
                   {cat.categoryName}
                 </td>
+                <td className="border-b border-gray-200 px-4 py-2">
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    disabled={isDeleting}
+                    onClick={() =>
+                      setDeleteModal({ open: true, category: cat })
+                    }
+                  >
+                    Remove
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {/* Modal */}
+      {/* Create Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
@@ -101,6 +134,39 @@ const CategoryManagement = () => {
                 disabled={isCreating || !newCategoryName.trim()}
               >
                 {isCreating ? "Creating..." : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirm Modal */}
+      {deleteModal.open && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-xl font-semibold mb-4 text-red-600">
+              Confirm Remove
+            </h2>
+            <p className="mb-6">
+              Are you sure you want to remove category{" "}
+              <span className="font-bold">
+                {deleteModal.category?.categoryName}
+              </span>
+              ?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded bg-gray-300"
+                onClick={() => setDeleteModal({ open: false, category: null })}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Removing..." : "Remove"}
               </button>
             </div>
           </div>

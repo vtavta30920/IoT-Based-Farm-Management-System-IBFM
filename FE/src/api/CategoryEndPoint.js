@@ -42,3 +42,27 @@ export const useCreateCategory = () => {
     },
   });
 };
+
+export const deleteCategory = async (categoryId) => {
+  const response = await axios.delete(
+    `https://localhost:7067/api/v1/category/${categoryId}`
+  );
+  return response.data;
+};
+
+export const useDeleteCategory = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['v1/category/get-all']);
+    },
+    onError: (error) => {
+      if (error.response) {
+        console.error('Delete category failed:', error.response.data, error.response.status, error.response.config.url);
+      } else {
+        console.error('Delete category failed:', error.message);
+      }
+    },
+  });
+};
