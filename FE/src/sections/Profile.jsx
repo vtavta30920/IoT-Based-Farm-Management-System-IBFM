@@ -1,11 +1,30 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../contexts/UserContext.jsx";
 import defaultAvatar from "../assets/avatardefault.jpg";
+import { useChangePassword } from "../api/AccountEndPoint";
+
+// Custom hook lấy userId từ token (ưu tiên nameid)
+function useCurrentUserId() {
+  const [userId, setUserId] = useState("");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let idFromToken = "";
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        idFromToken = payload.nameid ? String(payload.nameid) : "";
+      } catch {
+        // ignore
+      }
+    }
+    setUserId(idFromToken);
+  }, []);
+  return userId;
+}
 
 const Profile = () => {
   const { user, updateProfile } = useContext(UserContext);
   const [message, setMessage] = useState("");
-
   const [formData, setFormData] = useState({
     email: "",
     fullname: "",
@@ -17,9 +36,19 @@ const Profile = () => {
     address: "",
     image: "",
   });
-
   const [showModal, setShowModal] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
+  // Change password modal state
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const { mutate: changePassword, isLoading: isChangingPassword } =
+    useChangePassword();
+  const userId = useCurrentUserId();
 
   useEffect(() => {
     if (user) {
@@ -88,6 +117,82 @@ const Profile = () => {
     } catch (err) {
       setMessage("❌ Update failed: " + err.message);
     }
+  };
+
+  // Change password handlers
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmitChangePassword = (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    if (
+      !passwordForm.oldPassword ||
+      !passwordForm.newPassword ||
+      !passwordForm.confirmPassword
+    ) {
+      setPasswordError("All fields are required.");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("New password and confirm password do not match.");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters.");
+      return;
+    }
+    if (passwordForm.oldPassword === passwordForm.newPassword) {
+      setPasswordError("New password must be different from old password.");
+      return;
+    }
+    changePassword(
+      {
+        userId,
+        passwordData: {
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword,
+          confirmPassword: passwordForm.confirmPassword,
+        },
+      },
+      {
+        onSuccess: (data, variables, context) => {
+          // Nếu backend trả về lỗi trong response (ví dụ: status 400 nhưng axios không throw)
+          if (data && data.status === 400 && data.message === "Old password is incorrect") {
+            setPasswordError("Old password is incorrect.");
+            return;
+          }
+          setShowChangePassword(false);
+          setPasswordForm({
+            oldPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          });
+          setMessage("✅ Password changed successfully!");
+        },
+        onError: (err) => {
+          // Bắt lỗi old password sai từ backend
+          const msg =
+            err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            err?.message ||
+            "Change password failed.";
+          if (
+            msg === "Old password is incorrect" ||
+            msg.toLowerCase().includes("old password is incorrect")
+          ) {
+            setPasswordError("Old password is incorrect.");
+          } else {
+            setPasswordError(msg);
+          }
+        },
+      }
+    );
   };
 
   if (!user) return <div>Please log in to view your profile.</div>;
@@ -197,7 +302,13 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end mt-6">
+                <div className="flex justify-end mt-6 gap-2">
+                  <button
+                    onClick={() => setShowChangePassword(true)}
+                    className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition"
+                  >
+                    Change Password
+                  </button>
                   <button
                     onClick={handleUpdate}
                     className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
@@ -249,6 +360,88 @@ const Profile = () => {
                   Set Image
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal đổi mật khẩu */}
+        {showChangePassword && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 shadow-lg w-96">
+              <h3 className="text-lg font-semibold mb-4 text-center">
+                Change Password
+              </h3>
+              <form onSubmit={handleSubmitChangePassword}>
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1">
+                    Old Password
+                  </label>
+                  <input
+                    type="password"
+                    name="oldPassword"
+                    value={passwordForm.oldPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full border px-3 py-2 rounded-md"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full border px-3 py-2 rounded-md"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full border px-3 py-2 rounded-md"
+                    required
+                  />
+                </div>
+                {passwordError && (
+                  <div className="text-red-600 text-sm mb-2">
+                    {passwordError}
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                    onClick={() => {
+                      setShowChangePassword(false);
+                      setPasswordForm({
+                        oldPassword: "",
+                        newPassword: "",
+                        confirmPassword: "",
+                      });
+                      setPasswordError("");
+                    }}
+                    disabled={isChangingPassword}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600"
+                    disabled={isChangingPassword}
+                  >
+                    {isChangingPassword ? "Changing..." : "Change"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

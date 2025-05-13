@@ -97,7 +97,6 @@ export const updateAccount = async (userId, updateData) => {
   return response.data;
 };
 
-
 // Hook React Query để gọi API cập nhật tài khoản
 export const useUpdateAccount = () => {
   return useMutation({
@@ -133,6 +132,28 @@ export const useCreateAccount = () => {
     },
     onError: (error) => {
       console.error('Create account failed:', error);
+    },
+  });
+};
+
+// Hàm API để đổi mật khẩu tài khoản
+export const changePassword = async (userId, passwordData) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/account/update-password?id=${userId}`,
+    passwordData
+  );
+  return response.data;
+};
+
+// Hook React Query để gọi API đổi mật khẩu
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: ({ userId, passwordData }) => changePassword(userId, passwordData),
+    onSuccess: (data) => {
+      console.log('Password changed successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Password change failed:', error.response?.data || error.message);
     },
   });
 };
