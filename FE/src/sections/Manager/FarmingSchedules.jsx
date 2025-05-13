@@ -73,7 +73,7 @@ const FarmingSchedules = () => {
   const fetchCrops = async () => {
     try {
       const response = await getAllCrops(token);
-      setCrops(response);
+      setCrops(response.items);
     } catch (err) {
       setError(err.message);
     }
@@ -493,7 +493,7 @@ const FarmingSchedules = () => {
                     required
                   />
                 </div>
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
                     End Date
                   </label>
@@ -505,7 +505,7 @@ const FarmingSchedules = () => {
                     className="w-full p-2 border rounded"
                     required
                   />
-                </div>
+                </div> */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
                     Assigned To (Staff)
@@ -632,7 +632,7 @@ const FarmingSchedules = () => {
                     required
                   />
                 </div>
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
                     End Date
                   </label>
@@ -644,7 +644,7 @@ const FarmingSchedules = () => {
                     className="w-full p-2 border rounded"
                     required
                   />
-                </div>
+                </div> */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
                     Assigned To (Staff)
