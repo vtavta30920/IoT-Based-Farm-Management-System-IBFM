@@ -13,17 +13,21 @@ const CropManagement = () => {
   const [isChanging, setIsChanging] = useState(false);
   const { mutate: createCrop, isLoading: isCreating } = useCreateCrop();
   const [formErrors, setFormErrors] = useState({});
+  const [pageIndex, setPageIndex] = useState(1);
+  const pageSize = 5;
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         const [cropsData, farmsData] = await Promise.all([
-          getAllCrops(token),
+          getAllCrops(token, pageIndex, pageSize),
           getAllFarms(token),
         ]);
-        setCrops(cropsData);
+        setCrops(Array.isArray(cropsData.items) ? cropsData.items : []);
         setFarms(farmsData);
+        setTotalPages(cropsData.totalPagesCount || 1);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -32,7 +36,7 @@ const CropManagement = () => {
     };
 
     fetchData();
-  }, []);
+  }, [pageIndex]);
 
   const handleEdit = (crop) => {
     setCurrentCrop(crop);
@@ -78,6 +82,13 @@ const CropManagement = () => {
     return errors;
   };
 
+  const reloadCurrentPage = async () => {
+    const token = localStorage.getItem("token");
+    const cropsData = await getAllCrops(token, pageIndex, pageSize);
+    setCrops(Array.isArray(cropsData.items) ? cropsData.items : []);
+    setTotalPages(cropsData.totalPagesCount || 1);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -106,17 +117,14 @@ const CropManagement = () => {
         if (!response.ok) {
           throw new Error("Failed to update crop");
         }
-        const cropsData = await getAllCrops(token);
-        setCrops(cropsData);
+        await reloadCurrentPage();
         setIsModalOpen(false);
         setCurrentCrop(null);
         setFormErrors({});
       } else {
         createCrop(cropData, {
           onSuccess: async () => {
-            const token = localStorage.getItem("token");
-            const cropsData = await getAllCrops(token);
-            setCrops(cropsData);
+            await reloadCurrentPage();
             setIsModalOpen(false);
             setCurrentCrop(null);
             setFormErrors({});
@@ -136,9 +144,7 @@ const CropManagement = () => {
     setIsChanging(true);
     try {
       await changeCropStatus(statusModal.crop.cropId);
-      const token = localStorage.getItem("token");
-      const cropsData = await getAllCrops(token);
-      setCrops(cropsData);
+      await reloadCurrentPage();
       setStatusModal({ open: false, crop: null });
     } catch (err) {
       setError(err.message);
@@ -150,6 +156,7 @@ const CropManagement = () => {
 
   if (isLoading) return <div>Loading crops...</div>;
   if (error) return <div>Error: {error}</div>;
+  const cropList = Array.isArray(crops) ? crops : [];
 
   return (
     <div className="p-6">
@@ -194,7 +201,7 @@ const CropManagement = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {crops.map((crop) => (
+            {cropList.map((crop) => (
               <tr key={crop.cropId}>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm font-medium text-gray-900">
@@ -246,6 +253,26 @@ const CropManagement = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex justify-center items-center gap-4 mt-6">
+        <button
+          className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
+          disabled={pageIndex === 1}
+          onClick={() => setPageIndex((prev) => Math.max(prev - 1, 1))}
+        >
+          Previous
+        </button>
+        <span>
+          Page {pageIndex} / {totalPages}
+        </span>
+        <button
+          className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
+          disabled={pageIndex === totalPages}
+          onClick={() => setPageIndex((prev) => Math.min(prev + 1, totalPages))}
+        >
+          Next
+        </button>
       </div>
 
       {/* Crop Modal */}
