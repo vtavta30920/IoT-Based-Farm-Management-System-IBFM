@@ -260,19 +260,14 @@ export const getAllFarmActivities = async (token) => {
   return response.json();
 };
 
-export const getAllCrops = async (token, pageIndex = 0, pageSize = 10) => {
-  const response = await fetch(
-    `${API_BASE_URL}/crop/get-all?pageIndex=${
-      pageIndex + 1
-    }&pageSize=${pageSize}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+export const getAllCrops = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/crop/get-all-active`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch crops.");

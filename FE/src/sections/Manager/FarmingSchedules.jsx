@@ -73,7 +73,7 @@ const FarmingSchedules = () => {
   const fetchCrops = async () => {
     try {
       const response = await getAllCrops(token);
-      setCrops(response.items);
+      setCrops(response);
     } catch (err) {
       setError(err.message);
     }
