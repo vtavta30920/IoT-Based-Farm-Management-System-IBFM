@@ -111,7 +111,7 @@ const StaffLayout = () => {
                 {isSidebarOpen && <span className="ml-3">IoT Devices</span>}
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link
                 to="/staff/farming-tasks"
                 className="flex items-center p-3 hover:bg-green-600 rounded-lg transition duration-200"
@@ -132,8 +132,8 @@ const StaffLayout = () => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">Farming Tasks</span>}
               </Link>
-            </li>
-            <li>
+            </li> */}
+            {/* <li>
               <Link
                 to="/staff/quality-control"
                 className="flex items-center p-3 hover:bg-green-600 rounded-lg transition duration-200"
@@ -154,8 +154,8 @@ const StaffLayout = () => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">Quality Control</span>}
               </Link>
-            </li>
-            <li>
+            </li> */}
+            {/* <li>
               <Link
                 to="/staff/logistics"
                 className="flex items-center p-3 hover:bg-green-600 rounded-lg transition duration-200"
@@ -177,7 +177,7 @@ const StaffLayout = () => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">Logistics</span>}
               </Link>
-            </li>
+            </li> */}
             {/* <li>
               <Link
                 to="/staff/OrderManagement"

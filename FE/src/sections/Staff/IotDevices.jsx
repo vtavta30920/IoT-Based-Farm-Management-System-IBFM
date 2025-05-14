@@ -1,182 +1,163 @@
-// Staff/IotDevices.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getBlynkData } from "../../api/api";
 
-const IotDevices = () => {
-  // Sample device data
-  const devices = [
-    {
-      id: 1,
-      name: "Temperature Sensor 1",
-      type: "Sensor",
-      location: "Greenhouse A",
-      status: "Active",
-      battery: 85,
-    },
-    {
-      id: 2,
-      name: "Humidity Sensor 2",
-      type: "Sensor",
-      location: "Greenhouse B",
-      status: "Active",
-      battery: 72,
-    },
-    {
-      id: 3,
-      name: "Irrigation Controller",
-      type: "Controller",
-      location: "Field 1",
-      status: "Maintenance",
-      battery: 15,
-    },
-    {
-      id: 4,
-      name: "Soil Moisture Sensor",
-      type: "Sensor",
-      location: "Field 2",
-      status: "Active",
-      battery: 90,
-    },
-    {
-      id: 5,
-      name: "Weather Station",
-      type: "Station",
-      location: "Main Building",
-      status: "Inactive",
-      battery: 0,
-    },
-  ];
+const IotDevices = ({ token }) => {
+  const [blynkData, setBlynkData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getBlynkData(token);
+        setBlynkData(data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [token]);
+
+  if (loading) return <div className="p-6">Loading IoT data...</div>;
+  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h2 className="text-2xl font-bold text-green-700 mb-6">
-        IoT Devices Management
+        IoT Devices Dashboard
       </h2>
 
       <div className="mb-6">
-        <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mr-3">
-          Add New Device
-        </button>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Run Diagnostics
-        </button>
-      </div>
+        <div className="bg-gray-100 p-4 rounded-lg mb-4">
+          <h3 className="font-semibold text-lg mb-2">Blynk Console</h3>
+          <div className="text-gray-600 mb-2">IOT BaseFarm</div>
+          <div className="text-sm text-gray-500 mb-1">Inactive</div>
+          <div className="text-sm text-gray-500">My organization - 8289XO</div>
+        </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Device Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Location
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Battery
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {devices.map((device) => (
-              <tr key={device.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {device.name}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{device.type}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{device.location}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${
-                      device.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : device.status === "Maintenance"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {device.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="w-16 bg-gray-200 rounded-full h-2.5 mr-2">
-                      <div
-                        className={`h-2.5 rounded-full 
-                          ${
-                            device.battery > 50
-                              ? "bg-green-600"
-                              : device.battery > 20
-                              ? "bg-yellow-500"
-                              : "bg-red-600"
-                          }`}
-                        style={{ width: `${device.battery}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm">{device.battery}%</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button className="text-green-600 hover:text-green-900 mr-3">
-                    Details
-                  </button>
-                  <button className="text-blue-600 hover:text-blue-900">
-                    Configure
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Temperature Card */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-semibold mb-2">Temperature</h3>
+            <div className="text-2xl font-bold text-blue-600 mb-2">
+              {blynkData.v0}°C
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full"
+                style={{ width: `${blynkData.v0}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0</span>
+              <span>100</span>
+            </div>
+          </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <h3 className="font-semibold text-lg mb-2">Device Status Overview</h3>
-          <div className="h-64 bg-white rounded flex items-center justify-center">
-            <p className="text-gray-500">
-              Pie chart showing device status distribution
-            </p>
+          {/* Humidity Card */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-semibold mb-2">Humidity</h3>
+            <div className="text-2xl font-bold text-green-600 mb-2">
+              {blynkData.v1}%
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-green-600 h-2 rounded-full"
+                style={{ width: `${blynkData.v1}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0</span>
+              <span>100</span>
+            </div>
+          </div>
+
+          {/* Rainfall Card */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-semibold mb-2">Rainfall</h3>
+            <div className="text-2xl font-bold text-indigo-600 mb-2">
+              {blynkData.v2}mm
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-indigo-600 h-2 rounded-full"
+                style={{ width: `${blynkData.v2}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0</span>
+              <span>100</span>
+            </div>
+          </div>
+
+          {/* Soil Moisture Card */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-semibold mb-2">Soil Moisture</h3>
+            <div className="text-2xl font-bold text-yellow-600 mb-2">
+              {blynkData.v3}%
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-yellow-600 h-2 rounded-full"
+                style={{ width: `${blynkData.v3}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0</span>
+              <span>100</span>
+            </div>
           </div>
         </div>
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <h3 className="font-semibold text-lg mb-2">Recent Alerts</h3>
-          <div className="space-y-3">
-            <div className="bg-white p-3 rounded shadow-sm flex items-start">
-              <span className="w-3 h-3 bg-red-500 rounded-full mt-1 mr-3"></span>
-              <div>
-                <p className="font-medium">
-                  Irrigation Controller needs attention
-                </p>
-                <p className="text-sm text-gray-500">
-                  Low battery (15%) - Field 1
-                </p>
-              </div>
+
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Light Card */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-semibold mb-2">Light</h3>
+            <div className="text-2xl font-bold text-orange-600 mb-2">
+              {blynkData.v4} lux
             </div>
-            <div className="bg-white p-3 rounded shadow-sm flex items-start">
-              <span className="w-3 h-3 bg-yellow-500 rounded-full mt-1 mr-3"></span>
-              <div>
-                <p className="font-medium">Humidity Sensor 2 offline</p>
-                <p className="text-sm text-gray-500">
-                  Last seen 2 hours ago - Greenhouse B
-                </p>
-              </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-orange-600 h-2 rounded-full"
+                style={{ width: `${(blynkData.v4 / 1095) * 100}%` }}
+              ></div>
             </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0</span>
+              <span>1,095</span>
+            </div>
+          </div>
+
+          {/* Messages Card */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-semibold mb-2">Messages used</h3>
+            <div className="text-lg mb-2">
+              <span className="font-bold">0</span> of 30%
+            </div>
+            <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+              Add Tag
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h3 className="font-semibold mb-2">Device Management</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
+              Automations
+            </button>
+            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
+              Users
+            </button>
+            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
+              Organizations
+            </button>
+            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
+              Locations
+            </button>
           </div>
         </div>
       </div>
