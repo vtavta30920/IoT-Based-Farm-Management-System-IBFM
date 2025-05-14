@@ -70,3 +70,24 @@ export const useCreateCrop = () => {
     },
   });
 };
+
+export const updateCrop = async (cropId, updateData) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/crop/update/${cropId}`,
+    updateData // Truyền body JSON chứa cropName, description, quantity, plantingDate
+  );
+  return response.data;
+};
+
+export const useUpdateCrop = () => {
+  return useMutation({
+    mutationFn: ({ cropId, updateData }) => updateCrop(cropId, updateData),
+    onSuccess: (data) => {
+      console.log('Update crop success:', data);
+      // Có thể show toast hoặc invalidate query tại đây
+    },
+    onError: (error) => {
+      console.error('Update crop failed:', error);
+    },
+  });
+};

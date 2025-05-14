@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { getAllCrops, getAllFarms } from "../../api/api";
-import { changeCropStatus, useCreateCrop } from "../../api/CropEndPoint";
+import {
+  changeCropStatus,
+  useCreateCrop,
+  useUpdateCrop,
+} from "../../api/CropEndPoint";
 
 const CropManagement = () => {
   const [crops, setCrops] = useState([]);
@@ -12,6 +16,7 @@ const CropManagement = () => {
   const [statusModal, setStatusModal] = useState({ open: false, crop: null });
   const [isChanging, setIsChanging] = useState(false);
   const { mutate: createCrop, isLoading: isCreating } = useCreateCrop();
+  const { mutate: updateCrop, isLoading: isUpdating } = useUpdateCrop();
   const [formErrors, setFormErrors] = useState({});
   const [pageIndex, setPageIndex] = useState(1);
   const pageSize = 5;
@@ -38,11 +43,6 @@ const CropManagement = () => {
     fetchData();
   }, [pageIndex]);
 
-  const handleEdit = (crop) => {
-    setCurrentCrop(crop);
-    setIsModalOpen(true);
-  };
-
   const validateForm = (cropData) => {
     const errors = {};
     if (!cropData.quantity || isNaN(Number(cropData.quantity))) {
@@ -51,23 +51,25 @@ const CropManagement = () => {
       errors.quantity = "Quantity must be a positive number";
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     if (!cropData.plantingDate) {
       errors.plantingDate = "Planting date is required";
     } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const plantingDate = new Date(cropData.plantingDate);
       if (plantingDate < today) {
-        errors.plantingDate = "Planting date cannot be in the past";
+        errors.plantingDate = "Planting date must be today or in the future";
       }
     }
 
-    if (!cropData.harvestDate) {
+    if (!cropData.harvestDate && !currentCrop) {
       errors.harvestDate = "Harvest date is required";
-    } else {
+    } else if (!currentCrop && cropData.harvestDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const harvestDate = new Date(cropData.harvestDate);
       if (harvestDate < today) {
-        errors.harvestDate = "Harvest date cannot be in the past";
+        errors.harvestDate = "Harvest date must be today or in the future";
       } else if (cropData.plantingDate) {
         const plantingDate = new Date(cropData.plantingDate);
         const diffTime = harvestDate.getTime() - plantingDate.getTime();
@@ -79,7 +81,19 @@ const CropManagement = () => {
       }
     }
 
+    if (!cropData.cropName || !cropData.cropName.trim()) {
+      errors.cropName = "Crop name is required";
+    }
+    if (!cropData.description || !cropData.description.trim()) {
+      errors.description = "Description is required";
+    }
+
     return errors;
+  };
+
+  const handleEdit = (crop) => {
+    setCurrentCrop(crop);
+    setIsModalOpen(true);
   };
 
   const reloadCurrentPage = async () => {
@@ -102,25 +116,28 @@ const CropManagement = () => {
 
     try {
       if (currentCrop) {
-        const token = localStorage.getItem("token");
-        let response = await fetch(
-          `${API_BASE_URL}/crop/update/${currentCrop.cropId}`,
+        updateCrop(
           {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+            cropId: currentCrop.cropId,
+            updateData: {
+              cropName: cropData.cropName,
+              description: cropData.description,
+              quantity: cropData.quantity,
+              plantingDate: cropData.plantingDate,
             },
-            body: JSON.stringify(cropData),
+          },
+          {
+            onSuccess: async () => {
+              await reloadCurrentPage();
+              setIsModalOpen(false);
+              setCurrentCrop(null);
+              setFormErrors({});
+            },
+            onError: (err) => {
+              setError(err.message);
+            },
           }
         );
-        if (!response.ok) {
-          throw new Error("Failed to update crop");
-        }
-        await reloadCurrentPage();
-        setIsModalOpen(false);
-        setCurrentCrop(null);
-        setFormErrors({});
       } else {
         createCrop(cropData, {
           onSuccess: async () => {
@@ -295,6 +312,11 @@ const CropManagement = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   />
+                  {formErrors.cropName && (
+                    <p className="text-red-600 text-xs mt-1">
+                      {formErrors.cropName}
+                    </p>
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -307,6 +329,11 @@ const CropManagement = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   />
+                  {formErrors.description && (
+                    <p className="text-red-600 text-xs mt-1">
+                      {formErrors.description}
+                    </p>
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -322,13 +349,11 @@ const CropManagement = () => {
                     required
                     pattern="[0-9]*"
                     onKeyDown={(e) => {
-                      // Không cho nhập e, E, +, -, .
                       if (["e", "E", "+", "-", "."].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
                     onInput={(e) => {
-                      // Xóa ký tự không phải số
                       e.target.value = e.target.value.replace(/[^0-9]/g, "");
                     }}
                   />
@@ -356,24 +381,27 @@ const CropManagement = () => {
                     </p>
                   )}
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Harvest Date
-                  </label>
-                  <input
-                    type="date"
-                    name="harvestDate"
-                    defaultValue={currentCrop?.harvestDate || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                  {formErrors.harvestDate && (
-                    <p className="text-red-600 text-xs mt-1">
-                      {formErrors.harvestDate}
-                    </p>
-                  )}
-                </div>
+                {/* Chỉ hiển thị Harvest Date khi tạo mới, không hiển thị khi edit */}
+                {!currentCrop && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Harvest Date
+                    </label>
+                    <input
+                      type="date"
+                      name="harvestDate"
+                      defaultValue={currentCrop?.harvestDate || ""}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      required
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                    {formErrors.harvestDate && (
+                      <p className="text-red-600 text-xs mt-1">
+                        {formErrors.harvestDate}
+                      </p>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -388,9 +416,15 @@ const CropManagement = () => {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                    disabled={isCreating}
+                    disabled={isCreating || isUpdating}
                   >
-                    {currentCrop ? "Update" : isCreating ? "Saving..." : "Save"}
+                    {currentCrop
+                      ? isUpdating
+                        ? "Updating..."
+                        : "Update"
+                      : isCreating
+                      ? "Saving..."
+                      : "Save"}
                   </button>
                 </div>
               </form>
