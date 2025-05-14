@@ -9,7 +9,7 @@ import {
   getStaffAccounts,
   getAllFarms,
   getAllFarmActivities,
-  getAllCrops,
+  getAllActive,
 } from "../../api/api";
 
 const FarmingSchedules = () => {
@@ -72,7 +72,7 @@ const FarmingSchedules = () => {
 
   const fetchCrops = async () => {
     try {
-      const response = await getAllCrops(token);
+      const response = await getAllActive(token);
       setCrops(response);
     } catch (err) {
       setError(err.message);
