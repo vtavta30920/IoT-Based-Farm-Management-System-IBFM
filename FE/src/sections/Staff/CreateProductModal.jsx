@@ -128,7 +128,12 @@ const ImageUrlModal = ({ currentImageUrl, onChangeImageUrl, onClose }) => {
   );
 };
 
-const CreateProductModal = ({ onClose, onSubmit, isSubmitting = false }) => {
+const CreateProductModal = ({
+  onClose,
+  onSubmit,
+  isSubmitting = false,
+  apiError,
+}) => {
   const [showImageUrlModal, setShowImageUrlModal] = useState(false);
   const [imageUrl, setImageUrl] = useState(defaultAvatar);
   const [categoryId, setCategoryId] = useState("");
@@ -154,7 +159,8 @@ const CreateProductModal = ({ onClose, onSubmit, isSubmitting = false }) => {
     return newErrors;
   };
 
-  const handleSave = () => {
+  const handleSave = (e) => {
+    e.preventDefault();
     const newErrors = validate();
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -191,129 +197,144 @@ const CreateProductModal = ({ onClose, onSubmit, isSubmitting = false }) => {
         <h2 className="text-3xl font-bold mb-6 text-green-700 text-center">
           Create Product
         </h2>
-        {Object.keys(errors).length > 3 && (
-          <div className="mb-2 text-red-600 font-semibold text-center">
-            Please fill all required fields correctly.
-          </div>
-        )}
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-shrink-0 flex flex-col items-center">
-            <img
-              src={imageUrl}
-              alt="Product"
-              className="w-48 h-48 object-cover rounded cursor-pointer border"
-              onClick={handleImageClick}
-            />
-            {errors.imageUrl && (
-              <div className="text-red-600 text-sm mt-2">{errors.imageUrl}</div>
-            )}
-          </div>
-          <div className="flex-grow space-y-4">
-            <div>
-              <label className="block font-medium">Crop</label>
-              <CropDropdown
-                selectedCropId={cropId}
-                onCropChange={(val) => setCropId(String(val))}
-              />
-              {errors.cropId && (
-                <div className="text-red-600 text-sm mt-1">{errors.cropId}</div>
-              )}
+        <form onSubmit={handleSave}>
+          {Object.keys(errors).length > 3 && (
+            <div className="mb-2 text-red-600 font-semibold text-center">
+              Please fill all required fields correctly.
             </div>
-            <div>
-              <label className="block font-medium">Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-              />
-              {errors.name && (
-                <div className="text-red-600 text-sm mt-1">{errors.name}</div>
-              )}
+          )}
+          {apiError && (
+            <div className="mb-2 text-center text-red-600 font-semibold">
+              {apiError}
             </div>
-            <div>
-              <label className="block font-medium">Price</label>
-              <input
-                type="text"
-                value={price}
-                onChange={(e) => {
-                  // Chỉ cho phép số, không cho nhập bất kỳ ký tự nào ngoài số
-                  const val = e.target.value.replace(/[^0-9]/g, "");
-                  setPrice(val === "" ? "" : Math.max(Number(val), 0));
-                }}
-                className="w-full border rounded px-3 py-2"
-                min={10000}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
+          )}
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-shrink-0 flex flex-col items-center">
+              <img
+                src={imageUrl}
+                alt="Product"
+                className="w-48 h-48 object-cover rounded cursor-pointer border"
+                onClick={handleImageClick}
               />
-              {errors.price && (
-                <div className="text-red-600 text-sm mt-1">{errors.price}</div>
-              )}
-            </div>
-            <div>
-              <label className="block font-medium">Stock</label>
-              <input
-                type="text"
-                value={stock}
-                onChange={(e) => {
-                  // Chỉ cho phép số, không cho nhập bất kỳ ký tự nào ngoài số
-                  const val = e.target.value.replace(/[^0-9]/g, "");
-                  setStock(val === "" ? "" : Math.max(Number(val), 0));
-                }}
-                className="w-full border rounded px-3 py-2"
-                min={1}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-              />
-              {errors.stock && (
-                <div className="text-red-600 text-sm mt-1">{errors.stock}</div>
-              )}
-            </div>
-            <div>
-              <label className="block font-medium">Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-              />
-              {errors.description && (
-                <div className="text-red-600 text-sm mt-1">
-                  {errors.description}
+              {errors.imageUrl && (
+                <div className="text-red-600 text-sm mt-2">
+                  {errors.imageUrl}
                 </div>
               )}
             </div>
-            <div>
-              <label className="block font-medium">Category</label>
-              <CategoryDropdown
-                selectedCategoryId={categoryId}
-                onCategoryChange={(val) => setCategoryId(String(val))}
-              />
-              {errors.categoryId && (
-                <div className="text-red-600 text-sm mt-1">
-                  {errors.categoryId}
-                </div>
-              )}
+            <div className="flex-grow space-y-4">
+              <div>
+                <label className="block font-medium">Crop</label>
+                <CropDropdown
+                  selectedCropId={cropId}
+                  onCropChange={(val) => setCropId(String(val))}
+                />
+                {errors.cropId && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {errors.cropId}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block font-medium">Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                />
+                {errors.name && (
+                  <div className="text-red-600 text-sm mt-1">{errors.name}</div>
+                )}
+              </div>
+              <div>
+                <label className="block font-medium">Price</label>
+                <input
+                  type="text"
+                  value={price}
+                  onChange={(e) => {
+                    // Chỉ cho phép số, không cho nhập bất kỳ ký tự nào ngoài số
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setPrice(val === "" ? "" : Math.max(Number(val), 0));
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                  min={10000}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
+                />
+                {errors.price && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {errors.price}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block font-medium">Stock</label>
+                <input
+                  type="text"
+                  value={stock}
+                  onChange={(e) => {
+                    // Chỉ cho phép số, không cho nhập bất kỳ ký tự nào ngoài số
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setStock(val === "" ? "" : Math.max(Number(val), 0));
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                  min={1}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
+                />
+                {errors.stock && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {errors.stock}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block font-medium">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                />
+                {errors.description && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {errors.description}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block font-medium">Category</label>
+                <CategoryDropdown
+                  selectedCategoryId={categoryId}
+                  onCategoryChange={(val) => setCategoryId(String(val))}
+                />
+                {errors.categoryId && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {errors.categoryId}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex justify-end mt-6 space-x-4">
-          <button
-            className="bg-gray-600 text-white px-6 py-2 rounded"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          <button
-            className="bg-green-600 text-white px-6 py-2 rounded"
-            onClick={handleSave}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Create"}
-          </button>
-        </div>
+          <div className="flex justify-end mt-6 space-x-4">
+            <button
+              className="bg-gray-600 text-white px-6 py-2 rounded"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              className="bg-green-600 text-white px-6 py-2 rounded"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating..." : "Create"}
+            </button>
+          </div>
+        </form>
         {showImageUrlModal && (
           <ImageUrlModal
             currentImageUrl={imageUrl}
