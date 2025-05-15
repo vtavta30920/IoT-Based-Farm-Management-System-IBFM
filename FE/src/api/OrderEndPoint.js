@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext'; // đường dẫn context
@@ -68,5 +68,23 @@ export const useGetOrdersByEmail = (email, pageIndex = 1, pageSize = 5, enabled 
     queryFn: () => GetOrdersByEmail(email, pageIndex, pageSize, status),
     enabled: !!email && enabled,
     keepPreviousData: false,
+  });
+};
+
+// Hàm API cập nhật trạng thái giao hàng
+const UpdateDeliveryStatus = async (orderId, token) => {
+  const url = `https://localhost:7067/api/v1/Order/updateDeliveryStatus/${orderId}`;
+  const headers = token
+    ? { Authorization: `Bearer ${token}`, accept: "*/*" }
+    : { accept: "*/*" };
+  const { data } = await axios.put(url, null, { headers });
+  return data;
+};
+
+// Hook dùng để gọi API cập nhật trạng thái giao hàng
+export const useUpdateDeliveryStatus = () => {
+  const { token } = useContext(UserContext);
+  return useMutation({
+    mutationFn: (orderId) => UpdateDeliveryStatus(orderId, token),
   });
 };

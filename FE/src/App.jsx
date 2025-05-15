@@ -56,6 +56,7 @@ import TaskDetails from "./sections/Staff/TaskDetails.jsx";
 import QualityControl from "./sections/Staff/QualityControl.jsx";
 import Logistics from "./sections/Staff/Logistics.jsx";
 import ProductsManagement from "./sections/Staff/ProductsManagement.jsx";
+import OrderManagementStaff from "./sections/Staff/OrderManagementStaff.jsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -125,6 +126,10 @@ const App = () => {
                     <Route
                       path="ProductsManagement"
                       element={<ProductsManagement />}
+                    />
+                    <Route
+                      path="OrderManagementStaff"
+                      element={<OrderManagementStaff />}
                     />
                   </Route>
                 </Route>
