@@ -3,8 +3,10 @@ import {
   useGetAllOrder,
   useGetOrdersByEmail,
   useUpdateDeliveryStatus,
+  useUpdateCompleteStatus, // Thêm hook này
 } from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -113,11 +115,45 @@ const OrderManagementStaff = () => {
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [modalType, setModalType] = useState(""); // "DELIVER" hoặc "COMPLETE"
 
   const updateDeliveryStatus = useUpdateDeliveryStatus();
+  const updateCompleteStatus = useUpdateCompleteStatus();
+  const queryClient = useQueryClient();
+
+  // Notification modal state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "", // "success" | "error"
+  });
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
+      {/* Notification Modal */}
+      {notification.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
+            <span
+              className={`text-2xl mb-2 ${
+                notification.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {notification.type === "success" ? "✔️" : "❌"}
+            </span>
+            <div className="text-center mb-4">{notification.message}</div>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              onClick={() => setNotification({ ...notification, show: false })}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold text-center text-green-600 mb-6">
         Order Management
       </h1>
@@ -248,21 +284,35 @@ const OrderManagementStaff = () => {
                           {order.shippingAddress}
                         </td>
                         <td className="p-2 border-t text-center">
+                          {/* Nút Deliver cho PAID, Nút Complete cho DELIVERED */}
                           {status === "PAID" ? (
                             <button
                               className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedOrderId(order.orderId);
+                                setModalType("DELIVER");
                                 setShowModal(true);
                               }}
                             >
                               Deliver
                             </button>
+                          ) : status === "DELIVERED" ? (
+                            <button
+                              className="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOrderId(order.orderId);
+                                setModalType("COMPLETE");
+                                setShowModal(true);
+                              }}
+                            >
+                              Complete
+                            </button>
                           ) : (
                             // Nút tượng trưng cho các status khác
                             <span className="inline-block px-3 py-1 rounded bg-gray-200 text-gray-500 cursor-not-allowed select-none">
-                              Deliver
+                              None
                             </span>
                           )}
                         </td>
@@ -306,31 +356,99 @@ const OrderManagementStaff = () => {
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-6 w-80">
             <h2 className="text-lg font-semibold mb-4 text-center">
-              Confirm Delivery
+              {modalType === "DELIVER"
+                ? "Confirm Delivery"
+                : "Confirm Complete"}
             </h2>
             <p className="mb-6 text-center">
-              Are you sure you want to change status to <b>DELIVERED</b>?
+              {modalType === "DELIVER" ? (
+                <>
+                  Are you sure you want to change status to <b>DELIVERED</b>?
+                </>
+              ) : (
+                <>
+                  Are you sure you want to change status to <b>COMPLETED</b>?
+                </>
+              )}
             </p>
             <div className="flex justify-center gap-4">
               <button
                 className="bg-green-600 text-white px-4 py-2 rounded"
                 onClick={async () => {
-                  await updateDeliveryStatus.mutateAsync(selectedOrderId);
+                  let success = false;
+                  try {
+                    if (modalType === "DELIVER") {
+                      await updateDeliveryStatus.mutateAsync(selectedOrderId);
+                    } else if (modalType === "COMPLETE") {
+                      await updateCompleteStatus.mutateAsync(selectedOrderId);
+                    }
+                    // Làm mới danh sách order và danh sách search (nếu có)
+                    queryClient.invalidateQueries({
+                      queryKey: ["v1/Order/order-list"],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ["v1/Order/order-list-by-emal"],
+                    });
+                    success = true;
+                  } catch (err) {
+                    success = false;
+                  }
                   setShowModal(false);
+                  setNotification({
+                    show: true,
+                    message: success
+                      ? "Order status updated successfully!"
+                      : "Failed to update order status!",
+                    type: success ? "success" : "error",
+                  });
+                  if (success) {
+                    // Nếu chỉ có 1 order đang hiển thị (tức là sau khi đổi status thì list sẽ rỗng)
+                    if (displayOrders.length === 1) {
+                      setStatusFilter("");
+                      setPageIndex(1);
+                      setSearching(false);
+                      setSearchEmail("");
+                      setSearchPageIndex(1);
+                    }
+                    setTimeout(() => {
+                      setNotification((prev) =>
+                        prev.show ? { ...prev, show: false } : prev
+                      );
+                    }, 2000);
+                  }
                 }}
-                disabled={updateDeliveryStatus.isLoading}
+                disabled={
+                  modalType === "DELIVER"
+                    ? updateDeliveryStatus.isLoading
+                    : updateCompleteStatus.isLoading
+                }
               >
-                {updateDeliveryStatus.isLoading ? "Processing..." : "Confirm"}
+                {(
+                  modalType === "DELIVER"
+                    ? updateDeliveryStatus.isLoading
+                    : updateCompleteStatus.isLoading
+                )
+                  ? "Processing..."
+                  : "Confirm"}
               </button>
               <button
                 className="bg-gray-400 text-white px-4 py-2 rounded"
                 onClick={() => setShowModal(false)}
-                disabled={updateDeliveryStatus.isLoading}
+                disabled={
+                  modalType === "DELIVER"
+                    ? updateDeliveryStatus.isLoading
+                    : updateCompleteStatus.isLoading
+                }
               >
                 Cancel
               </button>
             </div>
-            {updateDeliveryStatus.isError && (
+            {modalType === "DELIVER" && updateDeliveryStatus.isError && (
+              <div className="text-red-500 text-center mt-2">
+                Failed to update status!
+              </div>
+            )}
+            {modalType === "COMPLETE" && updateCompleteStatus.isError && (
               <div className="text-red-500 text-center mt-2">
                 Failed to update status!
               </div>
