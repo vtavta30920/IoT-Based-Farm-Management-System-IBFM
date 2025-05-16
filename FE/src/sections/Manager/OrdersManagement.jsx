@@ -200,13 +200,8 @@ const OrdersManagement = () => {
     setSearchPageIndex(1);
   };
 
-  if (isError || !data?.data) {
-    return (
-      <div className="p-6 text-red-500 bg-white">Failed to load orders.</div>
-    );
-  }
-
-  const { items, totalPagesCount } = data.data;
+  const items = data?.data?.items || [];
+  const totalPagesCount = data?.data?.totalPagesCount || 1;
 
   const toggleExpand = (index) => {
     setExpandedIndex((prev) => (prev === index ? null : index));
@@ -390,6 +385,9 @@ const OrdersManagement = () => {
             <option value="PAID">Paid</option>
             <option value="UNDISCHARGED">Undischarged</option>
             <option value="PENDING">Pending</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
       </div>
