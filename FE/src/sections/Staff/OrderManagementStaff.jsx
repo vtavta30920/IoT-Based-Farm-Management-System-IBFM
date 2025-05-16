@@ -6,6 +6,7 @@ import {
   useUpdateCompleteStatus, // Thêm hook này
 } from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -118,9 +119,39 @@ const OrderManagementStaff = () => {
 
   const updateDeliveryStatus = useUpdateDeliveryStatus();
   const updateCompleteStatus = useUpdateCompleteStatus();
+  const queryClient = useQueryClient();
+
+  // Notification modal state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "", // "success" | "error"
+  });
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
+      {/* Notification Modal */}
+      {notification.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
+            <span
+              className={`text-2xl mb-2 ${
+                notification.type === "success" ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {notification.type === "success" ? "✔️" : "❌"}
+            </span>
+            <div className="text-center mb-4">{notification.message}</div>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              onClick={() => setNotification({ ...notification, show: false })}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold text-center text-green-600 mb-6">
         Order Management
       </h1>
@@ -342,12 +373,39 @@ const OrderManagementStaff = () => {
               <button
                 className="bg-green-600 text-white px-4 py-2 rounded"
                 onClick={async () => {
-                  if (modalType === "DELIVER") {
-                    await updateDeliveryStatus.mutateAsync(selectedOrderId);
-                  } else if (modalType === "COMPLETE") {
-                    await updateCompleteStatus.mutateAsync(selectedOrderId);
+                  let success = false;
+                  try {
+                    if (modalType === "DELIVER") {
+                      await updateDeliveryStatus.mutateAsync(selectedOrderId);
+                    } else if (modalType === "COMPLETE") {
+                      await updateCompleteStatus.mutateAsync(selectedOrderId);
+                    }
+                    // Làm mới danh sách order và danh sách search (nếu có)
+                    queryClient.invalidateQueries({
+                      queryKey: ["v1/Order/order-list"],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ["v1/Order/order-list-by-emal"],
+                    });
+                    success = true;
+                  } catch (err) {
+                    success = false;
                   }
                   setShowModal(false);
+                  setNotification({
+                    show: true,
+                    message: success
+                      ? "Order status updated successfully!"
+                      : "Failed to update order status!",
+                    type: success ? "success" : "error",
+                  });
+                  if (success) {
+                    setTimeout(() => {
+                      setNotification((prev) =>
+                        prev.show ? { ...prev, show: false } : prev
+                      );
+                    }, 2000);
+                  }
                 }}
                 disabled={
                   modalType === "DELIVER"
