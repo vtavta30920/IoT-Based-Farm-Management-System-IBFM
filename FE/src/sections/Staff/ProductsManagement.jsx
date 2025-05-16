@@ -18,13 +18,38 @@ const ProductsManagement = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState(""); // gõ ở ô input
   const [searchTerm, setSearchTerm] = useState(""); // dùng để query API
+  const [createApiError, setCreateApiError] = useState(""); // Thêm state để nhận lỗi từ CreateProductModal
 
   const { mutate: createProduct, isLoading: isCreating } = useCreateProduct();
 
-  const handleCreateProduct = (productData) => {
+  const handleCreateProduct = (productData, { onError, onSuccess } = {}) => {
+    setCreateApiError(""); // Reset lỗi trước khi submit
     createProduct(productData, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        // Nếu BE trả về status -1 và message, thì không đóng modal, hiện lỗi
+        if (data && data.status === -1 && data.message) {
+          setCreateApiError(data.message);
+          if (onError) onError({ response: { data } });
+          return;
+        }
+        setCreateApiError("");
         setIsCreateModalOpen(false);
+        if (onSuccess) onSuccess(data);
+      },
+      onError: (err) => {
+        // Bắt lỗi trả về từ BE (status -1 hoặc message)
+        const status = err?.response?.data?.status;
+        const msg =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Create product failed.";
+        if (status === -1 && msg) {
+          setCreateApiError(msg);
+        } else {
+          setCreateApiError(msg);
+        }
+        if (onError) onError(err);
       },
     });
   };
@@ -244,9 +269,13 @@ const ProductsManagement = () => {
 
       {isCreateModalOpen && (
         <CreateProductModal
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setCreateApiError("");
+          }}
           onSubmit={handleCreateProduct}
           isSubmitting={isCreating}
+          apiError={createApiError}
         />
       )}
     </div>
