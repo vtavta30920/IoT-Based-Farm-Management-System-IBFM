@@ -136,7 +136,9 @@ const OrderManagementStaff = () => {
           <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
             <span
               className={`text-2xl mb-2 ${
-                notification.type === "success" ? "text-green-600" : "text-red-600"
+                notification.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600"
               }`}
             >
               {notification.type === "success" ? "✔️" : "❌"}
@@ -400,6 +402,14 @@ const OrderManagementStaff = () => {
                     type: success ? "success" : "error",
                   });
                   if (success) {
+                    // Nếu chỉ có 1 order đang hiển thị (tức là sau khi đổi status thì list sẽ rỗng)
+                    if (displayOrders.length === 1) {
+                      setStatusFilter("");
+                      setPageIndex(1);
+                      setSearching(false);
+                      setSearchEmail("");
+                      setSearchPageIndex(1);
+                    }
                     setTimeout(() => {
                       setNotification((prev) =>
                         prev.show ? { ...prev, show: false } : prev
