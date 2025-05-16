@@ -35,6 +35,9 @@ const statusMap = {
   4: "PAID",
   5: "UNDISCHARGED",
   6: "PENDING",
+  9: "DELIVERED",
+  8: "COMPLETED",
+  7: "CANCELLED",
 };
 
 function getDaysInMonth(year, month) {
@@ -100,7 +103,7 @@ const OrdersManagement = () => {
       return (
         date.getFullYear() === Number(selectedYear) &&
         date.getMonth() + 1 === Number(selectedMonth) &&
-        order.status === 4
+        order.status === 8 // COMPLETED
       );
     });
 
@@ -176,7 +179,7 @@ const OrdersManagement = () => {
       if (
         date.getFullYear() === Number(selectedYear) &&
         date.getMonth() + 1 === Number(selectedMonth) &&
-        order.status === 4 // PAID
+        order.status === 8 // COMPLETED
       ) {
         total += order.totalPrice;
         count += 1;
@@ -196,10 +199,6 @@ const OrdersManagement = () => {
     setSearching(false);
     setSearchPageIndex(1);
   };
-
-  if (isLoading) {
-    return <div className="p-6 bg-white">Loading...</div>;
-  }
 
   if (isError || !data?.data) {
     return (
@@ -396,95 +395,104 @@ const OrdersManagement = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-4">
-        {displayOrders.map((order, index) => {
-          const status = statusMap[order.status];
-          const bgColor =
-            status === "PAID"
-              ? "bg-green-100 border-green-400"
-              : status === "UNDISCHARGED"
-              ? "bg-red-100 border-red-400"
-              : "bg-yellow-100 border-yellow-400";
+        {displayOrders.length === 0 ? (
+          <div className="text-center text-gray-500 py-8 text-lg font-semibold">
+            No order found.
+          </div>
+        ) : (
+          displayOrders.map((order, index) => {
+            const status = statusMap[order.status];
+            let bgColor, textColor;
+            if (order.status === 8 || order.status === 9) {
+              bgColor = "bg-green-100 border-green-400";
+              textColor = "text-green-600";
+            } else if (order.status === 7 || order.status === 5) {
+              bgColor = "bg-red-100 border-red-400";
+              textColor = "text-red-600";
+            } else {
+              bgColor = "bg-yellow-100 border-yellow-400";
+              textColor = "text-yellow-600";
+            }
 
-          return (
-            <div
-              key={order.orderId || index}
-              className={`border rounded-md shadow-sm ${bgColor}`}
-            >
+            return (
               <div
-                className="cursor-pointer hover:bg-opacity-50"
-                onClick={() => toggleExpand(index)}
+                key={order.orderId || index}
+                className={`border rounded-md shadow-sm ${bgColor}`}
               >
-                <table className="w-full table-fixed border border-gray-300 text-sm mb-2">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="p-2 border-r w-1/6 text-center">
-                        Customer
-                      </th>
-                      <th className="p-2 border-r w-1/6 text-center">
-                        Order Date
-                      </th>
-                      <th className="p-2 border-r w-1/6 text-center">Total</th>
-                      <th className="p-2 border-r w-1/6 text-center">Status</th>
-                      <th className="p-2 text-center">Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="p-2 border-t text-center">
-                        {order.email}
-                      </td>
-                      <td className="p-2 border-t text-center">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="p-2 border-t text-center">
-                        {formatCurrency(order.totalPrice)}
-                      </td>
-                      <td className="p-2 border-t text-center">
-                        <span
-                          className={`font-semibold ${
-                            status === "PAID"
-                              ? "text-green-600"
-                              : status === "UNDISCHARGED"
-                              ? "text-red-600"
-                              : "text-yellow-600"
-                          }`}
-                        >
-                          {status}
-                        </span>
-                      </td>
-                      <td className="p-2 border-t text-center">
-                        {order.shippingAddress}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {expandedIndex === index && (
-                <div className="px-4 py-2 bg-white rounded-b-md">
-                  <h2 className="font-semibold text-sm mb-2">Order Details</h2>
-                  <div className="grid grid-cols-3 font-semibold text-gray-700 border-b border-gray-300 pb-1 text-sm text-center">
-                    <span>Product Name</span>
-                    <span>Price</span>
-                    <span>Quantity</span>
-                  </div>
-                  <ul className="space-y-1 text-sm">
-                    {order.orderItems.map((item, i) => (
-                      <li
-                        key={i}
-                        className="grid grid-cols-3 border-b border-gray-200 pb-1 text-center"
-                      >
-                        <span>{item.productName}</span>
-                        <span>{formatCurrency(item.price)}</span>
-                        <span>{item.stockQuantity}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div
+                  className="cursor-pointer hover:bg-opacity-50"
+                  onClick={() => toggleExpand(index)}
+                >
+                  <table className="w-full table-fixed border border-gray-300 text-sm mb-2">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="p-2 border-r w-1/6 text-center">
+                          Customer
+                        </th>
+                        <th className="p-2 border-r w-1/6 text-center">
+                          Order Date
+                        </th>
+                        <th className="p-2 border-r w-1/6 text-center">
+                          Total
+                        </th>
+                        <th className="p-2 border-r w-1/6 text-center">
+                          Status
+                        </th>
+                        <th className="p-2 text-center">Address</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="p-2 border-t text-center">
+                          {order.email}
+                        </td>
+                        <td className="p-2 border-t text-center">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-2 border-t text-center">
+                          {formatCurrency(order.totalPrice)}
+                        </td>
+                        <td className="p-2 border-t text-center">
+                          <span className={`font-semibold ${textColor}`}>
+                            {status}
+                          </span>
+                        </td>
+                        <td className="p-2 border-t text-center">
+                          {order.shippingAddress}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </div>
-          );
-        })}
+
+                {expandedIndex === index && (
+                  <div className="px-4 py-2 bg-white rounded-b-md">
+                    <h2 className="font-semibold text-sm mb-2">
+                      Order Details
+                    </h2>
+                    <div className="grid grid-cols-3 font-semibold text-gray-700 border-b border-gray-300 pb-1 text-sm text-center">
+                      <span>Product Name</span>
+                      <span>Price</span>
+                      <span>Quantity</span>
+                    </div>
+                    <ul className="space-y-1 text-sm">
+                      {order.orderItems.map((item, i) => (
+                        <li
+                          key={i}
+                          className="grid grid-cols-3 border-b border-gray-200 pb-1 text-center"
+                        >
+                          <span>{item.productName}</span>
+                          <span>{formatCurrency(item.price)}</span>
+                          <span>{item.stockQuantity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
 
       <div className="flex justify-center items-center gap-4 mt-6">
