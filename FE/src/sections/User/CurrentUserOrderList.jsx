@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { useGetCurrentUserOrder } from "../../api/OrderEndPoint";
+import {
+  useGetCurrentUserOrder,
+  useUpdateCancelStatus,
+} from "../../api/OrderEndPoint";
 import { UserContext } from "../../contexts/UserContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -29,6 +33,19 @@ const CurrentUserOrderList = () => {
     pageSize,
     selectedStatus
   );
+  const cancelOrder = useUpdateCancelStatus();
+  const queryClient = useQueryClient();
+
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+  // Notification state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "", // "success" | "error"
+  });
 
   const orders = data?.data.items ?? [];
   const totalPagesCount = data?.data.totalPagesCount ?? 1;
@@ -37,28 +54,32 @@ const CurrentUserOrderList = () => {
     setExpandedIndex((prev) => (prev === index ? null : index));
   };
 
-  // if (isLoading) {
-  //   return <div className="p-6 bg-white">Loading...</div>;
-  // }
-
-  // if (!orders.length) {
-  //   return (
-  //     <div className="p-6 bg-white min-h-screen flex flex-col">
-  //       <div className="p-6 bg-white flex flex-col items-center text-center">
-  //         <h1 className="text-3xl font-bold text-gray-800 mb-4">
-  //           Your Order History
-  //         </h1>
-  //         <div className="text-6xl mb-4 text-gray-400">🛒</div>
-  //         <p className="text-xl text-gray-600 font-medium">
-  //           You have no orders yet!
-  //         </p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
+      {/* Notification Modal */}
+      {notification.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
+            <span
+              className={`text-2xl mb-2 ${
+                notification.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {notification.type === "success" ? "✔️" : "❌"}
+            </span>
+            <div className="text-center mb-4">{notification.message}</div>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              onClick={() => setNotification({ ...notification, show: false })}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
         Your Order History
       </h1>
@@ -110,6 +131,9 @@ const CurrentUserOrderList = () => {
               ? "bg-red-100 border-red-400"
               : "bg-yellow-100 border-yellow-400";
 
+            // Determine if cancel button should show
+            const canCancel = status === "UNDISCHARGED" || status === "PENDING";
+
             return (
               <div
                 key={index}
@@ -134,6 +158,7 @@ const CurrentUserOrderList = () => {
                         <th className="p-2 border-r border-gray-300 text-center">
                           Address
                         </th>
+                        <th className="p-2 text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -159,6 +184,24 @@ const CurrentUserOrderList = () => {
                         </td>
                         <td className="p-2 border-t text-center">
                           {order.shippingAddress}
+                        </td>
+                        <td className="p-2 border-t text-center">
+                          {canCancel ? (
+                            <button
+                              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOrderId(order.orderId);
+                                setShowModal(true);
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          ) : (
+                            <span className="inline-block px-3 py-1 rounded bg-gray-200 text-gray-500 cursor-not-allowed select-none">
+                              None
+                            </span>
+                          )}
                         </td>
                       </tr>
                     </tbody>
@@ -195,6 +238,73 @@ const CurrentUserOrderList = () => {
           })
         )}
       </div>
+
+      {/* Modal xác nhận hủy đơn */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-80">
+            <h2 className="text-lg font-semibold mb-4 text-center">
+              Confirm Cancel
+            </h2>
+            <p className="mb-6 text-center">
+              Are you sure you want to <b>cancel</b> this order?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="bg-red-600 text-white px-4 py-2 rounded"
+                onClick={async () => {
+                  let success = false;
+                  try {
+                    await cancelOrder.mutateAsync(selectedOrderId);
+                    // Refetch order list after cancel
+                    queryClient.invalidateQueries({
+                      queryKey: ["v1/Order/order-list-by-current-account"],
+                    });
+                    success = true;
+                  } catch (err) {
+                    success = false;
+                  }
+                  setShowModal(false);
+                  setNotification({
+                    show: true,
+                    message: success
+                      ? "Order cancelled successfully!"
+                      : "Failed to cancel order!",
+                    type: success ? "success" : "error",
+                  });
+                  if (success) {
+                    // Nếu chỉ còn 1 order đang hiển thị (sau khi cancel sẽ rỗng)
+                    if (orders.length === 1) {
+                      setSelectedStatus("");
+                      setPageIndex(1);
+                    }
+                    setTimeout(() => {
+                      setNotification((prev) =>
+                        prev.show ? { ...prev, show: false } : prev
+                      );
+                    }, 2000);
+                  }
+                }}
+                disabled={cancelOrder.isLoading}
+              >
+                {cancelOrder.isLoading ? "Processing..." : "Confirm"}
+              </button>
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded"
+                onClick={() => setShowModal(false)}
+                disabled={cancelOrder.isLoading}
+              >
+                Cancel
+              </button>
+            </div>
+            {cancelOrder.isError && (
+              <div className="text-red-500 text-center mt-2">
+                Failed to cancel order!
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex justify-center items-center gap-4 mt-6">

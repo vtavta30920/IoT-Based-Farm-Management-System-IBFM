@@ -105,3 +105,20 @@ export const useUpdateCompleteStatus = () => {
     mutationFn: (orderId) => UpdateCompleteStatus(orderId, token),
   });
 };
+
+const UpdateCancelStatus = async (orderId, token) => {
+  const url = `https://localhost:7067/api/v1/Order/updateCancelStatus/${orderId}`;
+  const headers = token
+    ? { Authorization: `Bearer ${token}`, accept: "*/*" }
+    : { accept: "*/*" };
+  const { data } = await axios.put(url, null, { headers });
+  return data;
+};
+
+// Hook dùng để gọi API cập nhật trạng thái giao hàng
+export const useUpdateCancelStatus = () => {
+  const { token } = useContext(UserContext);
+  return useMutation({
+    mutationFn: (orderId) => UpdateCancelStatus(orderId, token),
+  });
+};
