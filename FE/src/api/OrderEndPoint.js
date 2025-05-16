@@ -88,3 +88,20 @@ export const useUpdateDeliveryStatus = () => {
     mutationFn: (orderId) => UpdateDeliveryStatus(orderId, token),
   });
 };
+
+const UpdateCompleteStatus = async (orderId, token) => {
+  const url = `https://localhost:7067/api/v1/Order/updateCompletedStatus/${orderId}`;
+  const headers = token
+    ? { Authorization: `Bearer ${token}`, accept: "*/*" }
+    : { accept: "*/*" };
+  const { data } = await axios.put(url, null, { headers });
+  return data;
+};
+
+// Hook dùng để gọi API cập nhật trạng thái giao hàng
+export const useUpdateCompleteStatus = () => {
+  const { token } = useContext(UserContext);
+  return useMutation({
+    mutationFn: (orderId) => UpdateCompleteStatus(orderId, token),
+  });
+};
