@@ -18,11 +18,11 @@ const OrderFailed = () => {
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <FaTimesCircle className="text-6xl text-red-500 mx-auto mb-4" />
         <h1 className="text-3xl font-bold text-red-600 mb-4">Payment Failed</h1>
-        {orderId && (
+        {/* {orderId && (
           <p className="text-gray-700 mb-4">
             Order ID: <span className="font-semibold">{orderId}</span>
           </p>
-        )}
+        )} */}
         <p className="text-gray-600 mb-6">
           We couldn't process your payment. Please try again or contact support.
         </p>

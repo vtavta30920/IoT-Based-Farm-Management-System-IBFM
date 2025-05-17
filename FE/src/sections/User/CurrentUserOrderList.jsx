@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import {
+  useCompletePayment,
+  useCreateOrderPayment,
   useGetCurrentUserOrder,
   useUpdateCancelStatus,
 } from "../../api/OrderEndPoint";
@@ -53,6 +55,8 @@ const CurrentUserOrderList = () => {
   const toggleExpand = (index) => {
     setExpandedIndex((prev) => (prev === index ? null : index));
   };
+  const completePayment = useCompletePayment();
+  const createOrderPayment = useCreateOrderPayment();
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
@@ -187,16 +191,58 @@ const CurrentUserOrderList = () => {
                         </td>
                         <td className="p-2 border-t text-center">
                           {canCancel ? (
-                            <button
-                              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedOrderId(order.orderId);
-                                setShowModal(true);
-                              }}
-                            >
-                              Cancel
-                            </button>
+                            <div className="flex justify-center gap-2">
+                              <button
+                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedOrderId(order.orderId);
+                                  setShowModal(true);
+                                }}
+                              >
+                                Cancel
+                              </button>
+                              {(status === "UNDISCHARGED" ||
+                                status === "PENDING") && (
+                                <button
+                                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      const result =
+                                        await createOrderPayment.mutateAsync(
+                                          order.orderId
+                                        );
+
+                                      if (result.data?.paymentUrl) {
+                                        // Redirect to the payment URL
+                                        window.location.href =
+                                          result.data.paymentUrl;
+                                      } else {
+                                        setNotification({
+                                          show: true,
+                                          message: "Payment URL not received",
+                                          type: "error",
+                                        });
+                                      }
+                                    } catch (error) {
+                                      setNotification({
+                                        show: true,
+                                        message:
+                                          error.response?.data?.message ||
+                                          "Failed to initiate payment",
+                                        type: "error",
+                                      });
+                                    }
+                                  }}
+                                  disabled={createOrderPayment.isLoading}
+                                >
+                                  {createOrderPayment.isLoading
+                                    ? "Processing..."
+                                    : "Pay Now"}
+                                </button>
+                              )}
+                            </div>
                           ) : (
                             <span className="inline-block px-3 py-1 rounded bg-gray-200 text-gray-500 cursor-not-allowed select-none">
                               None

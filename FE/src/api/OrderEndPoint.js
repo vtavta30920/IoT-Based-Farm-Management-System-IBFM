@@ -1,8 +1,8 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import axios from 'axios';
-import { useContext } from 'react';
-import { UserContext } from '../contexts/UserContext'; // đường dẫn context
-import { useState } from 'react';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { useContext } from "react";
+import { UserContext } from "../contexts/UserContext"; // đường dẫn context
+import { useState } from "react";
 
 // Hàm API order list theo current user
 const GetCurrentUserOrders = async (pageIndex, pageSize, token, status) => {
@@ -32,10 +32,10 @@ export const useGetCurrentUserOrder = (pageIndex, pageSize, status) => {
   });
 };
 
-
-// Hàm API order list 
+// Hàm API order list
 const GetAllOrders = async (pageIndex, pageSize, status) => {
-  const statusParam = status !== undefined && status !== null ? `&status=${status}` : "";
+  const statusParam =
+    status !== undefined && status !== null ? `&status=${status}` : "";
   const { data } = await axios.get(
     `https://localhost:7067/api/v1/Order/order-list?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`
   );
@@ -44,7 +44,7 @@ const GetAllOrders = async (pageIndex, pageSize, status) => {
 
 export const useGetAllOrder = (pageIndex, pageSize, status) => {
   return useQuery({
-    queryKey: ['v1/Order/order-list', { pageIndex, pageSize, status }],
+    queryKey: ["v1/Order/order-list", { pageIndex, pageSize, status }],
     queryFn: () => GetAllOrders(pageIndex, pageSize, status),
   });
 };
@@ -52,7 +52,9 @@ export const useGetAllOrder = (pageIndex, pageSize, status) => {
 // Hàm API order list theo email, có filter status
 const GetOrdersByEmail = async (email, pageIndex = 1, pageSize = 5, status) => {
   // Đúng URL: /order-list-by-emal/{email}?status=4&pageIndex=1&pageSize=10
-  let url = `https://localhost:7067/api/v1/Order/order-list-by-emal/${encodeURIComponent(email)}?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+  let url = `https://localhost:7067/api/v1/Order/order-list-by-emal/${encodeURIComponent(
+    email
+  )}?pageIndex=${pageIndex}&pageSize=${pageSize}`;
   if (status !== undefined && status !== null && status !== "") {
     url += `&status=${status}`;
   }
@@ -62,9 +64,18 @@ const GetOrdersByEmail = async (email, pageIndex = 1, pageSize = 5, status) => {
   return data;
 };
 
-export const useGetOrdersByEmail = (email, pageIndex = 1, pageSize = 5, enabled = false, status) => {
+export const useGetOrdersByEmail = (
+  email,
+  pageIndex = 1,
+  pageSize = 5,
+  enabled = false,
+  status
+) => {
   return useQuery({
-    queryKey: ['v1/Order/order-list-by-emal', { email, pageIndex, pageSize, status }],
+    queryKey: [
+      "v1/Order/order-list-by-emal",
+      { email, pageIndex, pageSize, status },
+    ],
     queryFn: () => GetOrdersByEmail(email, pageIndex, pageSize, status),
     enabled: !!email && enabled,
     keepPreviousData: false,
@@ -120,5 +131,25 @@ export const useUpdateCancelStatus = () => {
   const { token } = useContext(UserContext);
   return useMutation({
     mutationFn: (orderId) => UpdateCancelStatus(orderId, token),
+  });
+};
+
+export const useCompletePayment = () => {
+  return useMutation({
+    mutationFn: (orderId) =>
+      axios
+        .post(`https://localhost:7067/api/vnpay/PaymentByOrderId/${orderId}`)
+        .then((res) => res.data),
+  });
+};
+
+export const useCreateOrderPayment = () => {
+  return useMutation({
+    mutationFn: (orderId) =>
+      axios
+        .post(
+          `https://localhost:7067/api/v1/Order/createOrderPayment/${orderId}`
+        )
+        .then((res) => res.data),
   });
 };

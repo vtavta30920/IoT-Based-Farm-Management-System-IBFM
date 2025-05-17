@@ -28,7 +28,7 @@ const OrderSuccess = () => {
           Order Confirmed!
         </h1>
 
-        {orderId && (
+        {/* {orderId && (
           <div className="mb-4">
             <p className="text-gray-700">Order Number:</p>
             <p className="text-xl font-semibold">{orderId}</p>
@@ -40,7 +40,7 @@ const OrderSuccess = () => {
             <p className="text-gray-700">Transaction ID:</p>
             <p className="text-lg">{transactionId}</p>
           </div>
-        )}
+        )} */}
 
         <div className="mb-6">
           <p className="text-gray-700">Amount Paid:</p>
