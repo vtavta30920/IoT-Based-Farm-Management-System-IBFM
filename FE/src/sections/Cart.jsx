@@ -31,7 +31,7 @@ const Cart = () => {
   // Handle quantity change with validation
   const handleQuantityChange = (productName, newQuantity) => {
     const num = parseInt(newQuantity, 10);
-    if (num > 0 && num <= 999) {
+    if (num > 0 && num <= 10000) {
       // Set reasonable limits
       setQuantities((prev) => ({
         ...prev,

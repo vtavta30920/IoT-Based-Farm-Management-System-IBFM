@@ -278,3 +278,37 @@ export const getAllCrops = async (token, pageIndex = 1, pageSize = 10) => {
 
   return response.json();
 };
+export const getAllActive = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/crop/get-all-active`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch crops.");
+  }
+
+  return response.json();
+};
+
+export const getBlynkData = async (token) => {
+  const response = await fetch(
+    `https://localhost:7067/api/blynk/get-blynk-data`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Blynk data. Status: ${response.status}`);
+  }
+
+  return response.json();
+};
