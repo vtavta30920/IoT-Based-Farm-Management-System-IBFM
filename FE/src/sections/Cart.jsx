@@ -51,20 +51,48 @@ const Cart = () => {
 
     if (isNaN(newQuantity) || newQuantity < 1) {
       toast.error("Please enter a valid quantity (1-999).");
+      // Reset to previous valid quantity
+      const item = cart.find((i) => i.productName === productName);
+      if (item) {
+        setQuantities((prev) => ({
+          ...prev,
+          [productName]: item.quantity,
+        }));
+      }
       return;
     }
 
     setIsUpdating(true);
     try {
-      await updateCartItem(productName, newQuantity);
-      toast.success(`${productName} quantity updated.`);
+      const result = await updateCartItem(productName, newQuantity);
+
+      if (!result.success) {
+        toast.error(result.message || "Failed to update quantity");
+        // Reset to previous valid quantity
+        const item = cart.find((i) => i.productName === productName);
+        if (item) {
+          setQuantities((prev) => ({
+            ...prev,
+            [productName]: item.quantity,
+          }));
+        }
+      } else {
+        toast.success(`${productName} quantity updated.`);
+      }
     } catch (error) {
       toast.error("Failed to update quantity. Please try again.");
+      // Reset to previous valid quantity
+      const item = cart.find((i) => i.productName === productName);
+      if (item) {
+        setQuantities((prev) => ({
+          ...prev,
+          [productName]: item.quantity,
+        }));
+      }
     } finally {
       setIsUpdating(false);
     }
   };
-
   // Calculate total price and item count
   const totalPrice = cart.reduce(
     (total, item) => total + item.price * item.quantity,
