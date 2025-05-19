@@ -357,7 +357,7 @@ const Checkout = () => {
                       <div className="w-16 h-16 bg-white border border-gray-200 rounded-md flex items-center justify-center overflow-hidden">
                         <img
                           src={
-                            item.image ||
+                            item.imageUrl ||
                             "https://dalattungtrinh.vn/wp-content/uploads/2024/08/rau-romain-1.jpg"
                           }
                           alt={item.productName}
