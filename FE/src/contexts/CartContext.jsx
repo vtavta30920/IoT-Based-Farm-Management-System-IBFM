@@ -81,9 +81,6 @@ export const CartProvider = ({ children }) => {
           : item
       )
     );
-    toast.success(`${productName} quantity updated.`, {
-      toastId: `quantity-update-${productName}`,
-    });
   };
 
   const removeFromCart = (productName) => {
