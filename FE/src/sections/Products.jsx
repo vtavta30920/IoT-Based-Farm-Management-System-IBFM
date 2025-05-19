@@ -28,11 +28,10 @@ const Products = () => {
           const normalized = {
             ...product,
             productId: product.id || product.productId,
-            imageUrl:
-              product.imageUrl ||
-              `https://source.unsplash.com/random/300x200/?${product.productName}`,
+            imageUrl: product.images,
             category,
           };
+
           return normalized;
         });
 
