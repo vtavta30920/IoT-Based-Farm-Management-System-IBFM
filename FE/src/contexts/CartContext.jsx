@@ -69,21 +69,39 @@ export const CartProvider = ({ children }) => {
 
   const updateCartItem = (productName, newQuantity) => {
     if (newQuantity < 1) {
-      toast.error("Quantity must be at least 1.", {
-        toastId: `quantity-error-${productName}`,
-      });
-      return;
+      return { success: false, message: "Quantity must be at least 1." };
     }
-    setCart((prevCart) =>
-      prevCart.map((item) =>
+
+    let updated = false;
+    let message = "";
+
+    setCart((prevCart) => {
+      const itemToUpdate = prevCart.find(
+        (item) => item.productName === productName
+      );
+
+      if (!itemToUpdate) {
+        message = "Product not found in cart";
+        return prevCart;
+      }
+
+      if (newQuantity > itemToUpdate.stockQuantity) {
+        message = `Only ${itemToUpdate.stockQuantity} available in stock.`;
+        return prevCart;
+      }
+
+      updated = true;
+      return prevCart.map((item) =>
         item.productName === productName
           ? { ...item, quantity: newQuantity }
           : item
-      )
-    );
-    toast.success(`${productName} quantity updated.`, {
-      toastId: `quantity-update-${productName}`,
+      );
     });
+
+    return {
+      success: updated,
+      message: updated ? "" : message,
+    };
   };
 
   const removeFromCart = (productName) => {

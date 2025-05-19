@@ -31,7 +31,7 @@ const Cart = () => {
   // Handle quantity change with validation
   const handleQuantityChange = (productName, newQuantity) => {
     const num = parseInt(newQuantity, 10);
-    if (num > 0 && num <= 10000) {
+    if (num > 0 && num <= 10000000) {
       // Set reasonable limits
       setQuantities((prev) => ({
         ...prev,
@@ -51,26 +51,59 @@ const Cart = () => {
 
     if (isNaN(newQuantity) || newQuantity < 1) {
       toast.error("Please enter a valid quantity (1-999).");
+      // Reset to previous valid quantity
+      const item = cart.find((i) => i.productName === productName);
+      if (item) {
+        setQuantities((prev) => ({
+          ...prev,
+          [productName]: item.quantity,
+        }));
+      }
       return;
     }
 
     setIsUpdating(true);
     try {
-      await updateCartItem(productName, newQuantity);
-      toast.success(`${productName} quantity updated.`);
+      const result = await updateCartItem(productName, newQuantity);
+
+      if (!result.success) {
+        toast.error(result.message || "Failed to update quantity");
+        // Reset to previous valid quantity
+        const item = cart.find((i) => i.productName === productName);
+        if (item) {
+          setQuantities((prev) => ({
+            ...prev,
+            [productName]: item.quantity,
+          }));
+        }
+      } else {
+        toast.success(`${productName} quantity updated.`);
+      }
     } catch (error) {
       toast.error("Failed to update quantity. Please try again.");
+      // Reset to previous valid quantity
+      const item = cart.find((i) => i.productName === productName);
+      if (item) {
+        setQuantities((prev) => ({
+          ...prev,
+          [productName]: item.quantity,
+        }));
+      }
     } finally {
       setIsUpdating(false);
     }
   };
-
   // Calculate total price and item count
   const totalPrice = cart.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
   const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
+  const isCheckoutDisabled =
+    cart.length === 0 ||
+    cart.some(
+      (item) => item.quantity > item.stockQuantity || item.status === 0
+    );
 
   // Handle checkout
   const handleCheckout = () => {
@@ -78,6 +111,30 @@ const Cart = () => {
       toast.error("Your cart is empty. Add some products before checkout.");
       return;
     }
+
+    // Check for any items where quantity > stockQuantity
+    const outOfStockItems = cart.filter(
+      (item) => item.quantity > item.stockQuantity
+    );
+
+    if (outOfStockItems.length > 0) {
+      toast.error(
+        `Cannot proceed to checkout. Some items exceed available stock. Please adjust quantities.`,
+        { autoClose: 5000 }
+      );
+      return;
+    }
+
+    // Check for any unavailable items (status = 0)
+    const unavailableItems = cart.filter((item) => item.status === 0);
+    if (unavailableItems.length > 0) {
+      toast.error(
+        `Cannot proceed to checkout. Some items are currently unavailable. Please remove them.`,
+        { autoClose: 5000 }
+      );
+      return;
+    }
+
     navigate("/checkout");
   };
 
@@ -136,14 +193,14 @@ const Cart = () => {
                       <div className="flex-shrink-0">
                         <img
                           src={
-                            item.image ||
+                            item.imageUrl ||
                             "https://dalattungtrinh.vn/wp-content/uploads/2024/08/rau-romain-1.jpg"
                           }
                           alt={item.productName}
                           className="h-20 w-20 rounded-md object-cover"
                         />
                       </div>
-                      <div>
+                      {/* <div>
                         <h3 className="text-lg font-medium text-gray-900">
                           {item.productName}
                         </h3>
@@ -157,6 +214,30 @@ const Cart = () => {
                             }`}
                           >
                             {item.inStock ? "In Stock" : "Out of Stock"}
+                          </p>
+                        )}
+                      </div> */}
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {item.productName}
+                        </h3>
+                        <p className="text-green-600 font-medium">
+                          {formatVND(item.price)}
+                        </p>
+                        <p
+                          className={`text-sm ${
+                            item.stockQuantity > 0
+                              ? "text-gray-500"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {item.stockQuantity > 0
+                            ? `${item.stockQuantity} in stock`
+                            : "Out of stock"}
+                        </p>
+                        {item.quantity > item.stockQuantity && (
+                          <p className="text-sm text-red-500">
+                            Quantity exceeds available stock!
                           </p>
                         )}
                       </div>
@@ -184,7 +265,6 @@ const Cart = () => {
                           onBlur={() => handleUpdateQuantity(item.productName)}
                           className="w-20 px-3 py-2 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-green-500"
                           min="1"
-                          max="999"
                         />
                       </div>
 
@@ -234,7 +314,12 @@ const Cart = () => {
                 </button>
                 <button
                   onClick={handleCheckout}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-md transition-colors"
+                  disabled={isCheckoutDisabled}
+                  className={`flex-1 ${
+                    isCheckoutDisabled
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                  } text-white font-medium py-3 px-6 rounded-md transition-colors`}
                 >
                   Proceed to Checkout
                 </button>
