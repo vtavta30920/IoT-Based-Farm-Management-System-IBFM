@@ -7,11 +7,13 @@ const IotDevices = ({ token }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let intervalId;
     const fetchData = async () => {
       try {
         const data = await getBlynkData(token);
         setBlynkData(data);
         setLoading(false);
+        setError(null);
       } catch (err) {
         setError(err.message);
         setLoading(false);
@@ -19,6 +21,9 @@ const IotDevices = ({ token }) => {
     };
 
     fetchData();
+    intervalId = setInterval(fetchData, 5000);
+
+    return () => clearInterval(intervalId);
   }, [token]);
 
   if (loading) return <div className="p-6">Loading IoT data...</div>;
