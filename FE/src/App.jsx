@@ -113,9 +113,8 @@ const App = () => {
                 {/* Staff Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
                   <Route path="/staff/*" element={<StaffLayout />}>
-                    <Route index element={<IotDevices />} />
-                    <Route path="iot-devices" element={<IotDevices />} />
-                    <Route path="iot-devices/:id" element={<DeviceDetails />} />
+                    <Route index element={<ProductsManagement />} />
+
                     <Route path="farming-tasks" element={<FarmingTasks />} />
                     <Route path="farming-tasks/:id" element={<TaskDetails />} />
                     <Route
@@ -155,6 +154,8 @@ const App = () => {
                       path="CategoryManagement"
                       element={<CategoryManagement />}
                     />
+                    <Route path="iot-devices" element={<IotDevices />} />
+                    <Route path="iot-devices/:id" element={<DeviceDetails />} />
                   </Route>
                 </Route>
 
