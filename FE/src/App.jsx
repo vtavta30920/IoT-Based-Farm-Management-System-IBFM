@@ -49,8 +49,8 @@ import OrderManagement from "./sections/Manager/OrdersManagement.jsx";
 import CategoryManagement from "./sections/Manager/CategoryManagement.jsx";
 
 // Staff Pages
-import IotDevices from "./sections/Staff/IotDevices.jsx";
-import DeviceDetails from "./sections/Staff/DeviceDetails.jsx";
+import IotDevices from "./sections/Manager/IotDevices.jsx";
+import DeviceDetails from "./sections/Manager/DeviceDetails.jsx";
 import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
 import TaskDetails from "./sections/Staff/TaskDetails.jsx";
 import QualityControl from "./sections/Staff/QualityControl.jsx";
@@ -113,9 +113,8 @@ const App = () => {
                 {/* Staff Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
                   <Route path="/staff/*" element={<StaffLayout />}>
-                    <Route index element={<IotDevices />} />
-                    <Route path="iot-devices" element={<IotDevices />} />
-                    <Route path="iot-devices/:id" element={<DeviceDetails />} />
+                    <Route index element={<ProductsManagement />} />
+
                     <Route path="farming-tasks" element={<FarmingTasks />} />
                     <Route path="farming-tasks/:id" element={<TaskDetails />} />
                     <Route
@@ -155,6 +154,8 @@ const App = () => {
                       path="CategoryManagement"
                       element={<CategoryManagement />}
                     />
+                    <Route path="iot-devices" element={<IotDevices />} />
+                    <Route path="iot-devices/:id" element={<DeviceDetails />} />
                   </Route>
                 </Route>
 
