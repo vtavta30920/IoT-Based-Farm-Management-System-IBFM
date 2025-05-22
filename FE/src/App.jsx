@@ -49,8 +49,8 @@ import OrderManagement from "./sections/Manager/OrdersManagement.jsx";
 import CategoryManagement from "./sections/Manager/CategoryManagement.jsx";
 
 // Staff Pages
-import IotDevices from "./sections/Staff/IotDevices.jsx";
-import DeviceDetails from "./sections/Staff/DeviceDetails.jsx";
+import IotDevices from "./sections/Manager/IotDevices.jsx";
+import DeviceDetails from "./sections/Manager/DeviceDetails.jsx";
 import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
 import TaskDetails from "./sections/Staff/TaskDetails.jsx";
 import QualityControl from "./sections/Staff/QualityControl.jsx";

@@ -34,8 +34,6 @@ const IotDevices = ({ token }) => {
         <div className="bg-gray-100 p-4 rounded-lg mb-4">
           <h3 className="font-semibold text-lg mb-2">Blynk Console</h3>
           <div className="text-gray-600 mb-2">IOT BaseFarm</div>
-          <div className="text-sm text-gray-500 mb-1">Inactive</div>
-          <div className="text-sm text-gray-500">My organization - 8289XO</div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -61,7 +59,7 @@ const IotDevices = ({ token }) => {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 className="font-semibold mb-2">Humidity</h3>
             <div className="text-2xl font-bold text-green-600 mb-2">
-              {blynkData.v1}%
+              {blynkData.v1}
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -79,7 +77,7 @@ const IotDevices = ({ token }) => {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 className="font-semibold mb-2">Rainfall</h3>
             <div className="text-2xl font-bold text-indigo-600 mb-2">
-              {blynkData.v2}mm
+              {blynkData.v2}%
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -117,7 +115,7 @@ const IotDevices = ({ token }) => {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 className="font-semibold mb-2">Light</h3>
             <div className="text-2xl font-bold text-orange-600 mb-2">
-              {blynkData.v4} lux
+              {blynkData.v4}
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div

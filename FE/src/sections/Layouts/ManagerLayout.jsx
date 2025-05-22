@@ -121,7 +121,7 @@ const ManagerLayout = () => {
                 )}
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link
                 to="/manager/farms"
                 className="flex items-center p-3 hover:bg-green-800 rounded-lg transition duration-200"
@@ -141,7 +141,7 @@ const ManagerLayout = () => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">Farm Management</span>}
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link
                 to="/manager/crops"
