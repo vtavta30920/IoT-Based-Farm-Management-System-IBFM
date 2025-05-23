@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
-import { UserContext } from "../contexts/UserContext.jsx";
-import defaultAvatar from "../assets/avatardefault.jpg";
-import { useChangePassword } from "../api/AccountEndPoint";
+import { UserContext } from "../../contexts/UserContext.jsx";
+import defaultAvatar from "../../assets/avatardefault.jpg";
+import { useChangePassword } from "../../api/AccountEndPoint.js";
 
 // Custom hook lấy userId từ token (ưu tiên nameid)
 function useCurrentUserId() {
@@ -163,7 +163,11 @@ const Profile = () => {
       {
         onSuccess: (data, variables, context) => {
           // Nếu backend trả về lỗi trong response (ví dụ: status 400 nhưng axios không throw)
-          if (data && data.status === 400 && data.message === "Old password is incorrect") {
+          if (
+            data &&
+            data.status === 400 &&
+            data.message === "Old password is incorrect"
+          ) {
             setPasswordError("Old password is incorrect.");
             return;
           }

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { slideUpVariants, zoomInVariants } from "./animation";
-import { allservices } from "../export";
+import { slideUpVariants, zoomInVariants } from "../../../components/animation";
+import { allservices } from "../../../export";
 
 const OurProducts = () => {
   return (

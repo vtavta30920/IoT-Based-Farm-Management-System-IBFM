@@ -8,62 +8,59 @@ import {
 } from "react-router-dom";
 import { UserProvider } from "./contexts/UserContext.jsx";
 import { CartProvider } from "./contexts/CartContext.jsx";
-import { SidebarProvider } from "./SidebarToggle.jsx";
+import { SidebarProvider } from "./contexts/SidebarToggle.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import Header from "./sections/Header";
-import Hero from "./sections/Hero";
-import About from "./pages/About";
-import OurProducts from "./sections/OurProducts";
-import Working from "./sections/Working";
-import Testimonials from "./sections/Testimonials";
-import Footer from "./sections/Footer";
-import ReadMore from "./sections/ReadMore";
-import Products from "./sections/Products";
-import Policy from "./sections/Policy";
-import Profile from "./sections/Profile.jsx";
-import Login from "./sections/Login";
-import Signup from "./sections/Signup";
-import ProductDetails from "./sections/ProductDetails.jsx";
-import Cart from "./sections/Cart.jsx";
-import Checkout from "./sections/Checkout.jsx";
-import OrderSuccess from "./sections/OrderSuccess.jsx";
-import OrderFailed from "./sections/OrderFailed.jsx";
-import VnPayCallback from "./sections/VnPayCallback.jsx";
-
-import CurrentUserOrderList from "./sections/User/CurrentUserOrderList.jsx";
-
-import AccountDetail from "./pages/Admin/AccountDetail.jsx";
-import CreateAccount from "./pages/Admin/CreateAccount.jsx";
-
-import AdminLayout from "./sections/Layouts/AdminLayout.jsx";
-import StaffLayout from "./sections/Layouts/StaffLayout.jsx";
-import ManagerLayout from "./sections/Layouts/ManagerLayout.jsx";
-
-import IotMonitoring from "./sections/Manager/IotMonitoring.jsx";
-import FarmingSchedules from "./sections/Manager/FarmingSchedules.jsx";
-import InventoryManagement from "./sections/Manager/InventoryManagement.jsx";
-import Reports from "./sections/Manager/Reports.jsx";
-import OrderManagement from "./sections/Manager/OrdersManagement.jsx";
-import CategoryManagement from "./sections/Manager/CategoryManagement.jsx";
-
-// Staff Pages
-import IotDevices from "./sections/Manager/IotDevices.jsx";
-import DeviceDetails from "./sections/Manager/DeviceDetails.jsx";
-import FarmingTasks from "./sections/Staff/FarmingTasks.jsx";
-import TaskDetails from "./sections/Staff/TaskDetails.jsx";
-import QualityControl from "./sections/Staff/QualityControl.jsx";
-import Logistics from "./sections/Staff/Logistics.jsx";
-import ProductsManagement from "./sections/Staff/ProductsManagement.jsx";
-import OrderManagementStaff from "./sections/Staff/OrderManagementStaff.jsx";
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import FarmManagement from "./sections/Manager/FarmManagement.jsx";
-import CropManagement from "./sections/Manager/CropManagement.jsx";
-import Unauthorized from "./sections/Unauthorized.jsx";
-import ProtectedRoute from "./sections/ProtectedRoute.jsx";
+import Header from "./components/Header.jsx";
+import Hero from "./pages/public/Home/Hero.jsx";
+import About from "./pages/public/Home/About.jsx";
+import OurProducts from "./pages/public/Home/OurProducts.jsx";
+import Working from "./pages/public/Home/Working.jsx";
+import Testimonials from "./pages/public/Home/Testimonials.jsx";
+import ReadMore from "./pages/public/ReadMore.jsx";
+import Products from "./pages/public/Products/Products.jsx";
+import ProductDetails from "./pages/public/Products/ProductDetails.jsx";
+import Policy from "./pages/public/Policy.jsx";
+import Login from "./pages/public/Auth/Login.jsx";
+import Unauthorized from "./components/common/Unauthorized.jsx";
+import Signup from "./pages/public/Auth/Signup.jsx";
+import OrderSuccess from "./pages/customer/Orders/OrderSuccess.jsx";
+import OrderFailed from "./pages/customer/Orders/OrderFailed.jsx";
+import VnPayCallback from "./pages/customer/Payment/VnPayCallback.jsx";
+import Profile from "./pages/customer/Profile.jsx";
+import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
+import Cart from "./pages/customer/Cart.jsx";
+import Checkout from "./pages/customer/Checkout.jsx";
+import CurrentUserOrderList from "./pages/customer/Orders/CurrentUserOrderList.jsx";
+import Footer from "./components/Footer.jsx";
+
+import StaffLayout from "./components/layouts/StaffLayout.jsx";
+
+import QualityControl from "./pages/staff/QualityControl";
+import Logistics from "./pages/staff/Logistics";
+import ProductsManagement from "./pages/staff/ProductsManagement";
+import OrderManagementStaff from "./pages/staff/OrderManagementStaff";
+import FarmingTasks from "./pages/staff/FarmingTasks.jsx";
+import TaskDetails from "./pages/staff/TaskDetails.jsx";
+
+import ManagerLayout from "./components/layouts/ManagerLayout.jsx";
+import FarmingSchedules from "./pages/manager/FarmingSchedules.jsx";
+import IotMonitoring from "./pages/manager/IotMonitoring.jsx";
+import InventoryManagement from "./pages/manager/InventoryManagement.jsx";
+import Reports from "./pages/Manager/Reports.jsx";
+import FarmManagement from "./pages/manager/FarmManagement.jsx";
+import CropManagement from "./pages/manager/CropManagement.jsx";
+import OrdersManagement from "./pages/manager/OrdersManagement.jsx";
+import CategoryManagement from "./pages/manager/CategoryManagement.jsx";
+import IotDevices from "./pages/manager/IotDevices.jsx";
+import DeviceDetails from "./pages/manager/DeviceDetails.jsx";
+
+import AdminLayout from "./components/layouts/AdminLayout.jsx";
+import AccountDetail from "./pages/admin/AccountDetail";
+import CreateAccount from "./pages/admin/CreateAccount";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -148,7 +145,7 @@ const App = () => {
                     <Route path="crops" element={<CropManagement />} />
                     <Route
                       path="OrderManagement"
-                      element={<OrderManagement />}
+                      element={<OrdersManagement />}
                     />
                     <Route
                       path="CategoryManagement"

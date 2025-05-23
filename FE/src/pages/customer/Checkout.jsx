@@ -1,8 +1,8 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { CartContext } from "../contexts/CartContext";
-import { UserContext } from "../contexts/UserContext";
-import { createOrder } from "../api/api";
+import { CartContext } from "../../contexts/CartContext";
+import { UserContext } from "../../contexts/UserContext";
+import { createOrder } from "../../api/api";
 import { toast } from "react-toastify";
 import { FaArrowLeft } from "react-icons/fa";
 

@@ -1,8 +1,9 @@
 import React, { useContext } from "react";
 import { Link, Outlet, useLocation, Navigate } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
-import { SidebarContext } from "../../SidebarToggle";
+
 import { useNavigate } from "react-router-dom";
+import { SidebarContext } from "../../contexts/SidebarToggle";
 
 const ManagerLayout = () => {
   const { user, logout } = useContext(UserContext);

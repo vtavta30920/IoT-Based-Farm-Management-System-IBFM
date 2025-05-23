@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { slideUpVariants, zoomInVariants } from "../sections/animation";
+import { slideUpVariants, zoomInVariants } from "../../../components/animation";
 import { Link } from "react-router-dom";
 const About = () => {
   return (

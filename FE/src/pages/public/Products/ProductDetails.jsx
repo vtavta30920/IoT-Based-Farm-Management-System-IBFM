@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { allservices } from "../export";
+import { allservices } from "../../../export";
 
 const ProductDetails = () => {
   const { title } = useParams(); // Get the product title from the URL
