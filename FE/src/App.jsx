@@ -39,8 +39,8 @@ import Footer from "./components/Footer.jsx";
 
 import StaffLayout from "./components/layouts/StaffLayout.jsx";
 
-import QualityControl from "./pages/staff/QualityControl";
-import Logistics from "./pages/staff/Logistics";
+import QualityControl from "./pages/staff/QualityControl.jsx";
+import Logistics from "./pages/staff/Logistics.jsx";
 import ProductsManagement from "./pages/staff/ProductsManagement.jsx";
 import OrderManagementStaff from "./pages/staff/OrderManagementStaff.jsx";
 import FarmingTasks from "./pages/staff/FarmingTasks.jsx";
