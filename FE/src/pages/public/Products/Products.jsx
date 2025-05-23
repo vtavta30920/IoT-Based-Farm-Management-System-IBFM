@@ -10,29 +10,52 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOption, setSortOption] = useState("default");
   const [quantities, setQuantities] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN") + " VND";
   };
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getProducts();
-        console.log("Raw Products API Response:", data.data.items);
-        const normalizedProducts = data.data.items.map((product) => {
-          const category = product.productName.toLowerCase().includes("fruit")
-            ? "fruit"
-            : "vegetable";
+        setLoading(true);
 
-          const normalized = {
+        // Fetch products
+        const productsData = await getProducts();
+        console.log("Raw Products API Response:", productsData.data.items);
+
+        // Fetch categories (you'll need to implement this API call)
+        const categoriesResponse = await fetch(
+          "https://localhost:7067/api/v1/category/get-all"
+        );
+        const categoriesData = await categoriesResponse.json();
+        setCategories(categoriesData);
+
+        // Map products with proper category information
+        const normalizedProducts = productsData.data.items.map((product) => {
+          // Find the matching category
+          const category = categoriesData.find(
+            (cat) => cat.categoryName === product.categoryname
+          );
+
+          return {
             ...product,
             productId: product.id || product.productId,
             imageUrl: product.images,
-            category,
+            category: category
+              ? {
+                  id: category.categoryId,
+                  name: category.categoryName.split(" - ")[0], // Take the English part
+                  fullName: category.categoryName,
+                }
+              : {
+                  id: 0,
+                  name: "Unknown",
+                  fullName: "Unknown Category",
+                },
           };
-
-          return normalized;
         });
 
         setProducts(normalizedProducts);
@@ -40,7 +63,6 @@ const Products = () => {
 
         const initialQuantities = {};
         normalizedProducts.forEach((product) => {
-          // Initialize with maximum available quantity (minimum between 1 and stock)
           initialQuantities[product.productId] = Math.min(
             1,
             product.stockQuantity
@@ -48,20 +70,26 @@ const Products = () => {
         });
         setQuantities(initialQuantities);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchProducts();
+
+    fetchData();
   }, []);
 
   useEffect(() => {
     let result = [...products];
+
+    // Filter by category
     if (selectedCategory !== "all") {
       result = result.filter(
-        (product) => product.category === selectedCategory
+        (product) => product.category.id.toString() === selectedCategory
       );
     }
 
+    // Sort products
     switch (sortOption) {
       case "price-low":
         result.sort((a, b) => a.price - b.price);
@@ -75,7 +103,11 @@ const Products = () => {
       case "name-desc":
         result.sort((a, b) => b.productName.localeCompare(a.productName));
         break;
+      case "stock-high":
+        result.sort((a, b) => b.stockQuantity - a.stockQuantity);
+        break;
       default:
+        // Default sorting (by productId)
         result.sort((a, b) => a.productId - b.productId);
     }
 
@@ -99,7 +131,6 @@ const Products = () => {
     const product = products.find((p) => p.productId === productId);
     if (!product) return;
 
-    // Ensure quantity is between 1 and available stock
     newQuantity = Math.max(1, Math.min(newQuantity, product.stockQuantity));
     setQuantities((prev) => ({
       ...prev,
@@ -107,21 +138,13 @@ const Products = () => {
     }));
   };
 
-  const incrementQuantity = (productId) => {
-    const currentQty = quantities[productId] || 1;
-    const product = products.find((p) => p.productId === productId);
-
-    if (product && currentQty < product.stockQuantity) {
-      handleQuantityChange(productId, currentQty + 1);
-    }
-  };
-
-  const decrementQuantity = (productId) => {
-    const currentQty = quantities[productId] || 1;
-    if (currentQty > 1) {
-      handleQuantityChange(productId, currentQty - 1);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-2xl">Loading products...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-gray-100 p-4 md:p-10">
@@ -144,9 +167,12 @@ const Products = () => {
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
-            <option value="all">All</option>
-            <option value="vegetable">Vegetables</option>
-            <option value="fruit">Fruits</option>
+            <option value="all">All Categories</option>
+            {categories.map((category) => (
+              <option key={category.categoryId} value={category.categoryId}>
+                {category.categoryName.split(" - ")[0]}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -165,80 +191,82 @@ const Products = () => {
             <option value="price-high">Price: High to Low</option>
             <option value="name-asc">Name: A-Z</option>
             <option value="name-desc">Name: Z-A</option>
+            <option value="stock-high">Stock: High to Low</option>
           </select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.productId}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-          >
-            <img
-              src={product.imageUrl}
-              alt={product.productName}
-              className="w-full h-48 object-cover"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src =
-                  "https://dalattungtrinh.vn/wp-content/uploads/2024/08/rau-romain-1.jpg";
-              }}
-            />
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-2">
-                {product.productName}
-              </h2>
-              <p className="text-gray-600 mb-1">
-                Price: {formatPrice(product.price)}
-              </p>
-              <p className="text-gray-600 mb-4">
-                Category:{" "}
-                {product.category.charAt(0).toUpperCase() +
-                  product.category.slice(1)}
-              </p>
+      {filteredProducts.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+          {filteredProducts.map((product) => (
+            <div
+              key={product.productId}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+            >
+              <img
+                src={product.imageUrl}
+                alt={product.productName}
+                className="w-full h-48 object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "https://dalattungtrinh.vn/wp-content/uploads/2024/08/rau-romain-1.jpg";
+                }}
+              />
+              <div className="p-6">
+                <h2 className="text-xl font-semibold mb-2">
+                  {product.productName}
+                </h2>
+                <p className="text-gray-600 mb-1">
+                  Price: {formatPrice(product.price)}
+                </p>
+                <p className="text-gray-600 mb-4">
+                  Category: {product.category.name}
+                </p>
+                <p className="text-gray-600 mb-4 text-sm">
+                  {product.description}
+                </p>
 
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-center">
-                  <span
-                    className={`text-lg font-bold ${
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <span
+                      className={`text-lg font-bold ${
+                        product.stockQuantity === 0
+                          ? "text-red-500"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      Stock: {product.stockQuantity}
+                    </span>
+                  </div>
+
+                  <button
+                    className={`w-full py-2 px-4 rounded transition duration-300 ${
                       product.stockQuantity === 0
-                        ? "text-red-500"
-                        : "text-gray-700"
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-600 text-white hover:bg-green-700"
                     }`}
+                    onClick={() => handleAddToCart(product)}
+                    disabled={isAdding || product.stockQuantity === 0}
                   >
-                    Stock: {product.stockQuantity}
-                  </span>
+                    {product.stockQuantity === 0
+                      ? "Out of Stock"
+                      : isAdding
+                      ? "Adding..."
+                      : "Add to Cart"}
+                  </button>
                 </div>
-
-                <button
-                  className={`w-full py-2 px-4 rounded transition duration-300 ${
-                    product.stockQuantity === 0
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 text-white hover:bg-green-700"
-                  }`}
-                  onClick={() => handleAddToCart(product)}
-                  disabled={isAdding || product.stockQuantity === 0}
-                >
-                  {product.stockQuantity === 0
-                    ? "Out of Stock"
-                    : isAdding
-                    ? "Adding..."
-                    : "Add to Cart"}
-                </button>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {filteredProducts.length === 0 && (
+          ))}
+        </div>
+      ) : (
         <div className="text-center py-10">
           <p className="text-xl text-gray-600">
             No products match your filters.
           </p>
           <button
-            className="mt-4 text-green-600 underline"
+            className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             onClick={() => {
               setSelectedCategory("all");
               setSortOption("default");
