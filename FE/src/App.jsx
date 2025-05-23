@@ -41,8 +41,8 @@ import StaffLayout from "./components/layouts/StaffLayout.jsx";
 
 import QualityControl from "./pages/staff/QualityControl";
 import Logistics from "./pages/staff/Logistics";
-import ProductsManagement from "./pages/staff/ProductsManagement";
-import OrderManagementStaff from "./pages/staff/OrderManagementStaff";
+import ProductsManagement from "./pages/staff/ProductsManagement.jsx";
+import OrderManagementStaff from "./pages/staff/OrderManagementStaff.jsx";
 import FarmingTasks from "./pages/staff/FarmingTasks.jsx";
 import TaskDetails from "./pages/staff/TaskDetails.jsx";
 
@@ -59,8 +59,8 @@ import IotDevices from "./pages/manager/IotDevices.jsx";
 import DeviceDetails from "./pages/manager/DeviceDetails.jsx";
 
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
-import AccountDetail from "./pages/admin/AccountDetail";
-import CreateAccount from "./pages/admin/CreateAccount";
+import AccountDetail from "./pages/admin/AccountDetail.jsx";
+import CreateAccount from "./pages/admin/CreateAccount.jsx";
 
 const App = () => {
   const queryClient = new QueryClient();
