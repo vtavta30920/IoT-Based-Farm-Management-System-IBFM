@@ -59,8 +59,8 @@ import IotDevices from "./pages/manager/IotDevices.jsx";
 import DeviceDetails from "./pages/manager/DeviceDetails.jsx";
 
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
-import AccountDetail from "./pages/admin/AccountDetail.jsx";
-import CreateAccount from "./pages/admin/CreateAccount.jsx";
+import AccountDetail from "./pages/admin/AccountDetail";
+import CreateAccount from "@/pages/admin/CreateAccount";
 
 const App = () => {
   const queryClient = new QueryClient();
