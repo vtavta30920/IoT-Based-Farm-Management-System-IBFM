@@ -60,7 +60,7 @@ import DeviceDetails from "./pages/manager/DeviceDetails.jsx";
 
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
 import AccountDetail from "@/pages/admin/AccountDetail.jsx";
-import CreateAccount from "./pages/admin/CreateAccount.jsx";
+import CreateAccount from ".@pages/admin/CreateAccount.jsx";
 
 const App = () => {
   const queryClient = new QueryClient();
