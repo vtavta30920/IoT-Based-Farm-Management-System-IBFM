@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useUpdateRole, useUpdateAccount } from "../../api/AccountEndPoint";
-import defaultAvatar from "../../assets/avatardefault.jpg";
+
+import defaultAvatar from "../assets/avatardefault.jpg";
+import { useUpdateAccount, useUpdateRole } from "../api/AccountEndPoint";
 
 const AccountDetail = () => {
   const location = useLocation();

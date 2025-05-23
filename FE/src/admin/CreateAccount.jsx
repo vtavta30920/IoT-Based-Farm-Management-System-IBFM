@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateAccount } from "../api/AccountEndPoint";
-import defaultAvatar from "../../assets/avatardefault.jpg";
+import defaultAvatar from "../assets/avatardefault.jpg";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
