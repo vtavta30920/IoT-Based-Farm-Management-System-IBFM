@@ -125,17 +125,17 @@ const IotDevices = ({ token }) => {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-orange-600 h-2 rounded-full"
-                style={{ width: `${(blynkData.v4 / 1095) * 100}%` }}
+                style={{ width: `${(blynkData.v4 / 6000) * 100}%` }}
               ></div>
             </div>
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>0</span>
-              <span>1,095</span>
+              <span>6000</span>
             </div>
           </div>
 
           {/* Messages Card */}
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          {/* <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 className="font-semibold mb-2">Messages used</h3>
             <div className="text-lg mb-2">
               <span className="font-bold">0</span> of 30%
@@ -143,10 +143,10 @@ const IotDevices = ({ token }) => {
             <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
               Add Tag
             </button>
-          </div>
+          </div> */}
         </div>
 
-        <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        {/* <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
           <h3 className="font-semibold mb-2">Device Management</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
@@ -162,7 +162,7 @@ const IotDevices = ({ token }) => {
               Locations
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
