@@ -59,7 +59,7 @@ import IotDevices from "./pages/manager/IotDevices.jsx";
 import DeviceDetails from "./pages/manager/DeviceDetails.jsx";
 
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
-import AccountDetail from "./admin/AccountDetail.js";
+import AccountDetail from "./admin/AccountDetail.jsx";
 import CreateAccount from "./admin/CreateAccount.jsx";
 
 const App = () => {
