@@ -242,7 +242,7 @@ const OrdersManagement = () => {
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
       <h1 className="text-3xl font-bold text-center text-green-600 mb-6">
-        Order Management
+        Manager Dashboard
       </h1>
 
       <div className="flex flex-wrap gap-4 mb-4 items-center justify-center">
