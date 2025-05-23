@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
-import { SidebarContext } from "../../SidebarToggle";
+import { SidebarContext } from "../../contexts/SidebarToggle";
 
 const StaffLayout = () => {
   const { user, logout } = useContext(UserContext);

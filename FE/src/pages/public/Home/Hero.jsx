@@ -1,8 +1,8 @@
 import React from "react";
-import heroimg from "../assets/heroimg.png";
-import backgroundImage from "../assets/homeimg.webp";
+import heroimg from "../../../assets/heroimg.png";
+import backgroundImage from "../../../assets/homeimg.webp";
 import { motion } from "framer-motion";
-import { slideUpVariants, zoomInVariants } from "./animation";
+import { slideUpVariants, zoomInVariants } from "../../../components/animation";
 import { Link } from "react-router-dom";
 const Hero = () => {
   return (

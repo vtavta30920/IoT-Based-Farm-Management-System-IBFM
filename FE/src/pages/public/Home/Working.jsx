@@ -1,6 +1,6 @@
 import React from "react";
-import { slideUpVariants, zoomInVariants } from "./animation";
-import { planning } from "../export";
+import { slideUpVariants, zoomInVariants } from "../../../components/animation";
+import { planning } from "../../../export";
 import { motion } from "framer-motion";
 
 const Working = () => {
