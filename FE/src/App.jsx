@@ -50,7 +50,7 @@ import ManagerLayout from "./components/layouts/ManagerLayout.jsx";
 import FarmingSchedules from "./pages/manager/FarmingSchedules.jsx";
 import IotMonitoring from "./pages/manager/IotMonitoring.jsx";
 import InventoryManagement from "./pages/manager/InventoryManagement.jsx";
-import Reports from "./pages/Manager/Reports.jsx";
+import Report from "./pages/manager/Reports.jsx";
 import FarmManagement from "./pages/manager/FarmManagement.jsx";
 import CropManagement from "./pages/manager/CropManagement.jsx";
 import OrdersManagement from "./pages/manager/OrdersManagement.jsx";
@@ -140,7 +140,7 @@ const App = () => {
                     />
                     <Route path="iot-monitoring" element={<IotMonitoring />} />
                     <Route path="inventory" element={<InventoryManagement />} />
-                    <Route path="reports" element={<Reports />} />
+                    <Route path="reports" element={<Report />} />
                     <Route path="farms" element={<FarmManagement />} />
                     <Route path="crops" element={<CropManagement />} />
                     <Route
