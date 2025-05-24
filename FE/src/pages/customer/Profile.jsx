@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../contexts/UserContext.jsx";
 import defaultAvatar from "../../assets/avatardefault.jpg";
 import { useChangePassword } from "../../api/AccountEndPoint.js";
-import { uploadImageToFirebase } from "../../api/Firebase";
+import { uploadImageToFirebase } from "../../api/firebase";
 
 // Custom hook lấy userId từ token (ưu tiên nameid)
 function useCurrentUserId() {
