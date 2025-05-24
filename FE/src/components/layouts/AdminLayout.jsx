@@ -48,11 +48,14 @@ const AdminLayout = () => {
     if (page !== currentPage) setCurrentPage(page);
   };
 
+  // Thay đổi trong handleSearch để set currentPage về 1 khi search
   const handleSearch = async () => {
     if (searchEmail.trim() === "") {
       setSearchResult(null);
       return;
     }
+    // Đưa về trang đầu khi search
+    if (currentPage !== 1) setCurrentPage(1);
 
     try {
       const result = await getUserByEmail(searchEmail.trim());
@@ -101,6 +104,12 @@ const AdminLayout = () => {
       setSearchResult(null);
     }
   }, [searchEmail]);
+
+  // Thêm useEffect để reset currentPage về 1 khi filter thay đổi
+  useEffect(() => {
+    if (currentPage !== 1) setCurrentPage(1);
+    // eslint-disable-next-line
+  }, [roleFilter, statusFilter]);
 
   return (
     <div className="flex h-screen bg-gray-50">
