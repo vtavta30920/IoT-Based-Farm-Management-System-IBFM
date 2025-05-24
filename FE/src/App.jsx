@@ -105,6 +105,9 @@ const App = () => {
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/myOrders" element={<CurrentUserOrderList />} />
+                  <Route path="/order-success" element={<OrderSuccess />} />
+                  <Route path="/order-failed" element={<OrderFailed />} />
+                  <Route path="/vnpay-callback" element={<VnPayCallback />} />
                 </Route>
 
                 {/* Staff Protected Routes */}

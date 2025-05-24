@@ -3,35 +3,78 @@ import axios from "axios";
 const API_BASE_URL = "https://localhost:7067/api/v1";
 
 export const login = async (email, password) => {
-  const response = await fetch(`${API_BASE_URL}/account/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password }),
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/account/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-  if (!response.ok) {
-    throw new Error("Login failed. Please check your credentials.");
+    if (!response.ok) {
+      // First try to parse as JSON
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed. Please try again.");
+      } else {
+        // If not JSON, read as text
+        const errorText = await response.text();
+        // Handle specific .NET exception messages
+        if (errorText.includes("UnauthorizedAccessException")) {
+          if (errorText.includes("Invalid email")) {
+            throw new Error("Invalid email.");
+          } else if (errorText.includes("Invalid password")) {
+            throw new Error("Invalid password.");
+          } else if (errorText.includes("Account is not active")) {
+            throw new Error("Account is not active.");
+          }
+        }
+        throw new Error("Login failed. Please try again.");
+      }
+    }
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || "Login failed. Please try again.");
   }
-  return response.json();
 };
 
 export const register = async (email, password, confirmPassword) => {
-  const response = await fetch(`${API_BASE_URL}/account/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password, confirmPassword }), // Updated payload
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/account/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password, confirmPassword }),
+    });
 
-  if (!response.ok) {
-    throw new Error("Registration failed. Please try again.");
+    if (!response.ok) {
+      // First try to parse as JSON
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Registration failed. Please try again."
+        );
+      } else {
+        // If not JSON, read as text
+        const errorText = await response.text();
+        // Handle specific .NET exception messages
+        if (errorText.includes("Email already exists")) {
+          throw new Error("Email already exists.");
+        }
+        throw new Error("Registration failed. Please try again.");
+      }
+    }
+
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || "Registration failed. Please try again.");
   }
-
-  return response.json();
 };
+
 export const getProducts = async (pageIndex = 0, pageSize = 10) => {
   const response = await fetch(
     `${API_BASE_URL}/products/products-list?pageIndex=${pageIndex}&pageSize=${pageSize}`,
