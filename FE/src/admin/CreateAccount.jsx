@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateAccount } from "../api/AccountEndPoint";
 import defaultAvatar from "../assets/avatardefault.jpg";
+import { uploadImageToFirebase } from "../api/Firebase";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageInput, setImageInput] = useState("");
   const [errors, setErrors] = useState({});
+  const [newImageFile, setNewImageFile] = useState(null);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -65,14 +67,49 @@ const CreateAccount = () => {
     }));
   };
 
-  const handleImageSave = () => {
-    setFormData((prev) => ({ ...prev, image: imageInput }));
-    setShowImageModal(false);
+  const handleImageFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImageFile(file);
+      setFormData((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
+    }
+  };
+
+  const handlePasteImage = (e) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          setNewImageFile(file);
+          setFormData((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
+          break;
+        }
+      }
+    }
+  };
+
+  const handleImageSave = async () => {
+    if (newImageFile) {
+      try {
+        setFormData((prev) => ({ ...prev, image: "Uploading..." }));
+        const url = await uploadImageToFirebase(newImageFile, "avatars");
+        setFormData((prev) => ({ ...prev, image: url }));
+        setShowImageModal(false);
+        setNewImageFile(null);
+      } catch {
+        setFormData((prev) => ({ ...prev, image: "" }));
+        alert("Upload image failed!");
+      }
+    }
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    await mutateAsync(createData);
+    await mutateAsync({
+      ...createData,
+      images: formData.image || "string",
+    });
     navigate("/admin");
   };
 
@@ -207,16 +244,27 @@ const CreateAccount = () => {
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg w-96 space-y-4">
               <h3 className="text-xl font-bold mb-2">Change Avatar</h3>
+              <div
+                tabIndex={0}
+                onPaste={handlePasteImage}
+                className="w-full h-20 border-2 border-dashed border-gray-400 rounded-md flex items-center justify-center mb-2 text-gray-500 focus:outline-none"
+                style={{ cursor: "pointer" }}
+                title="Paste image here"
+              >
+                Paste image here (Ctrl+V)
+              </div>
               <input
-                type="text"
-                placeholder="Enter image URL..."
-                value={imageInput}
-                onChange={(e) => setImageInput(e.target.value)}
-                className="w-full border px-3 py-2 rounded-md"
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileChange}
+                className="w-full border px-3 py-2 rounded-md mb-2"
               />
               <div className="flex justify-end space-x-4">
                 <button
-                  onClick={() => setShowImageModal(false)}
+                  onClick={() => {
+                    setShowImageModal(false);
+                    setNewImageFile(null);
+                  }}
                   className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
                 >
                   Cancel
@@ -224,6 +272,7 @@ const CreateAccount = () => {
                 <button
                   onClick={handleImageSave}
                   className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  disabled={!newImageFile}
                 >
                   Save
                 </button>
