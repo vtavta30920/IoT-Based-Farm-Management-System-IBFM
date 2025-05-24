@@ -5,7 +5,7 @@ import {
   useUpdateProduct,
 } from "../../api/ProductEndPoint";
 import { useCategories } from "../../api/CategoryEndPoint";
-import { uploadImageToFirebase } from "../../api/Firebase";
+import { uploadImageToFirebase } from "../../api/firebase.js";
 
 // Modal đổi ảnh (upload lên Firebase)
 const ImageUrlModal = ({ currentImageUrl, onChangeImageUrl, onClose }) => {
@@ -348,7 +348,9 @@ const ProductDetailModal = ({ product, onClose }) => {
                 placeholder="Enter crop name"
               />
               {errors.cropName && (
-                <div className="text-red-600 text-sm mt-1">{errors.cropName}</div>
+                <div className="text-red-600 text-sm mt-1">
+                  {errors.cropName}
+                </div>
               )}
             </div>
             <div>
@@ -409,7 +411,9 @@ const ProductDetailModal = ({ product, onClose }) => {
                 className="w-full border rounded px-3 py-2"
               />
               {errors.description && (
-                <div className="text-red-600 text-sm mt-1">{errors.description}</div>
+                <div className="text-red-600 text-sm mt-1">
+                  {errors.description}
+                </div>
               )}
             </div>
             <div>
@@ -420,7 +424,9 @@ const ProductDetailModal = ({ product, onClose }) => {
                 onCategoryChange={(val) => setCategoryId(String(val))}
               />
               {errors.categoryId && (
-                <div className="text-red-600 text-sm mt-1">{errors.categoryId}</div>
+                <div className="text-red-600 text-sm mt-1">
+                  {errors.categoryId}
+                </div>
               )}
             </div>
           </div>
