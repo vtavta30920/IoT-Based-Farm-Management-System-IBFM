@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import defaultAvatar from "../../assets/avatardefault.jpg";
 import { useGetAllCrops } from "../../api/CropEndPoint";
 import { useCategories } from "../../api/CategoryEndPoint";
-import { uploadImageToFirebase } from "../../api/Firebase";
+import { uploadImageToFirebase } from "../../api/firebase.js";
 
 const CropDropdown = ({ selectedCropId, onCropChange }) => {
   const { data: crops = [], isLoading } = useGetAllCrops();
