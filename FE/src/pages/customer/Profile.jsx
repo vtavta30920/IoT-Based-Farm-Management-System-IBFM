@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../contexts/UserContext.jsx";
 import defaultAvatar from "../../assets/avatardefault.jpg";
 import { useChangePassword } from "../../api/AccountEndPoint.js";
+import { uploadImageToFirebase } from "../../api/Firebase";
 
 // Custom hook lấy userId từ token (ưu tiên nameid)
 function useCurrentUserId() {
@@ -38,6 +39,7 @@ const Profile = () => {
   });
   const [showModal, setShowModal] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [newImageFile, setNewImageFile] = useState(null);
   // Change password modal state
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -101,6 +103,19 @@ const Profile = () => {
   const handleUpdate = async () => {
     if (!validateForm()) return;
 
+    let imageToSend = formData.image;
+
+    // Nếu có file ảnh mới, upload lên Firebase trước
+    if (newImageFile) {
+      try {
+        setMessage("Uploading image...");
+        imageToSend = await uploadImageToFirebase(newImageFile, "avatars");
+      } catch (err) {
+        setMessage("❌ Upload image failed.");
+        return;
+      }
+    }
+
     const updateData = {
       email: formData.email,
       gender:
@@ -108,12 +123,14 @@ const Profile = () => {
       phone: formData.phone,
       fullname: formData.fullname,
       address: formData.address,
-      images: formData.image || "string",
+      images: imageToSend || "string",
     };
 
     try {
       await updateProfile(updateData);
       setMessage("✅ Profile updated successfully!");
+      setNewImageFile(null);
+      setFormData((prev) => ({ ...prev, image: imageToSend }));
     } catch (err) {
       setMessage("❌ Update failed: " + err.message);
     }
@@ -197,6 +214,37 @@ const Profile = () => {
         },
       }
     );
+  };
+
+  // Xử lý chọn file ảnh
+  const handleImageFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImageFile(file);
+      setFormData((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
+      setShowModal(false);
+      setMessage("Press Update To Save Image!");
+    }
+  };
+
+  // Xử lý paste ảnh từ clipboard
+  const handlePasteImage = (e) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          setNewImageFile(file);
+          setFormData((prev) => ({
+            ...prev,
+            image: URL.createObjectURL(file),
+          }));
+          setShowModal(false);
+          setMessage("Press Update To Save Image!");
+          break;
+        }
+      }
+    }
   };
 
   if (!user) return <div>Please log in to view your profile.</div>;
@@ -336,13 +384,21 @@ const Profile = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 shadow-lg w-96">
               <h3 className="text-lg font-semibold mb-4 text-center">
-                Enter new image URL
+                Select or Paste new image
               </h3>
+              <div
+                tabIndex={0}
+                onPaste={handlePasteImage}
+                className="w-full h-20 border-2 border-dashed border-gray-400 rounded-md flex items-center justify-center mb-4 text-gray-500 focus:outline-none"
+                style={{ cursor: "pointer" }}
+                title="Paste image here"
+              >
+                Paste image here (Ctrl+V)
+              </div>
               <input
-                type="text"
-                placeholder="https://example.com/image.jpg"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileChange}
                 className="w-full border px-3 py-2 rounded-md mb-4"
               />
               <div className="flex justify-end space-x-2">
@@ -351,17 +407,6 @@ const Profile = () => {
                   className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
                 >
                   Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    setFormData((prev) => ({ ...prev, image: newImageUrl }));
-                    setShowModal(false);
-                    setNewImageUrl("");
-                    setMessage("Press Update To Save Image!");
-                  }}
-                  className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
-                >
-                  Set Image
                 </button>
               </div>
             </div>
