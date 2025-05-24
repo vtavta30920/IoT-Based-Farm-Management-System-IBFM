@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateAccount } from "../api/AccountEndPoint";
 import defaultAvatar from "../assets/avatardefault.jpg";
-import { uploadImageToFirebase } from "../api/Firebase";
+import { uploadImageToFirebase } from "../api/firebase.js";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
@@ -82,7 +82,10 @@ const CreateAccount = () => {
         const file = items[i].getAsFile();
         if (file) {
           setNewImageFile(file);
-          setFormData((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
+          setFormData((prev) => ({
+            ...prev,
+            image: URL.createObjectURL(file),
+          }));
           break;
         }
       }
