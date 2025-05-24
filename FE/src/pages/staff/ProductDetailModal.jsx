@@ -5,17 +5,49 @@ import {
   useUpdateProduct,
 } from "../../api/ProductEndPoint";
 import { useCategories } from "../../api/CategoryEndPoint";
+import { uploadImageToFirebase } from "../../api/Firebase";
 
-// Modal đổi URL ảnh
+// Modal đổi ảnh (upload lên Firebase)
 const ImageUrlModal = ({ currentImageUrl, onChangeImageUrl, onClose }) => {
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newImageFile, setNewImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    setNewImageUrl("");
-  }, [currentImageUrl]);
+  // Xử lý chọn file
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
-  const handleSubmit = () => {
-    onChangeImageUrl(newImageUrl);
+  // Xử lý paste ảnh
+  const handlePaste = (e) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          setNewImageFile(file);
+          setPreviewUrl(URL.createObjectURL(file));
+          break;
+        }
+      }
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (newImageFile) {
+      setUploading(true);
+      try {
+        const url = await uploadImageToFirebase(newImageFile, "products");
+        onChangeImageUrl(url);
+      } catch {
+        alert("Upload image failed!");
+      }
+      setUploading(false);
+    }
     onClose();
   };
 
@@ -29,28 +61,43 @@ const ImageUrlModal = ({ currentImageUrl, onChangeImageUrl, onClose }) => {
           ×
         </button>
         <h2 className="text-2xl font-bold mb-4 text-green-600">
-          Change Image URL
+          Change Product Image
         </h2>
         <div className="space-y-4">
-          <div>
-            <label className="block font-medium">New Image URL</label>
-            <input
-              type="text"
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            />
+          <div
+            tabIndex={0}
+            onPaste={handlePaste}
+            className="w-full h-20 border-2 border-dashed border-gray-400 rounded-md flex items-center justify-center text-gray-500 focus:outline-none mb-2"
+            style={{ cursor: "pointer" }}
+            title="Paste image here"
+          >
+            Paste image here (Ctrl+V)
           </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full border rounded px-3 py-2 mb-2"
+          />
+          {previewUrl && (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-32 h-32 object-cover rounded mx-auto border mb-2"
+            />
+          )}
           <div className="flex justify-end space-x-2">
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded"
               onClick={handleSubmit}
+              disabled={!newImageFile || uploading}
             >
-              Save
+              {uploading ? "Uploading..." : "Save"}
             </button>
             <button
               className="bg-gray-600 text-white px-4 py-2 rounded"
               onClick={onClose}
+              disabled={uploading}
             >
               Cancel
             </button>
