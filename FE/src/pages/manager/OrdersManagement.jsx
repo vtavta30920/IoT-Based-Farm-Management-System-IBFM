@@ -32,12 +32,12 @@ const formatCurrency = (value) => {
 };
 
 const statusMap = {
-  4: "PAID",
-  5: "UNDISCHARGED",
-  6: "PENDING",
-  9: "DELIVERED",
-  8: "COMPLETED",
-  7: "CANCELLED",
+  0: "PAID",
+  1: "UNDISCHARGED",
+  2: "PENDING",
+  5: "DELIVERED",
+  4: "COMPLETED",
+  3: "CANCELLED",
 };
 
 function getDaysInMonth(year, month) {

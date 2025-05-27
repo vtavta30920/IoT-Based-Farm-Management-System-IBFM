@@ -16,12 +16,12 @@ const formatCurrency = (value) => {
 };
 
 const statusMap = {
-  4: "PAID",
-  5: "UNDISCHARGED",
-  6: "PENDING",
-  9: "DELIVERED",
-  8: "COMPLETED",
-  7: "CANCELLED",
+  0: "PAID",
+  1: "UNDISCHARGED",
+  2: "PENDING",
+  5: "DELIVERED",
+  4: "COMPLETED",
+  3: "CANCELLED",
 };
 
 const OrderManagementStaff = () => {
@@ -45,12 +45,12 @@ const OrderManagementStaff = () => {
 
   // Convert statusFilter to correct value for API (number or string)
   let searchStatus = statusFilter;
-  if (searchStatus === "PAID") searchStatus = 4;
-  else if (searchStatus === "UNDISCHARGED") searchStatus = 5;
-  else if (searchStatus === "PENDING") searchStatus = 6;
-  else if (searchStatus === "DELIVERED") searchStatus = 9;
-  else if (searchStatus === "COMPLETED") searchStatus = 8;
-  else if (searchStatus === "CANCELLED") searchStatus = 7;
+  if (searchStatus === "PAID") searchStatus = 0;
+  else if (searchStatus === "UNDISCHARGED") searchStatus = 1;
+  else if (searchStatus === "PENDING") searchStatus = 2;
+  else if (searchStatus === "DELIVERED") searchStatus = 5;
+  else if (searchStatus === "COMPLETED") searchStatus = 4;
+  else if (searchStatus === "CANCELLED") searchStatus = 3;
   else if (searchStatus === "") searchStatus = undefined;
 
   const {
