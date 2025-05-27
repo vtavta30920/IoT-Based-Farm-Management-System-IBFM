@@ -355,3 +355,40 @@ export const getBlynkData = async (token) => {
 
   return response.json();
 };
+
+export const getIotDevices = async (pageIndex = 0, pageSize = 10, token) => {
+  const response = await fetch(
+    `${API_BASE_URL}/iotDevices/iotDevices-list?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch IoT devices.");
+  }
+
+  return response.json();
+};
+
+export const createIotDevice = async (deviceData, token) => {
+  const response = await fetch(`${API_BASE_URL}/iotDevices/iotDevices-create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(deviceData),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to create IoT device");
+  }
+
+  return response.json();
+};
