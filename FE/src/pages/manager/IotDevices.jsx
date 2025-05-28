@@ -87,7 +87,7 @@ const IotDevices = ({ token }) => {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-indigo-600 h-2 rounded-full"
-                style={{ width: `${blynkData.v2}%` }}
+                style={{ width: `${blynkData.v3}%` }}
               ></div>
             </div>
             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -105,7 +105,7 @@ const IotDevices = ({ token }) => {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-yellow-600 h-2 rounded-full"
-                style={{ width: `${blynkData.v3}%` }}
+                style={{ width: `${blynkData.v2}%` }}
               ></div>
             </div>
             <div className="flex justify-between text-xs text-gray-500 mt-1">
