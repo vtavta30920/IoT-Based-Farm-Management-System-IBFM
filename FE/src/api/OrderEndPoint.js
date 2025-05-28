@@ -4,6 +4,18 @@ import { useContext } from "react";
 import { UserContext } from "../contexts/UserContext"; // đường dẫn context
 import { useState } from "react";
 
+// Thêm interceptor để tự động thêm token vào header nếu có
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Hàm API order list theo current user
 const GetCurrentUserOrders = async (pageIndex, pageSize, token, status) => {
   const statusParam = status ? `&status=${status}` : "";

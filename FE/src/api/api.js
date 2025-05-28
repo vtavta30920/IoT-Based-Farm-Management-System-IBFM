@@ -2,6 +2,18 @@ import axios from "axios";
 
 const API_BASE_URL = "https://localhost:7067/api/v1";
 
+// Thêm interceptor để tự động thêm token vào header nếu có
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const login = async (email, password) => {
   try {
     const response = await fetch(`${API_BASE_URL}/account/login`, {

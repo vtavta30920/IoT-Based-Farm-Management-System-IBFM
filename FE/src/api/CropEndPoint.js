@@ -3,6 +3,18 @@ import axios from 'axios';
 import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext'; 
 
+// Thêm interceptor để tự động thêm token vào header nếu có
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const getAllCrops = async () => {
   const response = await axios.get(`https://localhost:7067/api/v1/crop/get-all-active`);
   return response.data;

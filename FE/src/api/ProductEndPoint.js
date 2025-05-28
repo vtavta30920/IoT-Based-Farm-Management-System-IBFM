@@ -3,6 +3,18 @@ import axios from 'axios';
 import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext'; 
 
+// Thêm interceptor để tự động thêm token vào header nếu có
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 const GetAllProducts = async (pageIndex, pageSize, status, categoryId, sortByStockAsc = true) => {
     const statusParam = status !== undefined && status !== null ? `&status=${status}` : "";
     const categoryParam = categoryId !== undefined && categoryId !== null ? `&categoryId=${categoryId}` : "";

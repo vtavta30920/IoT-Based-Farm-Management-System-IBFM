@@ -1,6 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
+// Thêm interceptor để tự động thêm token vào header nếu có
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const getAllCategories = async () => {
   const response = await axios.get('https://localhost:7067/api/v1/category/get-all');
   return response.data;

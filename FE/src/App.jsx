@@ -101,10 +101,10 @@ const App = () => {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/myOrders" element={<CurrentUserOrderList />} />
 
                 {/* Customer Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
-                  <Route path="/myOrders" element={<CurrentUserOrderList />} />
                   <Route path="/order-success" element={<OrderSuccess />} />
                   <Route path="/order-failed" element={<OrderFailed />} />
                   <Route path="/vnpay-callback" element={<VnPayCallback />} />
