@@ -401,32 +401,33 @@ const OrdersManagement = () => {
         ) : (
           displayOrders.map((order, index) => {
             const status = statusMap[order.status];
-            // Đổi màu theo statusMap
+            // Đổi màu theo statusMap mới:
+            // PAID: xanh lục, UNDISCHARGED: đỏ, CANCELLED: đỏ, DELIVERED: xanh dương, COMPLETED: xanh lục, PENDING: cam
             let bgColor, textColor;
             switch (status) {
               case "PAID":
-                bgColor = "bg-blue-100 border-blue-400";
-                textColor = "text-blue-600";
+                bgColor = "bg-green-50 border-green-300";
+                textColor = "text-green-700";
                 break;
               case "UNDISCHARGED":
-                bgColor = "bg-yellow-100 border-yellow-400";
-                textColor = "text-yellow-600";
+                bgColor = "bg-red-50 border-red-300";
+                textColor = "text-red-700";
                 break;
-              case "PENDING":
-                bgColor = "bg-orange-100 border-orange-400";
-                textColor = "text-orange-600";
+              case "CANCELLED":
+                bgColor = "bg-red-50 border-red-300";
+                textColor = "text-red-700";
                 break;
               case "DELIVERED":
-                bgColor = "bg-purple-100 border-purple-400";
-                textColor = "text-purple-600";
+                bgColor = "bg-blue-50 border-blue-300";
+                textColor = "text-blue-700";
                 break;
               case "COMPLETED":
                 bgColor = "bg-green-100 border-green-400";
                 textColor = "text-green-600";
                 break;
-              case "CANCELLED":
-                bgColor = "bg-red-100 border-red-400";
-                textColor = "text-red-600";
+              case "PENDING":
+                bgColor = "bg-orange-100 border-orange-400";
+                textColor = "text-orange-600";
                 break;
               default:
                 bgColor = "bg-gray-100 border-gray-400";
