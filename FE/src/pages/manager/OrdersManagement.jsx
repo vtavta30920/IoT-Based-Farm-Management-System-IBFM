@@ -98,12 +98,13 @@ const OrdersManagement = () => {
     const items = allOrderData?.data?.items;
     if (!items) return { labels: [], datasets: [] };
 
+    // Thống kê chỉ các đơn hàng có status là COMPLETED (theo statusMap)
     const filtered = items.filter((order) => {
       const date = new Date(order.createdAt);
       return (
         date.getFullYear() === Number(selectedYear) &&
         date.getMonth() + 1 === Number(selectedMonth) &&
-        order.status === 8 // COMPLETED
+        statusMap[order.status] === "COMPLETED"
       );
     });
 
@@ -179,7 +180,7 @@ const OrdersManagement = () => {
       if (
         date.getFullYear() === Number(selectedYear) &&
         date.getMonth() + 1 === Number(selectedMonth) &&
-        order.status === 8 // COMPLETED
+        statusMap[order.status] === "COMPLETED"
       ) {
         total += order.totalPrice;
         count += 1;
