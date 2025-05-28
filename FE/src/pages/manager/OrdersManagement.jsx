@@ -32,12 +32,12 @@ const formatCurrency = (value) => {
 };
 
 const statusMap = {
-  4: "PAID",
-  5: "UNDISCHARGED",
-  6: "PENDING",
-  9: "DELIVERED",
-  8: "COMPLETED",
-  7: "CANCELLED",
+  0: "PAID",
+  1: "UNDISCHARGED",
+  2: "PENDING",
+  5: "DELIVERED",
+  4: "COMPLETED",
+  3: "CANCELLED",
 };
 
 function getDaysInMonth(year, month) {
@@ -77,9 +77,9 @@ const OrdersManagement = () => {
 
   // Convert statusFilter to correct value for API (number or string)
   let searchStatus = statusFilter;
-  if (searchStatus === "PAID") searchStatus = 4;
-  else if (searchStatus === "UNDISCHARGED") searchStatus = 5;
-  else if (searchStatus === "PENDING") searchStatus = 6;
+  if (searchStatus === "PAID") searchStatus = 0;
+  else if (searchStatus === "UNDISCHARGED") searchStatus = 1;
+  else if (searchStatus === "PENDING") searchStatus = 2;
   else if (searchStatus === "") searchStatus = undefined;
 
   const {
@@ -400,16 +400,36 @@ const OrdersManagement = () => {
         ) : (
           displayOrders.map((order, index) => {
             const status = statusMap[order.status];
+            // Đổi màu theo statusMap
             let bgColor, textColor;
-            if (order.status === 8 || order.status === 9) {
-              bgColor = "bg-green-100 border-green-400";
-              textColor = "text-green-600";
-            } else if (order.status === 7 || order.status === 5) {
-              bgColor = "bg-red-100 border-red-400";
-              textColor = "text-red-600";
-            } else {
-              bgColor = "bg-yellow-100 border-yellow-400";
-              textColor = "text-yellow-600";
+            switch (status) {
+              case "PAID":
+                bgColor = "bg-blue-100 border-blue-400";
+                textColor = "text-blue-600";
+                break;
+              case "UNDISCHARGED":
+                bgColor = "bg-yellow-100 border-yellow-400";
+                textColor = "text-yellow-600";
+                break;
+              case "PENDING":
+                bgColor = "bg-orange-100 border-orange-400";
+                textColor = "text-orange-600";
+                break;
+              case "DELIVERED":
+                bgColor = "bg-purple-100 border-purple-400";
+                textColor = "text-purple-600";
+                break;
+              case "COMPLETED":
+                bgColor = "bg-green-100 border-green-400";
+                textColor = "text-green-600";
+                break;
+              case "CANCELLED":
+                bgColor = "bg-red-100 border-red-400";
+                textColor = "text-red-600";
+                break;
+              default:
+                bgColor = "bg-gray-100 border-gray-400";
+                textColor = "text-gray-600";
             }
 
             return (
