@@ -154,7 +154,7 @@ const IotDevices = ({ token }) => {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 className="font-semibold mb-2">Rainfall</h3>
             <div className="text-2xl font-bold text-indigo-600 mb-2">
-              {blynkData.v2}%
+              {blynkData.v3}%
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -172,7 +172,7 @@ const IotDevices = ({ token }) => {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 className="font-semibold mb-2">Soil Moisture</h3>
             <div className="text-2xl font-bold text-yellow-600 mb-2">
-              {blynkData.v3}%
+              {blynkData.v2}%
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -197,12 +197,12 @@ const IotDevices = ({ token }) => {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-orange-600 h-2 rounded-full"
-                style={{ width: `${(blynkData.v4 / 1200) * 100}%` }}
+                style={{ width: `${(blynkData.v4 / 1095) * 100}%` }}
               ></div>
             </div>
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>0</span>
-              <span>1200</span>
+              <span>1095</span>
             </div>
           </div>
 
@@ -310,32 +310,7 @@ const IotDevices = ({ token }) => {
                     <option value="Light Sensor">Light Sensor</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Sensor Value (optional)
-                  </label>
-                  <input
-                    type="text"
-                    name="sensorValue"
-                    value={newDevice.sensorValue}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., 25.5"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Unit (optional)
-                  </label>
-                  <input
-                    type="text"
-                    name="unit"
-                    value={newDevice.unit}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., °C, %"
-                  />
-                </div>
+
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
                     Expiry Date*
@@ -457,11 +432,6 @@ const IotDevices = ({ token }) => {
                             <div className="text-sm font-medium text-gray-900">
                               {device.deviceName}
                             </div>
-                            {device.sensorValue && device.unit && (
-                              <div className="text-sm text-gray-500">
-                                {device.sensorValue} {device.unit}
-                              </div>
-                            )}
                           </div>
                         </div>
                       </td>

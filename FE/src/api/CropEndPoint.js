@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { useContext } from 'react';
-import { UserContext } from '../contexts/UserContext'; 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { useContext } from "react";
+import { UserContext } from "../contexts/UserContext";
 
 // Thêm interceptor để tự động thêm token vào header nếu có
 axios.interceptors.request.use(
@@ -16,7 +16,9 @@ axios.interceptors.request.use(
 );
 
 export const getAllCrops = async () => {
-  const response = await axios.get(`https://localhost:7067/api/v1/crop/get-all-active`);
+  const response = await axios.get(
+    `https://localhost:7067/api/v1/crop/get-all-active`
+  );
   return response.data;
 };
 
@@ -45,9 +47,14 @@ export const useChangeCropStatus = () => {
     },
     onError: (error) => {
       if (error.response) {
-        console.error('Change crop status failed:', error.response.data, error.response.status, error.response.config.url);
+        console.error(
+          "Change crop status failed:",
+          error.response.data,
+          error.response.status,
+          error.response.config.url
+        );
       } else {
-        console.error('Change crop status failed:', error.message);
+        console.error("Change crop status failed:", error.message);
       }
     },
   });
@@ -55,11 +62,11 @@ export const useChangeCropStatus = () => {
 
 export const createCrop = async (cropData) => {
   const response = await axios.post(
-    'https://localhost:7067/api/v1/crop/create',
+    "https://localhost:7067/api/v1/crop/create",
     cropData,
     {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     }
   );
@@ -75,9 +82,14 @@ export const useCreateCrop = () => {
     },
     onError: (error) => {
       if (error.response) {
-        console.error('Create crop failed:', error.response.data, error.response.status, error.response.config.url);
+        console.error(
+          "Create crop failed:",
+          error.response.data,
+          error.response.status,
+          error.response.config.url
+        );
       } else {
-        console.error('Create crop failed:', error.message);
+        console.error("Create crop failed:", error.message);
       }
     },
   });
@@ -95,11 +107,11 @@ export const useUpdateCrop = () => {
   return useMutation({
     mutationFn: ({ cropId, updateData }) => updateCrop(cropId, updateData),
     onSuccess: (data) => {
-      console.log('Update crop success:', data);
+      console.log("Update crop success:", data);
       // Có thể show toast hoặc invalidate query tại đây
     },
     onError: (error) => {
-      console.error('Update crop failed:', error);
+      console.error("Update crop failed:", error);
     },
   });
 };
