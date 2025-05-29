@@ -28,7 +28,7 @@ const OrderFailed = () => {
         </p>
         <div className="flex gap-4 justify-center">
           <button
-            onClick={() => navigate("/checkout")}
+            onClick={() => navigate("/myOrders")}
             className="bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700 transition"
           >
             Try Again
