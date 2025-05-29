@@ -16,7 +16,11 @@ const ProductsFeedbackManagement = () => {
     statusFilter === "" ? undefined : parseInt(statusFilter, 10);
 
   // Lấy danh sách sản phẩm theo search/filter/sort
-  const { data: allData, isLoading, isError } = useGetAllProducts(
+  const {
+    data: allData,
+    isLoading,
+    isError,
+  } = useGetAllProducts(
     pageIndex,
     pageSize,
     statusValue,

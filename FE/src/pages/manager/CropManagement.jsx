@@ -190,6 +190,7 @@ const CropManagement = () => {
   const handleStatusSelect = async (crop, statusValue) => {
     setIsChanging(true);
     try {
+      // statusValue là số (0, 1, 2) lấy từ statusOptions.value
       await changeCropStatus({ cropId: crop.cropId, status: statusValue });
       await reloadCurrentPage();
       setNotification({
@@ -311,7 +312,7 @@ const CropManagement = () => {
                             (opt) => opt.label === e.target.value
                           );
                           if (selected)
-                            handleStatusSelect(crop, selected.value);
+                            handleStatusSelect(crop, selected.value); // truyền value là số
                         }}
                         className={`px-2 py-1 rounded text-xs font-semibold border focus:outline-none ${getStatusClass(
                           crop.status
