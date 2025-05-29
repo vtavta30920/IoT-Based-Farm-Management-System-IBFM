@@ -310,11 +310,12 @@ const CropManagement = () => {
                           const selected = statusOptions.find(
                             (opt) => opt.label === e.target.value
                           );
-                          if (selected) handleStatusSelect(crop, selected.value);
+                          if (selected)
+                            handleStatusSelect(crop, selected.value);
                         }}
-                        className={`px-2 py-1 rounded text-xs font-semibold border focus:outline-none ${
-                          getStatusClass(crop.status)
-                        }`}
+                        className={`px-2 py-1 rounded text-xs font-semibold border focus:outline-none ${getStatusClass(
+                          crop.status
+                        )}`}
                         disabled={isChanging}
                       >
                         {statusOptions.map((opt) => (

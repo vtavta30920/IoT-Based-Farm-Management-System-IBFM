@@ -46,6 +46,7 @@ import OrderManagementStaff from "./pages/staff/OrderManagementStaff.jsx";
 import FarmingTasks from "./pages/staff/FarmingTasks.jsx";
 import TaskDetails from "./pages/staff/TaskDetails.jsx";
 import FeedbackManagement from "./pages/staff/FeedbackManagement.jsx";
+import FeedbackList from "./pages/staff/FeedbackList.jsx";
 
 import ManagerLayout from "./components/layouts/ManagerLayout.jsx";
 import FarmingSchedules from "./pages/manager/FarmingSchedules.jsx";
@@ -115,7 +116,6 @@ const App = () => {
                 <Route element={<ProtectedRoute allowedRoles={["Staff"]} />}>
                   <Route path="/staff/*" element={<StaffLayout />}>
                     <Route index element={<ProductsManagement />} />
-
                     <Route path="farming-tasks" element={<FarmingTasks />} />
                     <Route path="farming-tasks/:id" element={<TaskDetails />} />
                     <Route
@@ -125,6 +125,10 @@ const App = () => {
                     <Route
                       path="FeedbackManagement"
                       element={<FeedbackManagement />}
+                    />
+                    <Route
+                      path="feedback/product/:productId"
+                      element={<FeedbackList />}
                     />
                     <Route path="logistics" element={<Logistics />} />
                     <Route
