@@ -422,3 +422,19 @@ export const createFeedback = async (feedbackData, token) => {
 
   return response.json();
 };
+
+export const getExcludingInactive = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/crop/get-excluding-inactive`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch crops.");
+  }
+
+  return response.json();
+};

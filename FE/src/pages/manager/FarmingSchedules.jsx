@@ -9,9 +9,8 @@ import {
   getStaffAccounts,
   getAllFarms,
   getAllFarmActivities,
-  getAllActive,
+  getExcludingInactive, // Changed from getAllActive
 } from "../../api/api";
-
 const FarmingSchedules = () => {
   const [schedules, setSchedules] = useState([]);
   const [staffList, setStaffList] = useState([]);
@@ -72,8 +71,8 @@ const FarmingSchedules = () => {
 
   const fetchCrops = async () => {
     try {
-      const response = await getAllActive(token);
-      setCrops(response);
+      const response = await getExcludingInactive(token);
+      setCrops(response.data); // Note: response.data is now used to access the array
     } catch (err) {
       setError(err.message);
     }
