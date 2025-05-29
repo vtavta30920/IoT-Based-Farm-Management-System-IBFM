@@ -9,14 +9,15 @@ import {
   getStaffAccounts,
   getAllFarms,
   getAllFarmActivities,
-  getExcludingInactive, // Changed from getAllActive
+  getExcludingInactive,
 } from "../../api/api";
+
 const FarmingSchedules = () => {
   const [schedules, setSchedules] = useState([]);
   const [staffList, setStaffList] = useState([]);
-  const [farms, setFarms] = useState([]); // New state for farms
-  const [farmActivities, setFarmActivities] = useState([]); // New state for farm activities
-  const [crops, setCrops] = useState([]); // New state for crops
+  const [farms, setFarms] = useState([]);
+  const [farmActivities, setFarmActivities] = useState([]);
+  const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
@@ -35,6 +36,7 @@ const FarmingSchedules = () => {
     farmActivityId: "",
     farmDetailsId: "",
     cropId: "",
+    plantingDate: "",
   });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -42,6 +44,7 @@ const FarmingSchedules = () => {
   const [currentSchedule, setCurrentSchedule] = useState(null);
 
   const token = localStorage.getItem("token");
+
   useEffect(() => {
     fetchSchedules();
     fetchStaffAccounts();
@@ -50,7 +53,6 @@ const FarmingSchedules = () => {
     fetchCrops();
   }, [pagination.pageIndex, pagination.pageSize, statusFilter]);
 
-  // Fetch all necessary data
   const fetchFarms = async () => {
     try {
       const response = await getAllFarms(token);
@@ -72,13 +74,12 @@ const FarmingSchedules = () => {
   const fetchCrops = async () => {
     try {
       const response = await getExcludingInactive(token);
-      setCrops(response.data); // Note: response.data is now used to access the array
+      setCrops(response.data);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // Fetch staff accounts
   const fetchSchedules = async () => {
     try {
       setLoading(true);
@@ -88,10 +89,10 @@ const FarmingSchedules = () => {
         pagination.pageSize,
         token
       );
+
       if (response.status === 1) {
         let filteredSchedules = response.data.items;
 
-        // Apply filters
         if (searchTerm) {
           filteredSchedules = filteredSchedules.filter(
             (schedule) =>
@@ -99,7 +100,7 @@ const FarmingSchedules = () => {
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase()) ||
               schedule.cropView?.cropName
-                .toLowerCase()
+                ?.toLowerCase()
                 .includes(searchTerm.toLowerCase())
           );
         }
@@ -160,12 +161,18 @@ const FarmingSchedules = () => {
       setLoading(true);
       setError(null);
 
-      // Additional validation
       if (new Date(formData.startDate) > new Date(formData.endDate)) {
         throw new Error("Start date cannot be after end date");
       }
 
-      const response = await createSchedule(formData, token);
+      const response = await createSchedule(
+        {
+          ...formData,
+          farmId: formData.farmDetailsId, // Map farmDetailsId to farmId for API
+        },
+        token
+      );
+
       if (response.status === 1) {
         setIsCreateModalOpen(false);
         resetForm();
@@ -192,9 +199,13 @@ const FarmingSchedules = () => {
 
       const response = await updateSchedule(
         currentSchedule.scheduleId,
-        formData,
+        {
+          ...formData,
+          farmId: formData.farmDetailsId, // Map farmDetailsId to farmId for API
+        },
         token
       );
+
       if (response.status === 1) {
         setIsEditModalOpen(false);
         resetForm();
@@ -208,6 +219,7 @@ const FarmingSchedules = () => {
       setLoading(false);
     }
   };
+
   const handleStatusChange = async (scheduleId, newStatus) => {
     try {
       setLoading(true);
@@ -232,6 +244,7 @@ const FarmingSchedules = () => {
       farmActivityId: "",
       farmDetailsId: "",
       cropId: "",
+      plantingDate: "",
     });
   };
 
@@ -244,6 +257,9 @@ const FarmingSchedules = () => {
       farmActivityId: schedule.farmActivityId,
       farmDetailsId: schedule.farmId,
       cropId: schedule.cropId,
+      plantingDate: schedule.cropView?.plantingDate
+        ? formatDateForInput(schedule.cropView.plantingDate)
+        : "",
     });
     setIsEditModalOpen(true);
   };
@@ -256,7 +272,7 @@ const FarmingSchedules = () => {
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     const [day, month, year] = dateString.split("/");
-    return `${year}-${month}-${day}`;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   };
 
   const formatDateForDisplay = (dateString) => {
@@ -492,8 +508,8 @@ const FarmingSchedules = () => {
                     required
                   />
                 </div>
-                {/* <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     End Date
                   </label>
                   <input
@@ -501,19 +517,32 @@ const FarmingSchedules = () => {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   />
-                </div> */}
+                </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Planting Date
+                  </label>
+                  <input
+                    type="date"
+                    name="plantingDate"
+                    value={formData.plantingDate}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Assigned To (Staff)
                   </label>
                   <select
                     name="assignedTo"
                     value={formData.assignedTo}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Staff</option>
@@ -525,14 +554,14 @@ const FarmingSchedules = () => {
                   </select>
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Farm Activity
                   </label>
                   <select
                     name="farmActivityId"
                     value={formData.farmActivityId}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Farm Activity</option>
@@ -548,14 +577,15 @@ const FarmingSchedules = () => {
                     ))}
                   </select>
                 </div>
-
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Farm</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Farm
+                  </label>
                   <select
                     name="farmDetailsId"
                     value={formData.farmDetailsId}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Farm</option>
@@ -566,14 +596,15 @@ const FarmingSchedules = () => {
                     ))}
                   </select>
                 </div>
-
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Crop</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Crop
+                  </label>
                   <select
                     name="cropId"
                     value={formData.cropId}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Crop</option>
@@ -612,14 +643,14 @@ const FarmingSchedules = () => {
       {/* Edit Schedule Modal */}
       {isEditModalOpen && currentSchedule && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-lg">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl">
             <h2 className="text-xl font-bold mb-4">
               Edit Schedule #{currentSchedule.scheduleId}
             </h2>
             <form onSubmit={handleUpdateSchedule}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Start Date
                   </label>
                   <input
@@ -627,12 +658,12 @@ const FarmingSchedules = () => {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   />
                 </div>
-                {/* <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     End Date
                   </label>
                   <input
@@ -640,19 +671,32 @@ const FarmingSchedules = () => {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   />
-                </div> */}
+                </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Planting Date
+                  </label>
+                  <input
+                    type="date"
+                    name="plantingDate"
+                    value={formData.plantingDate}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Assigned To (Staff)
                   </label>
                   <select
                     name="assignedTo"
                     value={formData.assignedTo}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Staff</option>
@@ -664,14 +708,14 @@ const FarmingSchedules = () => {
                   </select>
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Farm Activity
                   </label>
                   <select
                     name="farmActivityId"
                     value={formData.farmActivityId}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Farm Activity</option>
@@ -687,14 +731,15 @@ const FarmingSchedules = () => {
                     ))}
                   </select>
                 </div>
-
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Farm</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Farm
+                  </label>
                   <select
                     name="farmDetailsId"
                     value={formData.farmDetailsId}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Farm</option>
@@ -705,14 +750,15 @@ const FarmingSchedules = () => {
                     ))}
                   </select>
                 </div>
-
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Crop</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Crop
+                  </label>
                   <select
                     name="cropId"
                     value={formData.cropId}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
                   >
                     <option value="">Select Crop</option>
@@ -724,10 +770,10 @@ const FarmingSchedules = () => {
                   </select>
                 </div>
               </div>
-              <div className="flex justify-end space-x-2 mt-4">
+              <div className="flex justify-end space-x-3 mt-6">
                 <button
                   type="button"
-                  className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded"
+                  className="bg-gray-200 hover:bg-gray-300 px-6 py-2 rounded-lg text-gray-700 transition-colors"
                   onClick={() => {
                     setIsEditModalOpen(false);
                     resetForm();
@@ -737,7 +783,7 @@ const FarmingSchedules = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded"
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg transition-colors"
                   disabled={loading}
                 >
                   {loading ? "Updating..." : "Update Schedule"}
@@ -814,7 +860,7 @@ const FarmingSchedules = () => {
                     <span className="font-medium">Description:</span>{" "}
                     {currentSchedule.cropView.description}
                   </div>
-                  <div className="mb-2">
+                  {/* <div className="mb-2">
                     <span className="font-medium">Quantity:</span>{" "}
                     {currentSchedule.cropView.quantity}
                   </div>
@@ -825,34 +871,36 @@ const FarmingSchedules = () => {
                   <div className="mb-2">
                     <span className="font-medium">Harvest Date:</span>{" "}
                     {currentSchedule.cropView.harvestDate}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}
 
             {currentSchedule.farmActivityView && (
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">
-                  Farm Activity Information
-                </h3>
-                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded">
-                  <div className="mb-2">
-                    <span className="font-medium">Activity Type:</span>{" "}
-                    {currentSchedule.farmActivityView.activityType}
+              <div className="col-span-2">
+                <h3 className="text-lg font-semibold mb-2">Farm Activities</h3>
+                {currentSchedule.farmActivityView?.map((activity, index) => (
+                  <div key={index} className="bg-gray-50 p-3 rounded mb-2">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="font-medium">Activity Type:</span>{" "}
+                        {activity.activityType}
+                      </div>
+                      <div>
+                        <span className="font-medium">Status:</span>{" "}
+                        {activity.status}
+                      </div>
+                      <div>
+                        <span className="font-medium">Start Date:</span>{" "}
+                        {activity.startDate}
+                      </div>
+                      <div>
+                        <span className="font-medium">End Date:</span>{" "}
+                        {activity.endDate}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <span className="font-medium">Start Date:</span>{" "}
-                    {currentSchedule.farmActivityView.startDate}
-                  </div>
-                  <div className="mb-2">
-                    <span className="font-medium">End Date:</span>{" "}
-                    {currentSchedule.farmActivityView.endDate}
-                  </div>
-                  <div className="mb-2">
-                    <span className="font-medium">Status:</span>{" "}
-                    {currentSchedule.farmActivityView.status}
-                  </div>
-                </div>
+                ))}
               </div>
             )}
 
