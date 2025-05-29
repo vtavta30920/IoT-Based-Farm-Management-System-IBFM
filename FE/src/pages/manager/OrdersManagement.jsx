@@ -401,7 +401,6 @@ const OrdersManagement = () => {
         ) : (
           displayOrders.map((order, index) => {
             const status = statusMap[order.status];
-            // Đổi màu theo statusMap mới:
             // PAID: xanh lục, UNDISCHARGED: đỏ, CANCELLED: đỏ, DELIVERED: xanh dương, COMPLETED: xanh lục, PENDING: cam
             let bgColor, textColor;
             switch (status) {

@@ -24,6 +24,13 @@ const AccountDetail = () => {
     image: "",
   });
 
+  // Notification modal state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "", // "success" | "error"
+  });
+
   useEffect(() => {
     if (!user) {
       navigate("/admin");
@@ -73,6 +80,31 @@ const AccountDetail = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="flex-1 overflow-auto">
+        {/* Notification Modal */}
+        {notification.show && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
+              <span
+                className={`text-2xl mb-2 ${
+                  notification.type === "success"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {notification.type === "success" ? "✔️" : "❌"}
+              </span>
+              <div className="text-center mb-4">{notification.message}</div>
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded"
+                onClick={() =>
+                  setNotification({ ...notification, show: false })
+                }
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto py-4 px-6 flex justify-center items-center">
             <h2 className="text-3xl font-bold text-green-600 border-b-2 border-gray-300 pb-2 mb-6 text-center">
@@ -159,8 +191,8 @@ const AccountDetail = () => {
                         name="role"
                         value={formData.role}
                         onChange={(e) => {
-                          handleChange(e); // cập nhật formData.role
-                          setRoleId(parseInt(e.target.value)); // đảm bảo roleId cũng cập nhật đúng
+                          handleChange(e);
+                          setRoleId(parseInt(e.target.value));
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
                       >
@@ -168,9 +200,23 @@ const AccountDetail = () => {
                         <option value={3}>Staff</option>
                         <option value={0}>Customer</option>
                       </select>
-
                       <button
-                        onClick={async () => await mutateAsync()}
+                        onClick={async () => {
+                          try {
+                            await mutateAsync();
+                            setNotification({
+                              show: true,
+                              message: "Role updated successfully!",
+                              type: "success",
+                            });
+                          } catch (err) {
+                            setNotification({
+                              show: true,
+                              message: "Failed to update role!",
+                              type: "error",
+                            });
+                          }
+                        }}
                         className="ml-3 text-red-400 hover:text-red-600 bg-red-100 hover:bg-red-200 px-4 py-2 rounded-md"
                       >
                         {isPending ? "loading..." : "Change"}
@@ -246,9 +292,17 @@ const AccountDetail = () => {
                           userId: user.accountId,
                           updateData,
                         });
-                        alert("Update Succeed!");
+                        setNotification({
+                          show: true,
+                          message: "Update Succeed!",
+                          type: "success",
+                        });
                       } catch (err) {
-                        alert("Update Failed!");
+                        setNotification({
+                          show: true,
+                          message: "Update Failed!",
+                          type: "error",
+                        });
                       }
                     }}
                     className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
