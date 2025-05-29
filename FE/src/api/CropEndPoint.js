@@ -29,11 +29,12 @@ export const useGetAllCrops = () => {
   });
 };
 
-// Đổi trạng thái crop
-export const changeCropStatus = async (cropId) => {
-  if (!cropId) throw new Error("cropId is required");
+// Đổi trạng thái crop (PUT, truyền cropId và status trên query string)
+export const changeCropStatus = async ({ cropId, status }) => {
+  if (!cropId || typeof status === "undefined")
+    throw new Error("cropId and status are required");
   const response = await axios.put(
-    `https://localhost:7067/api/v1/crop/chang-status?cropId=${cropId}`
+    `https://localhost:7067/api/v1/crop/chang-status?cropId=${cropId}&status=${status}`
   );
   return response.data;
 };
