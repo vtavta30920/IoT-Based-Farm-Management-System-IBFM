@@ -200,15 +200,7 @@ const CropManagement = () => {
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Description
               </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
-                Quantity
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
-                Planting Date
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
-                Harvest Date
-              </th>
+              {/* Bỏ các cột Quantity, Planting Date, Harvest Date */}
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Status
               </th>
@@ -230,19 +222,7 @@ const CropManagement = () => {
                     {crop.description}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">{crop.quantity}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">
-                    {crop.plantingDate}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">
-                    {crop.harvestDate}
-                  </div>
-                </td>
+                {/* Bỏ các cột Quantity, Planting Date, Harvest Date */}
                 <td className="px-6 py-4 whitespace-nowrap text-center">
                   <button
                     className={`px-2 py-1 rounded-full text-xs font-semibold
@@ -263,7 +243,7 @@ const CropManagement = () => {
                     onClick={() => handleEdit(crop)}
                     className="text-blue-600 hover:text-blue-900 mr-3"
                   >
-                    Edit
+                    Detail
                   </button>
                 </td>
               </tr>

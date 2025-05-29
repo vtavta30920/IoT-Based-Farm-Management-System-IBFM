@@ -26,7 +26,9 @@ const FeedbackManagement = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-green-700">Feedback Management</h2>
+      <h2 className="text-2xl font-bold mb-6 text-green-700">
+        Feedback Management
+      </h2>
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
@@ -64,9 +66,7 @@ const FeedbackManagement = () => {
         >
           Previous
         </button>
-        <span>
-          Page {pageIndex}
-        </span>
+        <span>Page {pageIndex}</span>
         <button
           className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
           disabled={feedbacks.length < pageSize}

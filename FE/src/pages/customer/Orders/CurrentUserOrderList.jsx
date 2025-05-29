@@ -86,7 +86,7 @@ const CurrentUserOrderList = () => {
             setNotification({
               show: true,
               message: success
-                ? "Order was automatically cancelled after 1 minutes of pending status."
+                ? "Order was automatically cancelled after 5 minutes of pending status."
                 : "Failed to auto-cancel order after timeout.",
               type: success ? "success" : "error",
             });
