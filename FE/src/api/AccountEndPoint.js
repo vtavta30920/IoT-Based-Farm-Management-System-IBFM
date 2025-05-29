@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 
 // Thêm interceptor để tự động thêm token vào header nếu có
 axios.interceptors.request.use(
@@ -25,28 +25,32 @@ const fetchGetAllAccount = async (pageIndex, pageSize, role, status) => {
   if (role) params.append("role", role);
   if (status) params.append("status", status);
 
-  const { data } = await axios.get(`https://localhost:7067/api/v1/account/get-all?${params.toString()}`);
+  const { data } = await axios.get(
+    `https://localhost:7067/api/v1/account/get-all?${params.toString()}`
+  );
   return data;
 };
 
 // Hook react-query có thêm role và status
 export const useGetAllAccount = (pageIndex, pageSize, role, status) => {
   return useQuery({
-    queryKey: ['v1/account/get-all', { pageIndex, pageSize, role, status }],
+    queryKey: ["v1/account/get-all", { pageIndex, pageSize, role, status }],
     queryFn: () => fetchGetAllAccount(pageIndex, pageSize, role, status),
   });
 };
 
 // Hàm API get-by-email
 export const getUserByEmail = async (email) => {
-  const response = await axios.get(`https://localhost:7067/api/v1/account/get-by-email?email=${email}`);
+  const response = await axios.get(
+    `https://localhost:7067/api/v1/account/get-by-email?email=${email}`
+  );
   return response.data;
 };
 
 // Hook React Query để gọi API get-by-email
 export const useGetAccountByEmail = (email) => {
   return useQuery({
-    queryKey: ['v1/account/get-by-email', email],
+    queryKey: ["v1/account/get-by-email", email],
     queryFn: () => getUserByEmail(email), // <-- sửa lại tên hàm cho đúng
     enabled: !!email,
   });
@@ -66,12 +70,12 @@ export const useUpdateStatus = (userId) => {
     mutationFn: () => updateStatus(userId), // Chỉ cần truyền id
     onSuccess: (data) => {
       // Xử lý thành công (Ví dụ: thông báo cho người dùng hoặc cập nhật UI)
-      console.log('Update status success:', data);
+      console.log("Update status success:", data);
     },
     onError: (error) => {
       // Xử lý lỗi nếu có
-      console.error('Update status failed:', error);
-    }
+      console.error("Update status failed:", error);
+    },
   });
 };
 
@@ -83,7 +87,6 @@ export const updateRole = async (accountId, roleId) => {
   return response.data;
 };
 
-
 // Hook React Query để gọi API cập nhật role chỉ với accountId và roleId
 export const useUpdateRole = (accountId, roleId) => {
   return useMutation({
@@ -91,12 +94,12 @@ export const useUpdateRole = (accountId, roleId) => {
     onSuccess: (data) => {
       // Xử lý thành công (Ví dụ: thông báo cho người dùng hoặc cập nhật UI)
       //queryClient.invalidateQueries({queryKey: ["v1/account/get-all"]})
-      console.log('Update role success:', data);
+      console.log("Update role success:", data);
     },
     onError: (error) => {
       // Xử lý lỗi nếu có
-      console.error('Update role failed:', error);
-    }
+      console.error("Update role failed:", error);
+    },
   });
 };
 
@@ -114,10 +117,10 @@ export const useUpdateAccount = () => {
   return useMutation({
     mutationFn: ({ userId, updateData }) => updateAccount(userId, updateData),
     onSuccess: (data) => {
-      console.log('Update account success:', data);
+      console.log("Update account success:", data);
     },
     onError: (error) => {
-      console.error('Update account failed:', error);
+      console.error("Update account failed:", error);
     },
   });
 };
@@ -138,12 +141,12 @@ export const createAccount = async (createData) => {
 // Hook React Query để gọi API tạo tài khoản
 export const useCreateAccount = () => {
   return useMutation({
-    mutationFn: ( createData ) => createAccount(createData),
+    mutationFn: (createData) => createAccount(createData),
     onSuccess: (data) => {
-      console.log('Create account success:', data);
+      console.log("Create account success:", data);
     },
     onError: (error) => {
-      console.error('Create account failed:', error);
+      console.error("Create account failed:", error);
     },
   });
 };
@@ -160,12 +163,16 @@ export const changePassword = async (userId, passwordData) => {
 // Hook React Query để gọi API đổi mật khẩu
 export const useChangePassword = () => {
   return useMutation({
-    mutationFn: ({ userId, passwordData }) => changePassword(userId, passwordData),
+    mutationFn: ({ userId, passwordData }) =>
+      changePassword(userId, passwordData),
     onSuccess: (data) => {
-      console.log('Password changed successfully:', data);
+      console.log("Password changed successfully:", data);
     },
     onError: (error) => {
-      console.error('Password change failed:', error.response?.data || error.message);
+      console.error(
+        "Password change failed:",
+        error.response?.data || error.message
+      );
     },
   });
 };
