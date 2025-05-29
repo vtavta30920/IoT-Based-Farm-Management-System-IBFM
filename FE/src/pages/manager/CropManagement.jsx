@@ -26,6 +26,7 @@ const CropManagement = () => {
     message: "",
     type: "", // "success" | "error"
   });
+  const [statusDropdownOpenId, setStatusDropdownOpenId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -159,13 +160,38 @@ const CropManagement = () => {
     }
   };
 
-  const handleChangeStatus = async () => {
-    if (!statusModal.crop) return;
+  // Map status code to label
+  const statusOptions = [
+    { value: 0, label: "ACTIVE" },
+    { value: 1, label: "INACTIVE" },
+    { value: 2, label: "IN_STOCK" },
+  ];
+
+  // Helper to get status label from value
+  const getStatusLabel = (status) => {
+    const found = statusOptions.find(
+      (opt) => opt.label === status || opt.value === status
+    );
+    return found ? found.label : status;
+  };
+
+  // Helper to get status color classes
+  const getStatusClass = (status) => {
+    if (status === "ACTIVE" || status === 0)
+      return "bg-green-100 text-green-800 border border-green-400";
+    if (status === "IN_STOCK" || status === 2)
+      return "bg-blue-100 text-blue-800 border border-blue-400";
+    if (status === "CLEAR")
+      return "bg-yellow-100 text-yellow-800 border border-yellow-400";
+    return "bg-red-100 text-red-800 border border-red-400";
+  };
+
+  // Update status handler
+  const handleStatusSelect = async (crop, statusValue) => {
     setIsChanging(true);
     try {
-      await changeCropStatus(statusModal.crop.cropId);
+      await changeCropStatus({ cropId: crop.cropId, status: statusValue });
       await reloadCurrentPage();
-      setStatusModal({ open: false, crop: null });
       setNotification({
         show: true,
         message: "Update crop status successfully!",
@@ -173,7 +199,6 @@ const CropManagement = () => {
       });
     } catch (err) {
       setError(err.message);
-      setStatusModal({ open: false, crop: null });
       setNotification({
         show: true,
         message: "Update crop status failed!",
@@ -181,6 +206,7 @@ const CropManagement = () => {
       });
     } finally {
       setIsChanging(false);
+      setStatusDropdownOpenId(null);
     }
   };
 
@@ -226,66 +252,107 @@ const CropManagement = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto rounded-lg border bg-white">
+        <table className="min-w-full bg-white">
+          <colgroup>
+            <col style={{ width: "22%" }} />
+            <col style={{ width: "38%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "20%" }} />
+          </colgroup>
+          <thead className="bg-gray-200">
             <tr>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 Name
               </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 Description
               </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 Status
               </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {cropList.map((crop) => (
-              <tr key={crop.cropId}>
-                <td className="px-6 py-4 whitespace-nowrap text-center align-top">
-                  <div className="text-sm font-medium text-gray-900">
-                    {crop.cropName}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-pre-line text-center align-top">
-                  <div className="text-sm text-gray-500 break-words max-w-xs mx-auto">
-                    {crop.description}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center align-top">
-                  <button
-                    className={`px-2 py-1 rounded-full text-xs font-semibold
-                      ${
-                        crop.status === "ACTIVE"
-                          ? "bg-green-100 text-green-800 border border-green-400"
-                          : crop.status === "IN_STOCK"
-                          ? "bg-blue-100 text-blue-800 border border-blue-400"
-                          : crop.status === "CLEAR"
-                          ? "bg-yellow-100 text-yellow-800 border border-yellow-400"
-                          : "bg-red-100 text-red-800 border border-red-400"
-                      }
-                    `}
-                    disabled={isChanging}
-                    onClick={() => setStatusModal({ open: true, crop })}
-                  >
-                    {crop.status}
-                  </button>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center align-top">
-                  <button
-                    onClick={() => handleEdit(crop)}
-                    className="text-blue-600 hover:text-blue-900 mr-3"
-                  >
-                    Detail
-                  </button>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={4} className="text-center py-4">
+                  Loading...
                 </td>
               </tr>
-            ))}
+            ) : cropList.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center py-4">
+                  No crops found
+                </td>
+              </tr>
+            ) : (
+              cropList.map((crop) => (
+                <tr key={crop.cropId} className="hover:bg-gray-50 align-middle">
+                  <td className="py-2 px-4 border text-center align-middle">
+                    <div className="text-sm font-medium text-gray-900 flex items-center justify-center h-full">
+                      {crop.cropName}
+                    </div>
+                  </td>
+                  <td className="py-2 px-4 border text-center align-middle">
+                    <div className="text-sm text-gray-500 break-words max-w-xs mx-auto flex items-center justify-center h-full">
+                      {crop.description}
+                    </div>
+                  </td>
+                  <td className="py-2 px-4 border text-center align-middle relative">
+                    <div className="flex items-center justify-center h-full">
+                      <select
+                        value={getStatusLabel(crop.status)}
+                        onChange={(e) => {
+                          const selected = statusOptions.find(
+                            (opt) => opt.label === e.target.value
+                          );
+                          if (selected) handleStatusSelect(crop, selected.value);
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-semibold border focus:outline-none ${
+                          getStatusClass(crop.status)
+                        }`}
+                        disabled={isChanging}
+                      >
+                        {statusOptions.map((opt) => (
+                          <option
+                            key={opt.value}
+                            value={opt.label}
+                            className={
+                              opt.label === "ACTIVE"
+                                ? "text-green-800"
+                                : opt.label === "IN_STOCK"
+                                ? "text-blue-800"
+                                : opt.label === "CLEAR"
+                                ? "text-yellow-800"
+                                : opt.label === "INACTIVE"
+                                ? "text-red-800"
+                                : ""
+                            }
+                            disabled={getStatusLabel(crop.status) === opt.label}
+                          >
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </td>
+                  <td className="py-2 px-4 border text-center align-middle">
+                    <div className="flex items-center justify-center h-full">
+                      <button
+                        onClick={() => handleEdit(crop)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition"
+                      >
+                        Detail
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
