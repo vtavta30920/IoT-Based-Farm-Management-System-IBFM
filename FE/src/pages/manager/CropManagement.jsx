@@ -22,7 +22,7 @@ const CropManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [newImageFile, setNewImageFile] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
-
+  const [previewImage, setPreviewImage] = useState(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,7 +80,7 @@ const CropManagement = () => {
     if (Object.keys(errors).length > 0) return;
 
     try {
-      let imageUrl = cropData.imageUrl;
+      let imageUrl = currentCrop?.imageUrl || ""; // Preserve existing image if no new one uploaded
 
       // Upload new image if there's one
       if (newImageFile) {
@@ -230,7 +230,8 @@ const CropManagement = () => {
                       <img
                         src={crop.imageUrl}
                         alt={crop.cropName}
-                        className="w-10 h-10 rounded-full object-cover mx-auto"
+                        className="w-10 h-10 rounded-full object-cover mx-auto cursor-pointer"
+                        onClick={() => setPreviewImage(crop.imageUrl)}
                       />
                     )}
                   </div>
@@ -335,7 +336,10 @@ const CropManagement = () => {
                         src={currentCrop.imageUrl}
                         alt="Crop"
                         className="w-16 h-16 rounded-md object-cover mr-4 cursor-pointer"
-                        onClick={() => setShowImageModal(true)}
+                        onClick={() => {
+                          setPreviewImage(currentCrop.imageUrl);
+                          setShowImageModal(false);
+                        }}
                       />
                     )}
 
@@ -444,6 +448,24 @@ const CropManagement = () => {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative max-w-4xl max-h-full">
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="max-w-full max-h-screen"
+            />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 text-white bg-red-500 rounded-full p-2 hover:bg-red-600"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
