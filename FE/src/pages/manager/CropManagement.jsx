@@ -92,6 +92,11 @@ const CropManagement = () => {
         }
       }
 
+      // Validate that we have an image URL (either existing or new)
+      if (!imageUrl) {
+        setError("Image is required");
+        return;
+      }
       if (currentCrop) {
         updateCrop(
           {
@@ -237,16 +242,13 @@ const CropManagement = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">{crop.quantity}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm text-gray-500">
-                    {crop.plantingDate}
+                    {crop.description}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="text-sm text-gray-500">
-                    {crop.harvestDate}
+                    {crop.category?.categoryName}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -257,7 +259,7 @@ const CropManagement = () => {
                     onClick={() => handleEdit(crop)}
                     className="text-blue-600 hover:text-blue-900 mr-3"
                   >
-                    Detail
+                    Edit
                   </button>
                 </td>
               </tr>
