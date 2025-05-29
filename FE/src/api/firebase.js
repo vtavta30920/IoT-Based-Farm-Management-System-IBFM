@@ -14,7 +14,7 @@ const firebaseConfig = {
   storageBucket: "iotfarm-cd758.firebasestorage.app",
   messagingSenderId: "310426902116",
   appId: "1:310426902116:web:81880a6e46c503c84d4971",
-  measurementId: "G-KFV3ERNFE6"
+  measurementId: "G-KFV3ERNFE6",
 };
 
 // Initialize Firebase
