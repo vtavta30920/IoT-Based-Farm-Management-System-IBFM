@@ -215,6 +215,11 @@ const ProductDetailModal = ({ product, onClose }) => {
   const [description, setDescription] = useState(product?.description || "");
   const [cropName, setCropName] = useState(product?.cropName || "");
   const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "", // "success" | "error"
+  });
 
   const { mutate: updateStatus, isLoading: isUpdatingStatus } =
     useUpdateProductStatus();
@@ -231,9 +236,50 @@ const ProductDetailModal = ({ product, onClose }) => {
     setShowConfirmStatusModal(true);
   };
 
+  const handleSaveChanges = () => {
+    const newErrors = validate();
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    const payload = {
+      productName: name,
+      price: Number(price),
+      images: imageUrl,
+      // Không truyền stockQuantity khi update
+      description,
+      categoryId:
+        categoryId && !isNaN(Number(categoryId))
+          ? Number(categoryId)
+          : undefined,
+    };
+
+    updateProduct(
+      { productId: product.productId, productData: payload },
+      {
+        onSuccess: () => {
+          setNotification({
+            show: true,
+            message: "Update product successfully!",
+            type: "success",
+          });
+          setTimeout(() => {
+            setNotification({ show: false, message: "", type: "" });
+            onClose();
+          }, 1500);
+        },
+        onError: () => {
+          setNotification({
+            show: true,
+            message: "Update product failed!",
+            type: "error",
+          });
+        },
+      }
+    );
+  };
+
   const handleConfirmStatusChange = () => {
     if (!product?.productId) {
-      console.error("Product ID is missing.");
       setShowConfirmStatusModal(false);
       return;
     }
@@ -242,10 +288,19 @@ const ProductDetailModal = ({ product, onClose }) => {
       onSuccess: () => {
         setStatus(status === 1 ? 0 : 1);
         setShowConfirmStatusModal(false);
+        setNotification({
+          show: true,
+          message: "Update product status successfully!",
+          type: "success",
+        });
       },
-      onError: (error) => {
-        console.error("Failed to update status:", error);
+      onError: () => {
         setShowConfirmStatusModal(false);
+        setNotification({
+          show: true,
+          message: "Update product status failed!",
+          type: "error",
+        });
       },
     });
   };
@@ -265,37 +320,33 @@ const ProductDetailModal = ({ product, onClose }) => {
     return newErrors;
   };
 
-  const handleSaveChanges = () => {
-    const newErrors = validate();
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
-    const payload = {
-      productName: name,
-      price: Number(price),
-      images: imageUrl,
-      stockQuantity: Number(stock),
-      description,
-      categoryId:
-        categoryId && !isNaN(Number(categoryId))
-          ? Number(categoryId)
-          : undefined,
-    };
-
-    updateProduct(
-      { productId: product.productId, productData: payload },
-      {
-        onSuccess: () => {
-          onClose();
-        },
-      }
-    );
-  };
-
   if (!product) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {/* Notification Modal */}
+      {notification.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
+            <span
+              className={`text-2xl mb-2 ${
+                notification.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {notification.type === "success" ? "✔️" : "❌"}
+            </span>
+            <div className="text-center mb-4">{notification.message}</div>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              onClick={() => setNotification({ ...notification, show: false })}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <div className="bg-green-50 p-8 rounded-xl shadow-lg w-full max-w-3xl relative">
         <button
           className="absolute top-2 right-3 text-xl text-gray-600 hover:text-red-600"
@@ -389,11 +440,8 @@ const ProductDetailModal = ({ product, onClose }) => {
               <input
                 type="text"
                 value={stock}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, "");
-                  setStock(val === "" ? "" : val);
-                }}
-                className="w-full border rounded px-3 py-2"
+                readOnly
+                className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                 min={0}
                 inputMode="numeric"
                 pattern="[0-9]*"

@@ -5,8 +5,15 @@ import { useCategories } from "../../api/CategoryEndPoint";
 import { uploadImageToFirebase } from "../../api/firebase.js";
 
 const CropDropdown = ({ selectedCropId, onCropChange }) => {
-  const { data: crops = [], isLoading } = useGetAllCrops();
+  const { data: crops = [], isLoading, isError } = useGetAllCrops();
   if (isLoading) return <p>Loading crops...</p>;
+  if (isError || !Array.isArray(crops) || crops.length === 0) {
+    return (
+      <div className="text-red-500 text-sm py-2 px-1">
+        No crop available! Please contact your Manager.
+      </div>
+    );
+  }
   return (
     <select
       value={selectedCropId}
@@ -189,7 +196,6 @@ const CreateProductModal = ({
   const [cropId, setCropId] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState(10000); // default price is 10000
-  const [stock, setStock] = useState(0);
   const [description, setDescription] = useState("");
   const [errors, setErrors] = useState({});
 
@@ -204,7 +210,6 @@ const CreateProductModal = ({
     if (!imageUrl.trim()) newErrors.imageUrl = "Image URL is required.";
     if (!price || price < 10000)
       newErrors.price = "Price must be at least 10,000.";
-    if (!stock || stock <= 0) newErrors.stock = "Stock must be greater than 0.";
     return newErrors;
   };
 
@@ -223,7 +228,6 @@ const CreateProductModal = ({
       productName: name,
       price,
       images: imageUrl,
-      stockQuantity: stock,
       description,
       categoryId: categoryIdNum,
       cropId: cropIdNum,
@@ -315,28 +319,6 @@ const CreateProductModal = ({
                 {errors.price && (
                   <div className="text-red-600 text-sm mt-1">
                     {errors.price}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block font-medium">Stock</label>
-                <input
-                  type="text"
-                  value={stock}
-                  onChange={(e) => {
-                    // Chỉ cho phép số, không cho nhập bất kỳ ký tự nào ngoài số
-                    const val = e.target.value.replace(/[^0-9]/g, "");
-                    setStock(val === "" ? "" : Math.max(Number(val), 0));
-                  }}
-                  className="w-full border rounded px-3 py-2"
-                  min={1}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  autoComplete="off"
-                />
-                {errors.stock && (
-                  <div className="text-red-600 text-sm mt-1">
-                    {errors.stock}
                   </div>
                 )}
               </div>
