@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { getAllCrops, getAllFarms } from "../../api/api";
+import { getAllCrops, getAllCategories } from "../../api/api";
 import {
   changeCropStatus,
   useCreateCrop,
   useUpdateCrop,
 } from "../../api/CropEndPoint";
-
+import { uploadImageToFirebase } from "../../api/firebase.js";
 const CropManagement = () => {
   const [crops, setCrops] = useState([]);
-  const [farms, setFarms] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentCrop, setCurrentCrop] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statusModal, setStatusModal] = useState({ open: false, crop: null });
   const [isChanging, setIsChanging] = useState(false);
   const { mutate: createCrop, isLoading: isCreating } = useCreateCrop();
   const { mutate: updateCrop, isLoading: isUpdating } = useUpdateCrop();
@@ -21,22 +20,19 @@ const CropManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const pageSize = 5;
   const [totalPages, setTotalPages] = useState(1);
-  const [notification, setNotification] = useState({
-    show: false,
-    message: "",
-    type: "", // "success" | "error"
-  });
-
+  const [newImageFile, setNewImageFile] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const [cropsData, farmsData] = await Promise.all([
+        const [cropsData, categoriesData] = await Promise.all([
           getAllCrops(token, pageIndex, pageSize),
-          getAllFarms(token),
+          getAllCategories(token),
         ]);
         setCrops(Array.isArray(cropsData.items) ? cropsData.items : []);
-        setFarms(farmsData);
+        setCategories(categoriesData);
         setTotalPages(cropsData.totalPagesCount || 1);
       } catch (err) {
         setError(err.message);
@@ -50,49 +46,15 @@ const CropManagement = () => {
 
   const validateForm = (cropData) => {
     const errors = {};
-    if (!cropData.quantity || isNaN(Number(cropData.quantity))) {
-      errors.quantity = "Quantity is required and must be a number";
-    } else if (Number(cropData.quantity) <= 0) {
-      errors.quantity = "Quantity must be a positive number";
-    }
-
-    if (!cropData.plantingDate) {
-      errors.plantingDate = "Planting date is required";
-    } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const plantingDate = new Date(cropData.plantingDate);
-      if (plantingDate < today) {
-        errors.plantingDate = "Planting date must be today or in the future";
-      }
-    }
-
-    if (!cropData.harvestDate && !currentCrop) {
-      errors.harvestDate = "Harvest date is required";
-    } else if (!currentCrop && cropData.harvestDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const harvestDate = new Date(cropData.harvestDate);
-      if (harvestDate < today) {
-        errors.harvestDate = "Harvest date must be today or in the future";
-      } else if (cropData.plantingDate) {
-        const plantingDate = new Date(cropData.plantingDate);
-        const diffTime = harvestDate.getTime() - plantingDate.getTime();
-        const diffDays = diffTime / (1000 * 3600 * 24);
-        if (diffDays < 30) {
-          errors.harvestDate =
-            "Harvest date must be at least 1 month after planting date";
-        }
-      }
-    }
-
     if (!cropData.cropName || !cropData.cropName.trim()) {
       errors.cropName = "Crop name is required";
     }
     if (!cropData.description || !cropData.description.trim()) {
       errors.description = "Description is required";
     }
-
+    if (!cropData.categoryId) {
+      errors.categoryId = "Category is required";
+    }
     return errors;
   };
 
@@ -111,34 +73,41 @@ const CropManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    // Lấy đúng các trường cần thiết cho API mới
-    const cropData = {
-      cropName: formData.get("cropName"),
-      description: formData.get("description"),
-      origin: formData.get("origin"),
-    };
+    const cropData = Object.fromEntries(formData);
 
-    // Validate các trường bắt buộc
-    const errors = {};
-    if (!cropData.cropName || !cropData.cropName.trim()) {
-      errors.cropName = "Crop name is required";
-    }
-    if (!cropData.description || !cropData.description.trim()) {
-      errors.description = "Description is required";
-    }
-    if (!cropData.origin || !cropData.origin.trim()) {
-      errors.origin = "Origin is required";
-    }
+    const errors = validateForm(cropData);
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
     try {
+      let imageUrl = currentCrop?.imageUrl || ""; // Preserve existing image if no new one uploaded
+
+      // Upload new image if there's one
+      if (newImageFile) {
+        try {
+          imageUrl = await uploadImageToFirebase(newImageFile, "crops");
+        } catch (err) {
+          setError("Image upload failed: " + err.message);
+          return;
+        }
+      }
+
+      // Validate that we have an image URL (either existing or new)
+      if (!imageUrl) {
+        setError("Image is required");
+        return;
+      }
       if (currentCrop) {
-        // Nếu có currentCrop thì update (giả sử update cũng theo body mới)
         updateCrop(
           {
             cropId: currentCrop.cropId,
-            updateData: cropData,
+            updateData: {
+              cropName: cropData.cropName,
+              description: cropData.description,
+              imageUrl: imageUrl,
+              origin: cropData.origin,
+              categoryId: Number(cropData.categoryId),
+            },
           },
           {
             onSuccess: async () => {
@@ -146,6 +115,7 @@ const CropManagement = () => {
               setIsModalOpen(false);
               setCurrentCrop(null);
               setFormErrors({});
+              setNewImageFile(null);
             },
             onError: (err) => {
               setError(err.message);
@@ -153,77 +123,67 @@ const CropManagement = () => {
           }
         );
       } else {
-        createCrop(cropData, {
-          onSuccess: async () => {
-            await reloadCurrentPage();
-            setIsModalOpen(false);
-            setCurrentCrop(null);
-            setFormErrors({});
+        createCrop(
+          {
+            cropName: cropData.cropName,
+            description: cropData.description,
+            imageUrl: imageUrl,
+            origin: cropData.origin,
+            categoryId: Number(cropData.categoryId),
           },
-          onError: (err) => {
-            setError(err.message);
-          },
-        });
+          {
+            onSuccess: async () => {
+              await reloadCurrentPage();
+              setIsModalOpen(false);
+              setCurrentCrop(null);
+              setFormErrors({});
+              setNewImageFile(null);
+            },
+            onError: (err) => {
+              setError(err.message);
+            },
+          }
+        );
       }
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleChangeStatus = async () => {
-    if (!statusModal.crop) return;
-    setIsChanging(true);
-    try {
-      await changeCropStatus(statusModal.crop.cropId);
-      await reloadCurrentPage();
-      setStatusModal({ open: false, crop: null });
-      setNotification({
-        show: true,
-        message: "Update crop status successfully!",
-        type: "success",
-      });
-    } catch (err) {
-      setError(err.message);
-      setStatusModal({ open: false, crop: null });
-      setNotification({
-        show: true,
-        message: "Update crop status failed!",
-        type: "error",
-      });
-    } finally {
-      setIsChanging(false);
-    }
-  };
-
   if (isLoading) return <div>Loading crops...</div>;
   if (error) return <div>Error: {error}</div>;
   const cropList = Array.isArray(crops) ? crops : [];
+  const handleImageFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImageFile(file);
+      setCurrentCrop((prev) => ({
+        ...prev,
+        imageUrl: URL.createObjectURL(file),
+      }));
+      setShowImageModal(false);
+    }
+  };
 
+  const handlePasteImage = (e) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          setNewImageFile(file);
+          setCurrentCrop((prev) => ({
+            ...prev,
+            imageUrl: URL.createObjectURL(file),
+          }));
+          setShowImageModal(false);
+          break;
+        }
+      }
+    }
+  };
   return (
     <div className="p-6">
-      {/* Notification Modal */}
-      {notification.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
-            <span
-              className={`text-2xl mb-2 ${
-                notification.type === "success"
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              {notification.type === "success" ? "✔️" : "❌"}
-            </span>
-            <div className="text-center mb-4">{notification.message}</div>
-            <button
-              className="bg-green-600 text-white px-4 py-2 rounded"
-              onClick={() => setNotification({ ...notification, show: false })}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Crop Management</h2>
         <button
@@ -245,11 +205,16 @@ const CropManagement = () => {
                 Name
               </th>
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
+                Image
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Description
               </th>
-              {/* Bỏ các cột Quantity, Planting Date, Harvest Date */}
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
-                Status
+                Category
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
+                Origin
               </th>
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Actions
@@ -264,33 +229,37 @@ const CropManagement = () => {
                     {crop.cropName}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-pre-line text-center">
-                  <div className="text-sm text-gray-500 break-words max-w-xs mx-auto">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className="text-sm text-gray-500">
+                    {crop.imageUrl && (
+                      <img
+                        src={crop.imageUrl}
+                        alt={crop.cropName}
+                        className="w-10 h-10 rounded-full object-cover mx-auto cursor-pointer"
+                        onClick={() => setPreviewImage(crop.imageUrl)}
+                      />
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className="text-sm text-gray-500">
                     {crop.description}
                   </div>
                 </td>
-                {/* Bỏ các cột Quantity, Planting Date, Harvest Date */}
                 <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <button
-                    className={`px-2 py-1 rounded-full text-xs font-semibold
-                      ${
-                        crop.status === "ACTIVE"
-                          ? "bg-green-100 text-green-800 border border-green-400"
-                          : "bg-red-100 text-red-800 border border-red-400"
-                      }
-                    `}
-                    disabled={isChanging}
-                    onClick={() => setStatusModal({ open: true, crop })}
-                  >
-                    {crop.status}
-                  </button>
+                  <div className="text-sm text-gray-500">
+                    {crop.category?.categoryName}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className="text-sm text-gray-500">{crop.origin}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                   <button
                     onClick={() => handleEdit(crop)}
                     className="text-blue-600 hover:text-blue-900 mr-3"
                   >
-                    Detail
+                    Edit
                   </button>
                 </td>
               </tr>
@@ -349,13 +318,12 @@ const CropManagement = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
                   </label>
-                  <textarea
+                  <input
+                    type="text"
                     name="description"
                     defaultValue={currentCrop?.description || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md resize-y min-h-[60px] max-h-[200px]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
-                    rows={3}
-                    style={{ wordBreak: "break-word" }}
                   />
                   {formErrors.description && (
                     <p className="text-red-600 text-xs mt-1">
@@ -365,19 +333,64 @@ const CropManagement = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image
+                  </label>
+                  <div className="flex items-center">
+                    {currentCrop?.imageUrl && (
+                      <img
+                        src={currentCrop.imageUrl}
+                        alt="Crop"
+                        className="w-16 h-16 rounded-md object-cover mr-4 cursor-pointer"
+                        onClick={() => {
+                          setPreviewImage(currentCrop.imageUrl);
+                          setShowImageModal(false);
+                        }}
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setShowImageModal(true)}
+                      className="ml-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    >
+                      Upload
+                    </button>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Origin
                   </label>
-                  <textarea
+                  <input
+                    type="text"
                     name="origin"
                     defaultValue={currentCrop?.origin || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md resize-y min-h-[40px] max-h-[120px]"
-                    required
-                    rows={2}
-                    style={{ wordBreak: "break-word" }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
-                  {formErrors.origin && (
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    name="categoryId"
+                    defaultValue={currentCrop?.category?.categoryId || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                      <option
+                        key={category.categoryId}
+                        value={category.categoryId}
+                      >
+                        {category.categoryName}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.categoryId && (
                     <p className="text-red-600 text-xs mt-1">
-                      {formErrors.origin}
+                      {formErrors.categoryId}
                     </p>
                   )}
                 </div>
@@ -411,34 +424,53 @@ const CropManagement = () => {
           </div>
         </div>
       )}
-
-      {/* Modal confirm đổi trạng thái */}
-      {statusModal.open && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <h2 className="text-xl font-semibold mb-4 text-blue-600">
-              Confirm Change Status
-            </h2>
-            <p className="mb-6">
-              Are you sure you want to change status for crop{" "}
-              <span className="font-bold">{statusModal.crop?.cropName}</span>?
-            </p>
-            <div className="flex justify-end gap-2">
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Select or Paste new image
+            </h3>
+            <div
+              tabIndex={0}
+              onPaste={handlePasteImage}
+              className="w-full h-20 border-2 border-dashed border-gray-400 rounded-md flex items-center justify-center mb-4 text-gray-500 focus:outline-none"
+              style={{ cursor: "pointer" }}
+              title="Paste image here"
+            >
+              Paste image here (Ctrl+V)
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageFileChange}
+              className="w-full border px-3 py-2 rounded-md mb-4"
+            />
+            <div className="flex justify-end space-x-2">
               <button
-                className="px-4 py-2 rounded bg-gray-300"
-                onClick={() => setStatusModal({ open: false, crop: null })}
-                disabled={isChanging}
+                onClick={() => setShowImageModal(false)}
+                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
               >
                 Cancel
               </button>
-              <button
-                className="px-4 py-2 rounded bg-blue-600 text-white"
-                onClick={handleChangeStatus}
-                disabled={isChanging}
-              >
-                {isChanging ? "Changing..." : "Change"}
-              </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative max-w-4xl max-h-full">
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="max-w-full max-h-screen"
+            />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 text-white bg-red-500 rounded-full p-2 hover:bg-red-600"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
