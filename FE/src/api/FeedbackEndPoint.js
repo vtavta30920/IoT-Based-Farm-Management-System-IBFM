@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 // Thêm interceptor để tự động thêm token vào header nếu có
@@ -44,5 +44,39 @@ export const useGetFeedbackByProduct = (productId) => {
     queryKey: ["v1/feedback/feedback-by-product", productId],
     queryFn: () => getFeedbackByProduct(productId),
     enabled: !!productId,
+  });
+};
+
+// Hàm gọi API cập nhật trạng thái feedback (POST, truyền feedbackId trên URL)
+export const updateFeedbackStatus = async (feedbackId) => {
+  if (!feedbackId) throw new Error("feedbackId is required");
+  const { data } = await axios.post(
+    `https://localhost:7067/api/v1/feedback/update-feedback-status/${feedbackId}`
+  );
+  return data;
+};
+
+// Hook react-query để cập nhật trạng thái feedback
+export const useUpdateFeedbackStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateFeedbackStatus,
+    onSuccess: () => {
+      // Invalidate feedback queries nếu cần
+      queryClient.invalidateQueries(["v1/feedback/feedback-by-product"]);
+      queryClient.invalidateQueries(["v1/feedback/feed-back-list"]);
+    },
+    onError: (error) => {
+      if (error.response) {
+        console.error(
+          "Update feedback status failed:",
+          error.response.data,
+          error.response.status,
+          error.response.config.url
+        );
+      } else {
+        console.error("Update feedback status failed:", error.message);
+      }
+    },
   });
 };
