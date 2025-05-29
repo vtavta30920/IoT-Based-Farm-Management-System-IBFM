@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   useCompletePayment,
   useCreateOrderPayment,
@@ -57,6 +57,50 @@ const CurrentUserOrderList = () => {
   };
   const completePayment = useCompletePayment();
   const createOrderPayment = useCreateOrderPayment();
+
+  // Timer refs để lưu timeout cho từng order
+  const pendingTimers = useRef({});
+
+  // Tự động cancel order PENDING sau 5 phút nếu không đổi trạng thái
+  useEffect(() => {
+    // Xóa hết timer cũ trước khi set lại
+    Object.values(pendingTimers.current).forEach(clearTimeout);
+    pendingTimers.current = {};
+
+    orders.forEach((order) => {
+      const status = statusMap[order.status];
+      if (status === "PENDING") {
+        // Nếu order chưa có timer thì set timer
+        if (!pendingTimers.current[order.orderId]) {
+          pendingTimers.current[order.orderId] = setTimeout(async () => {
+            let success = false;
+            try {
+              await cancelOrder.mutateAsync(order.orderId);
+              queryClient.invalidateQueries({
+                queryKey: ["v1/Order/order-list-by-current-account"],
+              });
+              success = true;
+            } catch (err) {
+              success = false;
+            }
+            setNotification({
+              show: true,
+              message: success
+                ? "Order was automatically cancelled after 5 minutes of pending status."
+                : "Failed to auto-cancel order after timeout.",
+              type: success ? "success" : "error",
+            });
+          }, 1 * 60 * 1000); // 5 phút
+        }
+      }
+    });
+
+    // Cleanup khi unmount hoặc orders thay đổi
+    return () => {
+      Object.values(pendingTimers.current).forEach(clearTimeout);
+      pendingTimers.current = {};
+    };
+  }, [orders, cancelOrder, queryClient]);
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
