@@ -7,6 +7,7 @@ import {
 } from "../../../api/OrderEndPoint";
 import { UserContext } from "../../../contexts/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { FaStar, FaRegStar } from "react-icons/fa";
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -24,10 +25,35 @@ const statusMap = {
   3: "CANCELLED",
 };
 
+const StarRating = ({ rating, setRating, editable = false }) => {
+  return (
+    <div className="flex items-center">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => editable && setRating(star)}
+          className="focus:outline-none"
+          disabled={!editable}
+        >
+          {star <= rating ? (
+            <FaStar className="text-yellow-400 text-lg" />
+          ) : (
+            <FaRegStar className="text-yellow-400 text-lg" />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const CurrentUserOrderList = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState(""); // trạng thái lọc
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [feedbackData, setFeedbackData] = useState({});
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [currentOrderItem, setCurrentOrderItem] = useState(null);
   const pageSize = 5;
 
   const { data, isLoading } = useGetCurrentUserOrder(
@@ -57,6 +83,69 @@ const CurrentUserOrderList = () => {
   };
   const completePayment = useCompletePayment();
   const createOrderPayment = useCreateOrderPayment();
+
+  const handleFeedbackChange = (orderDetailId, field, value) => {
+    setFeedbackData((prev) => ({
+      ...prev,
+      [orderDetailId]: {
+        ...prev[orderDetailId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const submitFeedback = async (orderDetailId) => {
+    try {
+      const feedback = feedbackData[orderDetailId];
+      if (!feedback || !feedback.rating) {
+        throw new Error("Please provide a rating");
+      }
+
+      const response = await fetch(
+        `https://localhost:7067/api/v1/feedback/create-feedback`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            comment: feedback.comment || "",
+            rating: feedback.rating,
+            orderDetailId: orderDetailId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to submit feedback");
+      }
+
+      setNotification({
+        show: true,
+        message: "Feedback submitted successfully!",
+        type: "success",
+      });
+
+      // Clear feedback form
+      setFeedbackData((prev) => {
+        const newData = { ...prev };
+        delete newData[orderDetailId];
+        return newData;
+      });
+
+      // Refresh orders to show the new feedback
+      queryClient.invalidateQueries({
+        queryKey: ["v1/Order/order-list-by-current-account"],
+      });
+    } catch (error) {
+      setNotification({
+        show: true,
+        message: error.message || "Failed to submit feedback",
+        type: "error",
+      });
+    }
+  };
 
   // Timer refs để lưu timeout cho từng order
   const pendingTimers = useRef({});
@@ -181,6 +270,7 @@ const CurrentUserOrderList = () => {
 
             // Determine if cancel button should show
             const canCancel = status === "UNDISCHARGED" || status === "PENDING";
+            const canFeedback = status === "COMPLETED";
 
             return (
               <div
@@ -287,6 +377,16 @@ const CurrentUserOrderList = () => {
                                 </button>
                               )}
                             </div>
+                          ) : canFeedback ? (
+                            <button
+                              className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleExpand(index);
+                              }}
+                            >
+                              Leave Feedback
+                            </button>
                           ) : (
                             <span className="inline-block px-3 py-1 rounded bg-gray-200 text-gray-500 cursor-not-allowed select-none">
                               None
@@ -304,20 +404,37 @@ const CurrentUserOrderList = () => {
                     <h2 className="font-semibold text-sm mb-2">
                       Order Details
                     </h2>
-                    <div className="grid grid-cols-3 font-semibold text-gray-700 border-b border-gray-300 pb-1 text-sm text-center">
+                    <div className="grid grid-cols-5 font-semibold text-gray-700 border-b border-gray-300 pb-1 text-sm text-center">
                       <span>Product Name</span>
                       <span>Price</span>
                       <span>Quantity</span>
+                      <span>Feedback</span>
+                      <span>Action</span>
                     </div>
                     <ul className="space-y-1 text-sm">
                       {order.orderItems.map((item, i) => (
                         <li
                           key={i}
-                          className="grid grid-cols-3 justify-between border-b border-gray-200 pb-1 text-center"
+                          className="grid grid-cols-5 justify-between border-b border-gray-200 pb-1 text-center items-center"
                         >
                           <span>{item.productName}</span>
                           <span>{formatCurrency(item.price)}</span>
                           <span>{item.stockQuantity}</span>
+
+                          <span>
+                            {status === "COMPLETED" && !item.feedback && (
+                              <button
+                                className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentOrderItem(item);
+                                  setShowFeedbackModal(true);
+                                }}
+                              >
+                                Rate
+                              </button>
+                            )}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -328,6 +445,81 @@ const CurrentUserOrderList = () => {
           })
         )}
       </div>
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && currentOrderItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-96">
+            <h2 className="text-lg font-semibold mb-4 text-center">
+              Leave Feedback
+            </h2>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Product: {currentOrderItem.productName}
+              </label>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Rating:
+              </label>
+              <StarRating
+                rating={
+                  feedbackData[currentOrderItem.orderDetailId]?.rating || 0
+                }
+                setRating={(rating) =>
+                  handleFeedbackChange(
+                    currentOrderItem.orderDetailId,
+                    "rating",
+                    rating
+                  )
+                }
+                editable={true}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Comment
+              </label>
+              <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                rows="3"
+                value={
+                  feedbackData[currentOrderItem.orderDetailId]?.comment || ""
+                }
+                onChange={(e) =>
+                  handleFeedbackChange(
+                    currentOrderItem.orderDetailId,
+                    "comment",
+                    e.target.value
+                  )
+                }
+                placeholder="Share your experience with this product..."
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  setShowFeedbackModal(false);
+                  setCurrentOrderItem(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+                onClick={async () => {
+                  await submitFeedback(currentOrderItem.orderDetailId);
+                  setShowFeedbackModal(false);
+                  setCurrentOrderItem(null);
+                }}
+              >
+                Submit Feedback
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal xác nhận hủy đơn */}
       {showModal && (
