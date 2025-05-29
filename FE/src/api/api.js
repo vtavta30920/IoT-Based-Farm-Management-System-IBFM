@@ -404,3 +404,19 @@ export const createIotDevice = async (deviceData, token) => {
 
   return response.json();
 };
+
+export const getAllCategories = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/category/get-all`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch categories.");
+  }
+
+  return response.json();
+};
