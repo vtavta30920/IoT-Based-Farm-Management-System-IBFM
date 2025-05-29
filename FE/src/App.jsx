@@ -45,6 +45,7 @@ import ProductsManagement from "./pages/staff/ProductsManagement.jsx";
 import OrderManagementStaff from "./pages/staff/OrderManagementStaff.jsx";
 import FarmingTasks from "./pages/staff/FarmingTasks.jsx";
 import TaskDetails from "./pages/staff/TaskDetails.jsx";
+import FeedbackManagement from "./pages/staff/FeedbackManagement.jsx";
 
 import ManagerLayout from "./components/layouts/ManagerLayout.jsx";
 import FarmingSchedules from "./pages/manager/FarmingSchedules.jsx";
@@ -120,6 +121,10 @@ const App = () => {
                     <Route
                       path="quality-control"
                       element={<QualityControl />}
+                    />
+                    <Route
+                      path="FeedbackManagement"
+                      element={<FeedbackManagement />}
                     />
                     <Route path="logistics" element={<Logistics />} />
                     <Route
