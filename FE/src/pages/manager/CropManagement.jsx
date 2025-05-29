@@ -21,6 +21,11 @@ const CropManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const pageSize = 5;
   const [totalPages, setTotalPages] = useState(1);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "", // "success" | "error"
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,49 +50,15 @@ const CropManagement = () => {
 
   const validateForm = (cropData) => {
     const errors = {};
-    if (!cropData.quantity || isNaN(Number(cropData.quantity))) {
-      errors.quantity = "Quantity is required and must be a number";
-    } else if (Number(cropData.quantity) <= 0) {
-      errors.quantity = "Quantity must be a positive number";
-    }
-
-    if (!cropData.plantingDate) {
-      errors.plantingDate = "Planting date is required";
-    } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const plantingDate = new Date(cropData.plantingDate);
-      if (plantingDate < today) {
-        errors.plantingDate = "Planting date must be today or in the future";
-      }
-    }
-
-    if (!cropData.harvestDate && !currentCrop) {
-      errors.harvestDate = "Harvest date is required";
-    } else if (!currentCrop && cropData.harvestDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const harvestDate = new Date(cropData.harvestDate);
-      if (harvestDate < today) {
-        errors.harvestDate = "Harvest date must be today or in the future";
-      } else if (cropData.plantingDate) {
-        const plantingDate = new Date(cropData.plantingDate);
-        const diffTime = harvestDate.getTime() - plantingDate.getTime();
-        const diffDays = diffTime / (1000 * 3600 * 24);
-        if (diffDays < 30) {
-          errors.harvestDate =
-            "Harvest date must be at least 1 month after planting date";
-        }
-      }
-    }
-
     if (!cropData.cropName || !cropData.cropName.trim()) {
       errors.cropName = "Crop name is required";
     }
     if (!cropData.description || !cropData.description.trim()) {
       errors.description = "Description is required";
     }
-
+    if (!cropData.origin || !cropData.origin.trim()) {
+      errors.origin = "Origin is required";
+    }
     return errors;
   };
 
@@ -106,25 +77,32 @@ const CropManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const cropData = Object.fromEntries(formData);
+    const cropData = {
+      cropName: formData.get("cropName"),
+      description: formData.get("description"),
+      origin: formData.get("origin"),
+    };
 
-    cropData.quantity = Number(cropData.quantity);
-
-    const errors = validateForm(cropData);
+    // Validate required fields
+    const errors = {};
+    if (!cropData.cropName || !cropData.cropName.trim()) {
+      errors.cropName = "Crop name is required";
+    }
+    if (!cropData.description || !cropData.description.trim()) {
+      errors.description = "Description is required";
+    }
+    if (!cropData.origin || !cropData.origin.trim()) {
+      errors.origin = "Origin is required";
+    }
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
     try {
       if (currentCrop) {
-        updateCrop(
+        await updateCrop(
           {
             cropId: currentCrop.cropId,
-            updateData: {
-              cropName: cropData.cropName,
-              description: cropData.description,
-              quantity: cropData.quantity,
-              plantingDate: cropData.plantingDate,
-            },
+            updateData: cropData,
           },
           {
             onSuccess: async () => {
@@ -132,26 +110,51 @@ const CropManagement = () => {
               setIsModalOpen(false);
               setCurrentCrop(null);
               setFormErrors({});
+              setNotification({
+                show: true,
+                message: "Update crop successfully!",
+                type: "success",
+              });
             },
             onError: (err) => {
+              setNotification({
+                show: true,
+                message: "Update crop failed!",
+                type: "error",
+              });
               setError(err.message);
             },
           }
         );
       } else {
-        createCrop(cropData, {
+        await createCrop(cropData, {
           onSuccess: async () => {
             await reloadCurrentPage();
             setIsModalOpen(false);
             setCurrentCrop(null);
             setFormErrors({});
+            setNotification({
+              show: true,
+              message: "Create crop successfully!",
+              type: "success",
+            });
           },
           onError: (err) => {
+            setNotification({
+              show: true,
+              message: "Create crop failed!",
+              type: "error",
+            });
             setError(err.message);
           },
         });
       }
     } catch (err) {
+      setNotification({
+        show: true,
+        message: "Something went wrong!",
+        type: "error",
+      });
       setError(err.message);
     }
   };
@@ -163,9 +166,19 @@ const CropManagement = () => {
       await changeCropStatus(statusModal.crop.cropId);
       await reloadCurrentPage();
       setStatusModal({ open: false, crop: null });
+      setNotification({
+        show: true,
+        message: "Update crop status successfully!",
+        type: "success",
+      });
     } catch (err) {
       setError(err.message);
       setStatusModal({ open: false, crop: null });
+      setNotification({
+        show: true,
+        message: "Update crop status failed!",
+        type: "error",
+      });
     } finally {
       setIsChanging(false);
     }
@@ -177,6 +190,29 @@ const CropManagement = () => {
 
   return (
     <div className="p-6">
+      {/* Notification Modal */}
+      {notification.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
+            <span
+              className={`text-2xl mb-2 ${
+                notification.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {notification.type === "success" ? "✔️" : "❌"}
+            </span>
+            <div className="text-center mb-4">{notification.message}</div>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              onClick={() => setNotification({ ...notification, show: false })}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Crop Management</h2>
         <button
@@ -200,15 +236,7 @@ const CropManagement = () => {
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Description
               </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
-                Quantity
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
-                Planting Date
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
-                Harvest Date
-              </th>
+              {/* Bỏ cột Origin */}
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Status
               </th>
@@ -220,30 +248,18 @@ const CropManagement = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {cropList.map((crop) => (
               <tr key={crop.cropId}>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
+                <td className="px-6 py-4 whitespace-nowrap text-center align-top">
                   <div className="text-sm font-medium text-gray-900">
                     {crop.cropName}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-pre-line text-center align-top">
+                  <div className="text-sm text-gray-500 break-words max-w-xs mx-auto">
                     {crop.description}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">{crop.quantity}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">
-                    {crop.plantingDate}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="text-sm text-gray-500">
-                    {crop.harvestDate}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
+                {/* Bỏ cột Origin */}
+                <td className="px-6 py-4 whitespace-nowrap text-center align-top">
                   <button
                     className={`px-2 py-1 rounded-full text-xs font-semibold
                       ${
@@ -258,12 +274,12 @@ const CropManagement = () => {
                     {crop.status}
                   </button>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center align-top">
                   <button
                     onClick={() => handleEdit(crop)}
                     className="text-blue-600 hover:text-blue-900 mr-3"
                   >
-                    Edit
+                    Detail
                   </button>
                 </td>
               </tr>
@@ -322,12 +338,13 @@ const CropManagement = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     name="description"
                     defaultValue={currentCrop?.description || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md resize-y min-h-[60px] max-h-[200px]"
                     required
+                    rows={3}
+                    style={{ wordBreak: "break-word" }}
                   />
                   {formErrors.description && (
                     <p className="text-red-600 text-xs mt-1">
@@ -337,71 +354,22 @@ const CropManagement = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quantity
+                    Origin
                   </label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    min="1"
-                    step="1"
-                    defaultValue={currentCrop?.quantity || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  <textarea
+                    name="origin"
+                    defaultValue={currentCrop?.origin || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md resize-y min-h-[40px] max-h-[120px]"
                     required
-                    pattern="[0-9]*"
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-", "."].includes(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    onInput={(e) => {
-                      e.target.value = e.target.value.replace(/[^0-9]/g, "");
-                    }}
+                    rows={2}
+                    style={{ wordBreak: "break-word" }}
                   />
-                  {formErrors.quantity && (
+                  {formErrors.origin && (
                     <p className="text-red-600 text-xs mt-1">
-                      {formErrors.quantity}
+                      {formErrors.origin}
                     </p>
                   )}
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Planting Date
-                  </label>
-                  <input
-                    type="date"
-                    name="plantingDate"
-                    defaultValue={currentCrop?.plantingDate || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                  {formErrors.plantingDate && (
-                    <p className="text-red-600 text-xs mt-1">
-                      {formErrors.plantingDate}
-                    </p>
-                  )}
-                </div>
-                {/* Chỉ hiển thị Harvest Date khi tạo mới, không hiển thị khi edit */}
-                {!currentCrop && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Harvest Date
-                    </label>
-                    <input
-                      type="date"
-                      name="harvestDate"
-                      defaultValue={currentCrop?.harvestDate || ""}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      required
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                    {formErrors.harvestDate && (
-                      <p className="text-red-600 text-xs mt-1">
-                        {formErrors.harvestDate}
-                      </p>
-                    )}
-                  </div>
-                )}
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
