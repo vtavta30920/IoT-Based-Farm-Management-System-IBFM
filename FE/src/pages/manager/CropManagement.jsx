@@ -236,7 +236,6 @@ const CropManagement = () => {
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Description
               </th>
-              {/* Bỏ cột Origin */}
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-center">
                 Status
               </th>
@@ -258,13 +257,16 @@ const CropManagement = () => {
                     {crop.description}
                   </div>
                 </td>
-                {/* Bỏ cột Origin */}
                 <td className="px-6 py-4 whitespace-nowrap text-center align-top">
                   <button
                     className={`px-2 py-1 rounded-full text-xs font-semibold
                       ${
                         crop.status === "ACTIVE"
                           ? "bg-green-100 text-green-800 border border-green-400"
+                          : crop.status === "IN_STOCK"
+                          ? "bg-blue-100 text-blue-800 border border-blue-400"
+                          : crop.status === "CLEAR"
+                          ? "bg-yellow-100 text-yellow-800 border border-yellow-400"
                           : "bg-red-100 text-red-800 border border-red-400"
                       }
                     `}

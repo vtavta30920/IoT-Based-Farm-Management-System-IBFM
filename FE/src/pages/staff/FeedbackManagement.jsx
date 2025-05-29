@@ -36,7 +36,7 @@ const FeedbackManagement = () => {
               <th className="px-4 py-2 text-left">Product</th>
               <th className="px-4 py-2 text-left">Comment</th>
               <th className="px-4 py-2 text-center">Rating</th>
-              <th className="px-4 py-2 text-center">Phone</th>
+              <th className="px-4 py-2 text-center">Email</th>
               <th className="px-4 py-2 text-center">Created At</th>
             </tr>
           </thead>
@@ -50,7 +50,7 @@ const FeedbackManagement = () => {
                 <td className="px-4 py-2 text-center">
                   {renderStars(fb.rating)}
                 </td>
-                <td className="px-4 py-2 text-center">{fb.phone}</td>
+                <td className="px-4 py-2 text-center">{fb.email}</td>
                 <td className="px-4 py-2 text-center">{fb.createdAt}</td>
               </tr>
             ))}
