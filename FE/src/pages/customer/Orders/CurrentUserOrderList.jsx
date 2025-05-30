@@ -155,7 +155,6 @@ const CurrentUserOrderList = () => {
         orderDetailId: currentOrderItem.orderDetailId,
       };
 
-      // For update, ensure feedbackId is included if required by API
       if (editingFeedback) {
         payload.feedbackId = editingFeedback.feedbackId;
       }
@@ -176,18 +175,23 @@ const CurrentUserOrderList = () => {
 
       const feedbackResponse = await response.json();
       const newFeedback = feedbackResponse.data || {
-        feedbackId: editingFeedback ? editingFeedback.feedbackId : Date.now(), // Fallback ID
+        feedbackId: editingFeedback ? editingFeedback.feedbackId : Date.now(),
         orderDetailId: currentOrderItem.orderDetailId,
+        productId: currentOrderItem.productId,
         productName: currentOrderItem.productName,
         rating: feedback.rating,
         comment: feedback.comment,
         createdAt: new Date().toISOString(),
-        orderDetail: { productName: currentOrderItem.productName },
+        orderDetail: {
+          productId: currentOrderItem.productId,
+          productName: currentOrderItem.productName,
+        },
       };
 
-      // Update ordersWithFeedback to reflect the new or updated feedback
-      setOrdersWithFeedback((prev) =>
-        prev.map((order) => {
+      // Deep copy to ensure state update triggers re-render
+      setOrdersWithFeedback((prev) => {
+        const newOrders = JSON.parse(JSON.stringify(prev));
+        return newOrders.map((order) => {
           if (order.orderId === currentOrderItem.orderId) {
             const updatedFeedbacks = editingFeedback
               ? order.feedbacks.map((f) =>
@@ -197,8 +201,8 @@ const CurrentUserOrderList = () => {
             return { ...order, feedbacks: updatedFeedbacks };
           }
           return order;
-        })
-      );
+        });
+      });
 
       setNotification({
         show: true,
@@ -215,10 +219,12 @@ const CurrentUserOrderList = () => {
         return newData;
       });
 
-      // Invalidate query in the background to ensure data consistency
-      queryClient.invalidateQueries({
-        queryKey: ["v1/Order/order-list-by-current-account"],
-      });
+      // Invalidate query in the background with a slight delay
+      setTimeout(() => {
+        queryClient.invalidateQueries({
+          queryKey: ["v1/Order/order-list-by-current-account"],
+        });
+      }, 100);
 
       setShowFeedbackModal(false);
       setCurrentOrderItem(null);
@@ -232,12 +238,17 @@ const CurrentUserOrderList = () => {
     }
   };
 
-  const handleEditFeedback = (feedback, orderId) => {
+  const handleEditFeedback = (feedback, orderId, order) => {
+    // Find the corresponding order item to get productId
+    const orderItemIndex = order.orderDetailIds.indexOf(feedback.orderDetailId);
+    const orderItem = order.orderItems[orderItemIndex] || {};
+
     setEditingFeedback(feedback);
     setCurrentOrderItem({
       productName: feedback.orderDetail.productName,
       orderDetailId: feedback.orderDetailId,
       orderId,
+      productId: orderItem.productId,
     });
     setFeedbackData((prev) => ({
       ...prev,
@@ -514,7 +525,7 @@ const CurrentUserOrderList = () => {
                       {order.orderItems.map((item, i) => {
                         const orderDetailId = order.orderDetailIds[i];
                         const existingFeedback = feedbacks.find(
-                          (f) => f.orderDetail?.productId === item.productId
+                          (f) => f.orderDetailId === orderDetailId
                         );
 
                         return (
@@ -568,7 +579,8 @@ const CurrentUserOrderList = () => {
                                           e.stopPropagation();
                                           handleEditFeedback(
                                             existingFeedback,
-                                            order.orderId
+                                            order.orderId,
+                                            order
                                           );
                                         }}
                                       >
@@ -584,6 +596,7 @@ const CurrentUserOrderList = () => {
                                           ...item,
                                           orderDetailId,
                                           orderId: order.orderId,
+                                          productId: item.productId,
                                         });
                                         setShowFeedbackModal(true);
                                       }}
