@@ -59,3 +59,49 @@ export const useCreateActivity = () => {
     mutationFn: createActivity,
   });
 };
+
+// Đổi trạng thái hoạt động nông trại
+export const changeActivityStatus = async (farmActivitiesId) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/farm-activity/change-status/${farmActivitiesId}`,
+    null,
+    {
+      headers: {
+        Accept: "*/*",
+      },
+    }
+  );
+  return response.data;
+};
+
+// Hook mutation để đổi trạng thái hoạt động
+export const useChangeActivityStatus = () => {
+  return useMutation({
+    mutationFn: changeActivityStatus,
+  });
+};
+
+// Cập nhật hoạt động nông trại
+export const updateActivity = async ({ farmActivitiesId, activityType, startDate, endDate }) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/farm-activity/update/${farmActivitiesId}?activityType=${activityType}`,
+    {
+      startDate,
+      endDate,
+    },
+    {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return response.data;
+};
+
+// Hook mutation để cập nhật hoạt động
+export const useUpdateActivity = () => {
+  return useMutation({
+    mutationFn: updateActivity,
+  });
+};
