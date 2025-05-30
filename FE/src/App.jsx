@@ -60,6 +60,7 @@ import OrdersManagement from "./pages/manager/OrdersManagement.jsx";
 import CategoryManagement from "./pages/manager/CategoryManagement.jsx";
 import IotDevices from "./pages/manager/IotDevices.jsx";
 import DeviceDetails from "./pages/manager/DeviceDetails.jsx";
+import ActivityManagement from "./pages/manager/ActivityManagement.jsx";
 
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
 import AccountDetail from "./admin/AccountDetail.jsx";
@@ -164,6 +165,10 @@ const App = () => {
                     <Route
                       path="CategoryManagement"
                       element={<CategoryManagement />}
+                    />
+                    <Route
+                      path="ActivityManagement"
+                      element={<ActivityManagement />}
                     />
                     <Route path="iot-devices" element={<IotDevices />} />
                     <Route path="iot-devices/:id" element={<DeviceDetails />} />
