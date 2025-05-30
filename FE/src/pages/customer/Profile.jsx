@@ -111,16 +111,39 @@ const Profile = () => {
 
     let imageToSend = formData.image;
 
+    // Nếu không có file ảnh mới và imageToSend là null/rỗng, dùng defaultAvatar và upload lên Firebase
+    if (!newImageFile && (!imageToSend || imageToSend.trim() === "")) {
+      try {
+        setMessage("Uploading avatar...");
+        // Fetch defaultAvatar as blob
+        const response = await fetch(defaultAvatar);
+        const blob = await response.blob();
+        // Tạo file từ blob
+        const file = new File([blob], "default-avatar.png", {
+          type: blob.type,
+        });
+        imageToSend = await uploadImageToFirebase(file, "avatars");
+      } catch (err) {
+        setMessage("");
+        setNotification({
+          show: true,
+          message: "❌ Upload avatar failed.",
+          type: "error",
+        });
+        return;
+      }
+    }
+
     // Nếu có file ảnh mới, upload lên Firebase trước
     if (newImageFile) {
       try {
-        setMessage("Uploading image...");
+        setMessage("Uploading avatar...");
         imageToSend = await uploadImageToFirebase(newImageFile, "avatars");
       } catch (err) {
         setMessage("");
         setNotification({
           show: true,
-          message: "❌ Upload image failed.",
+          message: "❌ Upload avatar failed.",
           type: "error",
         });
         return;

@@ -10,6 +10,11 @@ const CreateAccount = () => {
   const [imageInput, setImageInput] = useState("");
   const [errors, setErrors] = useState({});
   const [newImageFile, setNewImageFile] = useState(null);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "", // "success" | "error"
+  });
 
   const [formData, setFormData] = useState({
     email: "",
@@ -109,16 +114,96 @@ const CreateAccount = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    await mutateAsync({
-      ...createData,
-      images: formData.image || "string",
-    });
-    navigate("/admin");
+
+    let imageToSend = formData.image;
+
+    // Nếu không có file ảnh mới và imageToSend là null/rỗng, dùng defaultAvatar và upload lên Firebase
+    if (!newImageFile && (!imageToSend || imageToSend.trim() === "")) {
+      try {
+        // Fetch defaultAvatar as blob
+        const response = await fetch(defaultAvatar);
+        const blob = await response.blob();
+        // Tạo file từ blob
+        const file = new File([blob], "default-avatar.png", {
+          type: blob.type,
+        });
+        imageToSend = await uploadImageToFirebase(file, "avatars");
+      } catch {
+        setNotification({
+          show: true,
+          message: "Upload default avatar failed!",
+          type: "error",
+        });
+        return;
+      }
+    }
+
+    // Nếu có file ảnh mới, upload lên Firebase trước
+    if (newImageFile) {
+      try {
+        imageToSend = await uploadImageToFirebase(newImageFile, "avatars");
+      } catch {
+        setNotification({
+          show: true,
+          message: "Upload image failed!",
+          type: "error",
+        });
+        return;
+      }
+    }
+
+    try {
+      await mutateAsync({
+        ...createData,
+        images: imageToSend || "string",
+      });
+      setNotification({
+        show: true,
+        message: "Create account successfully!",
+        type: "success",
+      });
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+        navigate("/admin");
+      }, 1200);
+    } catch (err) {
+      setNotification({
+        show: true,
+        message: "Create account failed!",
+        type: "error",
+      });
+    }
   };
 
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="flex-1 overflow-auto">
+        {/* Notification Modal */}
+        {notification.show && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white rounded shadow-lg p-6 w-80 flex flex-col items-center">
+              <span
+                className={`text-2xl mb-2 ${
+                  notification.type === "success"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {notification.type === "success" ? "✔️" : "❌"}
+              </span>
+              <div className="text-center mb-4">{notification.message}</div>
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  setNotification({ show: false, message: "", type: "" });
+                  if (notification.type === "success") navigate("/admin");
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto py-4 px-6 flex justify-center items-center">
             <h2 className="text-3xl font-bold text-green-600 border-b-2 border-gray-300 pb-2 mb-6 text-center">
