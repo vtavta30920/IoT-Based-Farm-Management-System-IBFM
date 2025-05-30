@@ -404,3 +404,37 @@ export const createIotDevice = async (deviceData, token) => {
 
   return response.json();
 };
+
+export const createFeedback = async (feedbackData, token) => {
+  const response = await fetch(`${API_BASE_URL}/feedback/create-feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(feedbackData),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to submit feedback");
+  }
+
+  return response.json();
+};
+
+export const getExcludingInactive = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/crop/get-excluding-inactive`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch crops.");
+  }
+
+  return response.json();
+};
