@@ -827,6 +827,10 @@ const FarmingSchedules = () => {
                 {currentSchedule.endDate}
               </div>
               <div className="mb-2">
+                <span className="font-medium">Planting Date:</span>{" "}
+                {currentSchedule.plantingDate}
+              </div>
+              <div className="mb-2">
                 <span className="font-medium">Created At:</span>{" "}
                 {currentSchedule.createdAt}
               </div>
@@ -864,10 +868,7 @@ const FarmingSchedules = () => {
                     <span className="font-medium">Quantity:</span>{" "}
                     {currentSchedule.cropView.quantity}
                   </div>
-                  <div className="mb-2">
-                    <span className="font-medium">Planting Date:</span>{" "}
-                    {currentSchedule.cropView.plantingDate}
-                  </div>
+                  
                   <div className="mb-2">
                     <span className="font-medium">Harvest Date:</span>{" "}
                     {currentSchedule.cropView.harvestDate}
