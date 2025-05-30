@@ -276,13 +276,13 @@ const FarmingSchedules = () => {
     setFormData({
       startDate: formatDateForInput(schedule.startDate),
       endDate: formatDateForInput(schedule.endDate),
-      assignedTo: schedule.assignedTo.toString(), // Ensure string value for select
-      farmActivityId: schedule.farmActivityId?.toString() || "", // Handle possible undefined
-      farmDetailsId: schedule.farmId?.toString() || "", // Handle possible undefined
-      cropId: schedule.cropId?.toString() || "", // Handle possible undefined
+      assignedTo: schedule.assignedTo.toString(),
+      farmActivityId: schedule.farmActivityId?.toString() || "",
+      farmDetailsId: schedule.farmId?.toString() || "",
+      cropId: schedule.cropId?.toString() || "",
       plantingDate: schedule.plantingDate
         ? formatDateForInput(schedule.plantingDate)
-        : "", // Handle empty planting date
+        : "",
     });
     setIsEditModalOpen(true);
     setModalError(null);
@@ -867,7 +867,7 @@ const FarmingSchedules = () => {
               </div>
               <div className="mb-2">
                 <span className="font-medium">Planting Date:</span>{" "}
-                {currentSchedule.plantingDate}
+                {currentSchedule.plantingDate || "N/A"}
               </div>
               <div className="mb-2">
                 <span className="font-medium">Created At:</span>{" "}
@@ -875,6 +875,38 @@ const FarmingSchedules = () => {
               </div>
             </div>
 
+            {/* Farm Information Section */}
+            {currentSchedule.farmId && (
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold mb-2">Farm Information</h3>
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded">
+                  {farms
+                    .filter((farm) => farm.farmId === currentSchedule.farmId)
+                    .map((farm) => (
+                      <>
+                        <div className="mb-2">
+                          <span className="font-medium">Name:</span>{" "}
+                          {farm.farmName}
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-medium">Location:</span>{" "}
+                          {farm.location}
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-medium">Created At:</span>{" "}
+                          {farm.createdAt}
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-medium">Updated At:</span>{" "}
+                          {farm.updatedAt}
+                        </div>
+                      </>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Crop Information Section */}
             {currentSchedule.cropView && (
               <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2">Crop Information</h3>
@@ -891,10 +923,11 @@ const FarmingSchedules = () => {
               </div>
             )}
 
+            {/* Farm Activities Section */}
             {currentSchedule.farmActivityView && (
-              <div className="col-span-2">
+              <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2">Farm Activities</h3>
-                {currentSchedule.farmActivityView?.map((activity, index) => (
+                {currentSchedule.farmActivityView.map((activity, index) => (
                   <div key={index} className="bg-gray-50 p-3 rounded mb-2">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
