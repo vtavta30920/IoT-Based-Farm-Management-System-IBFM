@@ -54,6 +54,8 @@ const CurrentUserOrderList = () => {
   const [feedbackData, setFeedbackData] = useState({});
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [currentOrderItem, setCurrentOrderItem] = useState(null);
+  const [ordersWithFeedback, setOrdersWithFeedback] = useState([]);
+  const [editingFeedback, setEditingFeedback] = useState(null);
   const pageSize = 5;
 
   const { data, isLoading } = useGetCurrentUserOrder(
@@ -67,6 +69,7 @@ const CurrentUserOrderList = () => {
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [showViewFeedbackModal, setShowViewFeedbackModal] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState({
@@ -84,6 +87,40 @@ const CurrentUserOrderList = () => {
   const completePayment = useCompletePayment();
   const createOrderPayment = useCreateOrderPayment();
 
+  // Fetch feedback for each order when data changes
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      if (!data?.data?.items) return;
+
+      const updatedOrders = await Promise.all(
+        data.data.items.map(async (order) => {
+          if (statusMap[order.status] === "COMPLETED") {
+            try {
+              const response = await fetch(
+                `https://localhost:7067/api/v1/feedback/feedback-by-order/${order.orderId}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  },
+                }
+              );
+              if (response.ok) {
+                const feedbackResponse = await response.json();
+                return { ...order, feedbacks: feedbackResponse.data };
+              }
+            } catch (error) {
+              console.error("Failed to fetch feedback:", error);
+            }
+          }
+          return order;
+        })
+      );
+      setOrdersWithFeedback(updatedOrders);
+    };
+
+    fetchFeedbacks();
+  }, [data]);
+
   const handleFeedbackChange = (orderDetailId, field, value) => {
     setFeedbackData((prev) => ({
       ...prev,
@@ -94,43 +131,51 @@ const CurrentUserOrderList = () => {
     }));
   };
 
-  const submitFeedback = async (orderDetailId) => {
+  const submitFeedback = async () => {
     try {
-      const feedback = feedbackData[orderDetailId];
+      if (!currentOrderItem?.orderDetailId) return;
+
+      const feedback = feedbackData[currentOrderItem.orderDetailId];
       if (!feedback || !feedback.rating) {
         throw new Error("Please provide a rating");
       }
 
-      const response = await fetch(
-        `https://localhost:7067/api/v1/feedback/create-feedback`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            comment: feedback.comment || "",
-            rating: feedback.rating,
-            orderDetailId: orderDetailId,
-          }),
-        }
-      );
+      const url = editingFeedback
+        ? `https://localhost:7067/api/v1/feedback/update-feedback/${editingFeedback.feedbackId}`
+        : `https://localhost:7067/api/v1/feedback/create-feedback`;
+
+      const method = editingFeedback ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          comment: feedback.comment || "",
+          rating: feedback.rating,
+          orderDetailId: currentOrderItem.orderDetailId,
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to submit feedback");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to submit feedback");
       }
 
       setNotification({
         show: true,
-        message: "Feedback submitted successfully!",
+        message: editingFeedback
+          ? "Feedback updated successfully!"
+          : "Feedback submitted successfully!",
         type: "success",
       });
 
       // Clear feedback form
       setFeedbackData((prev) => {
         const newData = { ...prev };
-        delete newData[orderDetailId];
+        delete newData[currentOrderItem.orderDetailId];
         return newData;
       });
 
@@ -138,6 +183,10 @@ const CurrentUserOrderList = () => {
       queryClient.invalidateQueries({
         queryKey: ["v1/Order/order-list-by-current-account"],
       });
+
+      setShowFeedbackModal(false);
+      setCurrentOrderItem(null);
+      setEditingFeedback(null);
     } catch (error) {
       setNotification({
         show: true,
@@ -147,19 +196,35 @@ const CurrentUserOrderList = () => {
     }
   };
 
-  // Timer refs để lưu timeout cho từng order
+  const handleEditFeedback = (feedback) => {
+    setEditingFeedback(feedback);
+    setCurrentOrderItem({
+      productName: feedback.orderDetail.productName,
+      orderDetailId: feedback.orderDetailId,
+    });
+    setFeedbackData((prev) => ({
+      ...prev,
+      [feedback.orderDetailId]: {
+        rating: feedback.rating,
+        comment: feedback.comment,
+      },
+    }));
+    setShowFeedbackModal(true);
+  };
+
+  // Timer refs to store timeouts for each order
   const pendingTimers = useRef({});
 
-  // Tự động cancel order PENDING sau 5 phút nếu không đổi trạng thái
+  // Auto cancel PENDING orders after 5 minutes if status doesn't change
   useEffect(() => {
-    // Xóa hết timer cũ trước khi set lại
+    // Clear all old timers before setting new ones
     Object.values(pendingTimers.current).forEach(clearTimeout);
     pendingTimers.current = {};
 
     orders.forEach((order) => {
       const status = statusMap[order.status];
       if (status === "PENDING") {
-        // Nếu order chưa có timer thì set timer
+        // If order doesn't have a timer yet, set one
         if (!pendingTimers.current[order.orderId]) {
           pendingTimers.current[order.orderId] = setTimeout(async () => {
             let success = false;
@@ -179,12 +244,12 @@ const CurrentUserOrderList = () => {
                 : "Failed to auto-cancel order after timeout.",
               type: success ? "success" : "error",
             });
-          }, 1 * 60 * 1000); // 5 phút
+          }, 5 * 60 * 1000); // 5 minutes
         }
       }
     });
 
-    // Cleanup khi unmount hoặc orders thay đổi
+    // Cleanup on unmount or when orders change
     return () => {
       Object.values(pendingTimers.current).forEach(clearTimeout);
       pendingTimers.current = {};
@@ -221,7 +286,7 @@ const CurrentUserOrderList = () => {
         Your Order History
       </h1>
 
-      {/* Dropdown lọc theo trạng thái */}
+      {/* Status filter dropdown */}
       <div className="mb-4 flex justify-end">
         <div className="flex items-center">
           <label htmlFor="status" className="mr-2 text-gray-600 font-medium">
@@ -232,7 +297,7 @@ const CurrentUserOrderList = () => {
             value={selectedStatus}
             onChange={(e) => {
               setSelectedStatus(e.target.value);
-              setPageIndex(1); // Reset về trang đầu khi lọc
+              setPageIndex(1); // Reset to first page when filtering
             }}
             className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
@@ -247,7 +312,7 @@ const CurrentUserOrderList = () => {
         </div>
       </div>
 
-      {/* Danh sách đơn hàng */}
+      {/* Order list */}
       <div className="flex-1 overflow-y-auto space-y-4">
         {orders.length === 0 ? (
           <div className="text-center text-gray-500 text-lg py-10">
@@ -256,7 +321,6 @@ const CurrentUserOrderList = () => {
         ) : (
           orders.map((order, index) => {
             const status = statusMap[order.status];
-            // Cập nhật logic màu sắc
             const isGreen =
               status === "PAID" ||
               status === "DELIVERED" ||
@@ -268,9 +332,14 @@ const CurrentUserOrderList = () => {
               ? "bg-red-100 border-red-400"
               : "bg-yellow-100 border-yellow-400";
 
-            // Determine if cancel button should show
             const canCancel = status === "UNDISCHARGED" || status === "PENDING";
             const canFeedback = status === "COMPLETED";
+
+            // Find feedbacks for this order
+            const orderWithFeedback = ordersWithFeedback.find(
+              (o) => o.orderId === order.orderId
+            );
+            const feedbacks = orderWithFeedback?.feedbacks || [];
 
             return (
               <div
@@ -349,7 +418,6 @@ const CurrentUserOrderList = () => {
                                         );
 
                                       if (result.data?.paymentUrl) {
-                                        // Redirect to the payment URL
                                         window.location.href =
                                           result.data.paymentUrl;
                                       } else {
@@ -398,7 +466,7 @@ const CurrentUserOrderList = () => {
                   </table>
                 </div>
 
-                {/* Chi tiết đơn hàng */}
+                {/* Order details */}
                 {expandedIndex === index && (
                   <div className="px-4 py-2 bg-white rounded-b-md">
                     <h2 className="font-semibold text-sm mb-2">
@@ -412,31 +480,85 @@ const CurrentUserOrderList = () => {
                       <span>Action</span>
                     </div>
                     <ul className="space-y-1 text-sm">
-                      {order.orderItems.map((item, i) => (
-                        <li
-                          key={i}
-                          className="grid grid-cols-5 justify-between border-b border-gray-200 pb-1 text-center items-center"
-                        >
-                          <span>{item.productName}</span>
-                          <span>{formatCurrency(item.price)}</span>
-                          <span>{item.stockQuantity}</span>
+                      {order.orderItems.map((item, i) => {
+                        const orderDetailId = order.orderDetailIds[i];
+                        const existingFeedback = feedbacks.find(
+                          (f) => f.orderDetail?.productId === item.productId
+                        );
 
-                          <span>
-                            {status === "COMPLETED" && !item.feedback && (
-                              <button
-                                className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentOrderItem(item);
-                                  setShowFeedbackModal(true);
-                                }}
-                              >
-                                Rate
-                              </button>
-                            )}
-                          </span>
-                        </li>
-                      ))}
+                        return (
+                          <li
+                            key={i}
+                            className="grid grid-cols-5 justify-between border-b border-gray-200 pb-1 text-center items-center"
+                          >
+                            <span>{item.productName}</span>
+                            <span>{formatCurrency(item.price)}</span>
+                            <span>{item.stockQuantity}</span>
+                            <span>
+                              {existingFeedback ? (
+                                <div className="flex flex-col items-center">
+                                  <StarRating
+                                    rating={existingFeedback.rating}
+                                  />
+                                  {existingFeedback.comment && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      "{existingFeedback.comment}"
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-gray-400">
+                                  {status === "COMPLETED"
+                                    ? "No feedback"
+                                    : "N/A"}
+                                </span>
+                              )}
+                            </span>
+                            <span>
+                              {status === "COMPLETED" && (
+                                <div className="flex justify-center gap-1">
+                                  {existingFeedback ? (
+                                    <>
+                                      <button
+                                        className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowViewFeedbackModal(true);
+                                        }}
+                                      >
+                                        View
+                                      </button>
+                                      <button
+                                        className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditFeedback(existingFeedback);
+                                        }}
+                                      >
+                                        Edit
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-purple-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCurrentOrderItem({
+                                          ...item,
+                                          orderDetailId,
+                                        });
+                                        setShowFeedbackModal(true);
+                                      }}
+                                    >
+                                      Rate
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 )}
@@ -451,7 +573,7 @@ const CurrentUserOrderList = () => {
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-6 w-96">
             <h2 className="text-lg font-semibold mb-4 text-center">
-              Leave Feedback
+              {editingFeedback ? "Edit Feedback" : "Leave Feedback"}
             </h2>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -478,7 +600,7 @@ const CurrentUserOrderList = () => {
             </div>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                Comment
+                Comment (optional):
               </label>
               <textarea
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -502,26 +624,62 @@ const CurrentUserOrderList = () => {
                 onClick={() => {
                   setShowFeedbackModal(false);
                   setCurrentOrderItem(null);
+                  setEditingFeedback(null);
                 }}
               >
                 Cancel
               </button>
               <button
                 className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-                onClick={async () => {
-                  await submitFeedback(currentOrderItem.orderDetailId);
-                  setShowFeedbackModal(false);
-                  setCurrentOrderItem(null);
-                }}
+                onClick={submitFeedback}
               >
-                Submit Feedback
+                {editingFeedback ? "Update Feedback" : "Submit Feedback"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal xác nhận hủy đơn */}
+      {/* View Feedback Modal */}
+      {showViewFeedbackModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-96">
+            <h2 className="text-lg font-semibold mb-4 text-center">
+              Feedback Details
+            </h2>
+            <div className="space-y-4">
+              {ordersWithFeedback
+                .flatMap((order) => order.feedbacks || [])
+                .filter((feedback) => feedback)
+                .map((feedback) => (
+                  <div key={feedback.feedbackId} className="border-b pb-4 mb-4">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-medium">
+                        {feedback.orderDetail.productName}
+                      </h3>
+                      <StarRating rating={feedback.rating} />
+                    </div>
+                    <p className="text-gray-600 mt-2">{feedback.comment}</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Submitted on:{" "}
+                      {new Date(feedback.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded"
+                onClick={() => setShowViewFeedbackModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Order Confirmation Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-6 w-80">
@@ -538,7 +696,6 @@ const CurrentUserOrderList = () => {
                   let success = false;
                   try {
                     await cancelOrder.mutateAsync(selectedOrderId);
-                    // Refetch order list after cancel
                     queryClient.invalidateQueries({
                       queryKey: ["v1/Order/order-list-by-current-account"],
                     });
@@ -554,17 +711,9 @@ const CurrentUserOrderList = () => {
                       : "Failed to cancel order!",
                     type: success ? "success" : "error",
                   });
-                  if (success) {
-                    // Nếu chỉ còn 1 order đang hiển thị (sau khi cancel sẽ rỗng)
-                    if (orders.length === 1) {
-                      setSelectedStatus("");
-                      setPageIndex(1);
-                    }
-                    setTimeout(() => {
-                      setNotification((prev) =>
-                        prev.show ? { ...prev, show: false } : prev
-                      );
-                    }, 2000);
+                  if (success && orders.length === 1) {
+                    setSelectedStatus("");
+                    setPageIndex(1);
                   }
                 }}
                 disabled={cancelOrder.isLoading}
@@ -579,11 +728,6 @@ const CurrentUserOrderList = () => {
                 Cancel
               </button>
             </div>
-            {cancelOrder.isError && (
-              <div className="text-red-500 text-center mt-2">
-                Failed to cancel order!
-              </div>
-            )}
           </div>
         </div>
       )}

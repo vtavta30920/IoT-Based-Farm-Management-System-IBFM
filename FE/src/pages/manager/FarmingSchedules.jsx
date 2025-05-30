@@ -20,6 +20,7 @@ const FarmingSchedules = () => {
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [modalError, setModalError] = useState(null); // New state for modal errors
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 5,
@@ -159,16 +160,28 @@ const FarmingSchedules = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      setError(null);
+      setModalError(null); // Clear previous modal errors
 
       if (new Date(formData.startDate) > new Date(formData.endDate)) {
         throw new Error("Start date cannot be after end date");
       }
 
+      // Validate required fields
+      if (
+        !formData.startDate ||
+        !formData.endDate ||
+        !formData.assignedTo ||
+        !formData.farmActivityId ||
+        !formData.farmDetailsId ||
+        !formData.cropId
+      ) {
+        throw new Error("Please fill in all required fields");
+      }
+
       const response = await createSchedule(
         {
           ...formData,
-          farmId: formData.farmDetailsId, // Map farmDetailsId to farmId for API
+          farmId: formData.farmDetailsId,
         },
         token
       );
@@ -181,7 +194,7 @@ const FarmingSchedules = () => {
         throw new Error(response.message || "Failed to create schedule");
       }
     } catch (err) {
-      setError(err.message);
+      setModalError(err.message); // Set error in modal state
     } finally {
       setLoading(false);
     }
@@ -191,18 +204,26 @@ const FarmingSchedules = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      setError(null);
+      setModalError(null);
 
       if (new Date(formData.startDate) > new Date(formData.endDate)) {
         throw new Error("Start date cannot be after end date");
       }
 
+      // Prepare the update data
+      const updateData = {
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        assignedTo: Number(formData.assignedTo),
+        farmActivityId: Number(formData.farmActivityId),
+        farmDetailsId: Number(formData.farmDetailsId),
+        cropId: Number(formData.cropId),
+        plantingDate: formData.plantingDate || null, // Handle case where planting date might be empty
+      };
+
       const response = await updateSchedule(
         currentSchedule.scheduleId,
-        {
-          ...formData,
-          farmId: formData.farmDetailsId, // Map farmDetailsId to farmId for API
-        },
+        updateData,
         token
       );
 
@@ -214,12 +235,13 @@ const FarmingSchedules = () => {
         throw new Error(response.message || "Failed to update schedule");
       }
     } catch (err) {
-      setError(err.message);
+      setModalError(
+        err.message || "An error occurred while updating the schedule"
+      );
     } finally {
       setLoading(false);
     }
   };
-
   const handleStatusChange = async (scheduleId, newStatus) => {
     try {
       setLoading(true);
@@ -246,6 +268,7 @@ const FarmingSchedules = () => {
       cropId: "",
       plantingDate: "",
     });
+    setModalError(null); // Clear modal errors when form is reset
   };
 
   const openEditModal = (schedule) => {
@@ -253,15 +276,16 @@ const FarmingSchedules = () => {
     setFormData({
       startDate: formatDateForInput(schedule.startDate),
       endDate: formatDateForInput(schedule.endDate),
-      assignedTo: schedule.assignedTo,
-      farmActivityId: schedule.farmActivityId,
-      farmDetailsId: schedule.farmId,
-      cropId: schedule.cropId,
-      plantingDate: schedule.cropView?.plantingDate
-        ? formatDateForInput(schedule.cropView.plantingDate)
-        : "",
+      assignedTo: schedule.assignedTo.toString(), // Ensure string value for select
+      farmActivityId: schedule.farmActivityId?.toString() || "", // Handle possible undefined
+      farmDetailsId: schedule.farmId?.toString() || "", // Handle possible undefined
+      cropId: schedule.cropId?.toString() || "", // Handle possible undefined
+      plantingDate: schedule.plantingDate
+        ? formatDateForInput(schedule.plantingDate)
+        : "", // Handle empty planting date
     });
     setIsEditModalOpen(true);
+    setModalError(null);
   };
 
   const openViewModal = (schedule) => {
@@ -301,7 +325,10 @@ const FarmingSchedules = () => {
           </h1>
           <button
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setIsCreateModalOpen(true);
+              setModalError(null); // Clear previous modal errors
+            }}
           >
             + New Schedule
           </button>
@@ -493,6 +520,12 @@ const FarmingSchedules = () => {
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               Create New Schedule
             </h2>
+            {/* Modal error message */}
+            {modalError && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+                {modalError}
+              </div>
+            )}
             <form onSubmit={handleCreateSchedule}>
               <div className="grid grid-cols-2 gap-6">
                 <div className="mb-4">
@@ -647,6 +680,12 @@ const FarmingSchedules = () => {
             <h2 className="text-xl font-bold mb-4">
               Edit Schedule #{currentSchedule.scheduleId}
             </h2>
+            {/* Modal error message */}
+            {modalError && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+                {modalError}
+              </div>
+            )}
             <form onSubmit={handleUpdateSchedule}>
               <div className="grid grid-cols-2 gap-6">
                 <div className="mb-4">
@@ -834,22 +873,6 @@ const FarmingSchedules = () => {
                 <span className="font-medium">Created At:</span>{" "}
                 {currentSchedule.createdAt}
               </div>
-              {/* <div className="mb-2">
-                <span className="font-medium">Updated At:</span>{" "}
-                {currentSchedule.updatedAt}
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">Farm Activity ID:</span>{" "}
-                {currentSchedule.farmActivityId}
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">Farm ID:</span>{" "}
-                {currentSchedule.farmId}
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">Crop ID:</span>{" "}
-                {currentSchedule.cropId}
-              </div> */}
             </div>
 
             {currentSchedule.cropView && (
@@ -864,15 +887,6 @@ const FarmingSchedules = () => {
                     <span className="font-medium">Description:</span>{" "}
                     {currentSchedule.cropView.description}
                   </div>
-                  {/* <div className="mb-2">
-                    <span className="font-medium">Quantity:</span>{" "}
-                    {currentSchedule.cropView.quantity}
-                  </div>
-                  
-                  <div className="mb-2">
-                    <span className="font-medium">Harvest Date:</span>{" "}
-                    {currentSchedule.cropView.harvestDate}
-                  </div> */}
                 </div>
               </div>
             )}
