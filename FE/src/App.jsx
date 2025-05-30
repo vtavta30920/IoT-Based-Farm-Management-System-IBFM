@@ -47,6 +47,7 @@ import FarmingTasks from "./pages/staff/FarmingTasks.jsx";
 import TaskDetails from "./pages/staff/TaskDetails.jsx";
 import FeedbackManagement from "./pages/staff/FeedbackManagement.jsx";
 import FeedbackList from "./pages/staff/FeedbackList.jsx";
+import StaffSchedule from "./pages/staff/StaffSchedule.jsx";
 
 import ManagerLayout from "./components/layouts/ManagerLayout.jsx";
 import FarmingSchedules from "./pages/manager/FarmingSchedules.jsx";
@@ -59,6 +60,7 @@ import OrdersManagement from "./pages/manager/OrdersManagement.jsx";
 import CategoryManagement from "./pages/manager/CategoryManagement.jsx";
 import IotDevices from "./pages/manager/IotDevices.jsx";
 import DeviceDetails from "./pages/manager/DeviceDetails.jsx";
+import ActivityManagement from "./pages/manager/ActivityManagement.jsx";
 
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
 import AccountDetail from "./admin/AccountDetail.jsx";
@@ -139,6 +141,7 @@ const App = () => {
                       path="OrderManagementStaff"
                       element={<OrderManagementStaff />}
                     />
+                    <Route path="StaffSchedule" element={<StaffSchedule />} />
                   </Route>
                 </Route>
 
@@ -162,6 +165,10 @@ const App = () => {
                     <Route
                       path="CategoryManagement"
                       element={<CategoryManagement />}
+                    />
+                    <Route
+                      path="ActivityManagement"
+                      element={<ActivityManagement />}
                     />
                     <Route path="iot-devices" element={<IotDevices />} />
                     <Route path="iot-devices/:id" element={<DeviceDetails />} />
