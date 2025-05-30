@@ -299,22 +299,29 @@ export const getAllFarms = async (token) => {
   return response.json();
 };
 
-export const getAllFarmActivities = async (token) => {
-  const response = await fetch(`${API_BASE_URL}/farm-activity/get-all`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const getAllFarmActivities = async (
+  token,
+  pageIndex = 1,
+  pageSize = 10
+) => {
+  const response = await fetch(
+    `${API_BASE_URL}/farm-activity/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch farm activities.");
   }
 
-  return response.json();
+  const data = await response.json();
+  return data.status === 1 && data.data?.items ? data.data.items : [];
 };
-
 export const getAllCrops = async (token, pageIndex = 1, pageSize = 10) => {
   const response = await fetch(
     `${API_BASE_URL}/crop/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`,
