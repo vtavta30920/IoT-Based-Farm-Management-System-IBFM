@@ -141,13 +141,14 @@ const FeedbackList = () => {
                   Loading feedback...
                 </td>
               </tr>
-            ) : isError ? (
+            ) : (isError && (feedbacks == null || feedbacks.length === 0)) ||
+              feedbacks == null ? (
               <tr>
                 <td
                   colSpan={5}
-                  className="text-center text-red-600 py-8 border-b border-gray-300"
+                  className="text-center text-gray-500 py-8 border-b border-gray-300"
                 >
-                  Error loading feedback.
+                  No feedback found for this product.
                 </td>
               </tr>
             ) : feedbacks && feedbacks.length > 0 ? (
