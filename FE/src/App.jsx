@@ -47,6 +47,7 @@ import FarmingTasks from "./pages/staff/FarmingTasks.jsx";
 import TaskDetails from "./pages/staff/TaskDetails.jsx";
 import FeedbackManagement from "./pages/staff/FeedbackManagement.jsx";
 import FeedbackList from "./pages/staff/FeedbackList.jsx";
+import StaffSchedule from "./pages/staff/StaffSchedule.jsx";
 
 import ManagerLayout from "./components/layouts/ManagerLayout.jsx";
 import FarmingSchedules from "./pages/manager/FarmingSchedules.jsx";
@@ -139,6 +140,7 @@ const App = () => {
                       path="OrderManagementStaff"
                       element={<OrderManagementStaff />}
                     />
+                    <Route path="StaffSchedule" element={<StaffSchedule />} />
                   </Route>
                 </Route>
 
