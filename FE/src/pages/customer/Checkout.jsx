@@ -306,7 +306,7 @@ const Checkout = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City *
+                    City/Province *
                   </label>
                   <select
                     name="city"
@@ -315,7 +315,7 @@ const Checkout = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                     required
                   >
-                    <option value="">Select City</option>
+                    <option value="">Select City/Province</option>
                     {vietnamCities.map((city) => (
                       <option key={city} value={city}>
                         {city}
