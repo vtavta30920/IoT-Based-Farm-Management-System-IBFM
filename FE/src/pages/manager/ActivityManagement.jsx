@@ -15,6 +15,21 @@ const activityTypeOptions = [
   { label: "Fertilization", value: 3 },
   { label: "Harvesting", value: 4 },
 ];
+const statusOptions = [
+  { label: "All", value: "" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
+  { label: "Complete", value: "COMPLETE" },
+  { label: "In Progress", value: "IN_PROGRESS" },
+];
+
+const months = [
+  { label: "All", value: "" },
+  ...Array.from({ length: 12 }, (_, i) => ({
+    label: `Month ${i + 1}`,
+    value: i + 1,
+  })),
+];
 
 const ActivityManagement = () => {
   const [pageIndex, setPageIndex] = useState(1);
@@ -42,16 +57,22 @@ const ActivityManagement = () => {
     message: "",
     type: "",
   });
+  const [filterType, setFilterType] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
 
   const queryClient = useQueryClient();
   const createActivity = useCreateActivity();
   const changeStatus = useChangeActivityStatus();
   const updateActivity = useUpdateActivity();
 
-  // Chỉ truyền pageIndex, PAGE_SIZE cho API (BE phân trang)
+  // Sử dụng hook mới với filter
   const { data, isLoading, isError, error } = useGetAllActivities(
     pageIndex,
-    PAGE_SIZE
+    PAGE_SIZE,
+    filterType,
+    filterStatus,
+    filterMonth
   );
 
   // Chuẩn hóa lấy danh sách activities từ nhiều trường có thể có
@@ -542,6 +563,62 @@ const ActivityManagement = () => {
             + New Activity
           </button>
         </div>
+
+        {/* Filter Section */}
+        <div className="flex flex-wrap gap-4 mb-6 items-center">
+          <div>
+            <label className="mr-2 font-medium">Activity Type:</label>
+            <select
+              className="p-2 border rounded"
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setPageIndex(1);
+              }}
+            >
+              <option value="">All</option>
+              {activityTypeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mr-2 font-medium">Status:</label>
+            <select
+              className="p-2 border rounded"
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setPageIndex(1);
+              }}
+            >
+              {statusOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mr-2 font-medium">Month:</label>
+            <select
+              className="p-2 border rounded"
+              value={filterMonth}
+              onChange={(e) => {
+                setFilterMonth(e.target.value);
+                setPageIndex(1);
+              }}
+            >
+              {months.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Activities Table */}
@@ -549,19 +626,19 @@ const ActivityManagement = () => {
         <table className="min-w-full bg-white">
           <thead className="bg-gray-200">
             <tr>
-              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 No
               </th>
-              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 Activity Type
               </th>
-              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 Start Date
               </th>
-              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 End Date
               </th>
-              <th className="py-3 px-4 text-left text-gray-600 font-semibold">
+              <th className="py-3 px-4 text-center text-gray-600 font-semibold">
                 Status
               </th>
               <th className="py-3 px-4 text-center text-gray-600 font-semibold">
@@ -588,17 +665,19 @@ const ActivityManagement = () => {
                   key={activity.farmActivitiesId}
                   className="hover:bg-gray-50"
                 >
-                  <td className="py-2 px-4 border">
+                  <td className="py-2 px-4 border text-center">
                     {(pageIndex - 1) * PAGE_SIZE + index + 1}
                   </td>
-                  <td className="py-2 px-4 border">{activity.activityType}</td>
-                  <td className="py-2 px-4 border">
+                  <td className="py-2 px-4 border text-center">
+                    {activity.activityType}
+                  </td>
+                  <td className="py-2 px-4 border text-center">
                     {formatDateDisplay(activity.startDate)}
                   </td>
-                  <td className="py-2 px-4 border">
+                  <td className="py-2 px-4 border text-center">
                     {formatDateDisplay(activity.endDate)}
                   </td>
-                  <td className="py-2 px-4 border">
+                  <td className="py-2 px-4 border text-center">
                     <div className="flex justify-center">
                       <button
                         className={`px-2 py-1 rounded text-xs w-20 flex items-center justify-center ${

@@ -13,24 +13,38 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Lấy tất cả hoạt động nông trại (có phân trang)
-export const getAllActivities = async ({ pageIndex = 1, pageSize = 10 }) => {
-  const response = await axios.get(
-    `https://localhost:7067/api/v1/farm-activity/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`,
-    {
-      headers: {
-        Accept: "*/*",
-      },
-    }
-  );
+// Lấy tất cả hoạt động nông trại (có phân trang và filter)
+export const getAllActivities = async ({
+  pageIndex = 1,
+  pageSize = 10,
+  type,
+  status,
+  month,
+}) => {
+  let url = `https://localhost:7067/api/v1/farm-activity/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+  if (type !== undefined && type !== "") url += `&type=${type}`;
+  if (status !== undefined && status !== "") url += `&status=${status}`;
+  if (month !== undefined && month !== "") url += `&month=${month}`;
+  const response = await axios.get(url, {
+    headers: {
+      Accept: "*/*",
+    },
+  });
   return response.data;
 };
 
-// Hook sử dụng React Query để lấy danh sách hoạt động
-export const useGetAllActivities = (pageIndex = 1, pageSize = 10) => {
+// Hook sử dụng React Query để lấy danh sách hoạt động với filter
+export const useGetAllActivities = (
+  pageIndex = 1,
+  pageSize = 10,
+  type,
+  status,
+  month
+) => {
   return useQuery({
-    queryKey: ["farm-activity", pageIndex, pageSize],
-    queryFn: () => getAllActivities({ pageIndex, pageSize }),
+    queryKey: ["farm-activity", pageIndex, pageSize, type, status, month],
+    queryFn: () =>
+      getAllActivities({ pageIndex, pageSize, type, status, month }),
     keepPreviousData: true,
   });
 };
