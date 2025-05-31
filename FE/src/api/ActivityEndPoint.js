@@ -119,3 +119,24 @@ export const useUpdateActivity = () => {
     mutationFn: updateActivity,
   });
 };
+
+// Đổi trạng thái activity sang COMPLETE
+export const completeActivity = async (farmActivitiesId) => {
+  const response = await axios.put(
+    `https://localhost:7067/api/v1/farm-activity/complete/${farmActivitiesId}`,
+    null,
+    {
+      headers: {
+        Accept: "*/*",
+      },
+    }
+  );
+  return response.data;
+};
+
+// Hook mutation để gọi complete activity
+export const useCompleteActivity = () => {
+  return useMutation({
+    mutationFn: completeActivity,
+  });
+};

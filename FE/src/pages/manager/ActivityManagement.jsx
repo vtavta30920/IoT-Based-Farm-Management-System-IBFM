@@ -660,47 +660,66 @@ const ActivityManagement = () => {
                 </td>
               </tr>
             ) : (
-              activities.map((activity, index) => (
-                <tr
-                  key={activity.farmActivitiesId}
-                  className="hover:bg-gray-50"
-                >
-                  <td className="py-2 px-4 border text-center">
-                    {(pageIndex - 1) * PAGE_SIZE + index + 1}
-                  </td>
-                  <td className="py-2 px-4 border text-center">
-                    {activity.activityType}
-                  </td>
-                  <td className="py-2 px-4 border text-center">
-                    {formatDateDisplay(activity.startDate)}
-                  </td>
-                  <td className="py-2 px-4 border text-center">
-                    {formatDateDisplay(activity.endDate)}
-                  </td>
-                  <td className="py-2 px-4 border text-center">
-                    <div className="flex justify-center">
+              activities.map((activity, index) => {
+                // Xác định màu theo status
+                let statusClass = "";
+                if (activity.status === "ACTIVE") {
+                  statusClass = "bg-green-100 text-green-800";
+                } else if (activity.status === "INACTIVE") {
+                  statusClass = "bg-red-100 text-red-800";
+                } else if (
+                  activity.status === "COMPLETE" ||
+                  activity.status === "COMPLETED"
+                ) {
+                  statusClass = "bg-lime-100 text-lime-700"; // màu lục
+                } else if (
+                  activity.status === "IN_PROGRESS" ||
+                  activity.status === "INPROGRESS"
+                ) {
+                  statusClass = "bg-blue-100 text-blue-700"; // màu xanh dương
+                } else {
+                  statusClass = "bg-gray-100 text-gray-700";
+                }
+                return (
+                  <tr
+                    key={activity.farmActivitiesId}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="py-2 px-4 border text-center">
+                      {(pageIndex - 1) * PAGE_SIZE + index + 1}
+                    </td>
+                    <td className="py-2 px-4 border text-center">
+                      {activity.activityType}
+                    </td>
+                    <td className="py-2 px-4 border text-center">
+                      {formatDateDisplay(activity.startDate)}
+                    </td>
+                    <td className="py-2 px-4 border text-center">
+                      {formatDateDisplay(activity.endDate)}
+                    </td>
+                    <td className="py-2 px-4 border text-center">
+                      <div className="flex justify-center">
+                        <button
+                          className={`px-2 py-1 rounded text-xs w-24 flex items-center justify-center ${statusClass}`}
+                          onClick={() =>
+                            setStatusModal({ open: true, activity })
+                          }
+                        >
+                          {activity.status}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-2 px-4 border text-center">
                       <button
-                        className={`px-2 py-1 rounded text-xs w-20 flex items-center justify-center ${
-                          activity.status === "ACTIVE"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                        onClick={() => setStatusModal({ open: true, activity })}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded mr-2"
+                        onClick={() => openEditModal(activity)}
                       >
-                        {activity.status}
+                        Update
                       </button>
-                    </div>
-                  </td>
-                  <td className="py-2 px-4 border text-center">
-                    <button
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded mr-2"
-                      onClick={() => openEditModal(activity)}
-                    >
-                      Update
-                    </button>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
