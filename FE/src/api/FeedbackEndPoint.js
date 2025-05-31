@@ -29,7 +29,7 @@ export const useGetFeedbackList = (pageIndex = 1, pageSize = 10) => {
   });
 };
 
-// Hàm gọi API lấy feedback theo productId
+// Hàm gọi API lấy feedback theo productId (không phân trang)
 export const getFeedbackByProduct = async (productId) => {
   if (!productId) throw new Error("productId is required");
   const { data } = await axios.get(
@@ -38,7 +38,7 @@ export const getFeedbackByProduct = async (productId) => {
   return data;
 };
 
-// Hook react-query để lấy feedback theo productId
+// Hook react-query để lấy feedback theo productId (không phân trang)
 export const useGetFeedbackByProduct = (productId) => {
   return useQuery({
     queryKey: ["v1/feedback/feedback-by-product", productId],
