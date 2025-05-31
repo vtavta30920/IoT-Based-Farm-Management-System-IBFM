@@ -305,7 +305,7 @@ export const getAllFarmActivities = async (
   pageSize = 10
 ) => {
   const response = await fetch(
-    `${API_BASE_URL}/farm-activity/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    `${API_BASE_URL}/farm-activity/get-active?pageIndex=${pageIndex}&pageSize=${pageSize}`,
     {
       method: "GET",
       headers: {
