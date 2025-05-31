@@ -44,7 +44,12 @@ const FarmingSchedules = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [currentSchedule, setCurrentSchedule] = useState(null);
-
+  const getTodayDate = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${(today.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
+  };
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -449,6 +454,10 @@ const FarmingSchedules = () => {
             <span className="font-medium">Planting Date:</span>{" "}
             {formatDateForDisplay(currentSchedule.plantingDate) || "N/A"}
           </div>
+          <div className="mb-2">
+            <span className="font-medium">Quantity:</span>{" "}
+            {currentSchedule.quantity || "N/A"}
+          </div>
         </div>
 
         {/* Farm Information */}
@@ -784,6 +793,7 @@ const FarmingSchedules = () => {
                     name="plantingDate"
                     value={formData.plantingDate}
                     onChange={handleInputChange}
+                    min={getTodayDate()} // Prevent past dates
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                   />
                 </div>
@@ -933,6 +943,7 @@ const FarmingSchedules = () => {
                     name="plantingDate"
                     value={formData.plantingDate}
                     onChange={handleInputChange}
+                    min={getTodayDate()} // Prevent past dates
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                   />
                 </div>
