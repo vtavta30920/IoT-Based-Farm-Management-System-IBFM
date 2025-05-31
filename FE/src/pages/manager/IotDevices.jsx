@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   getBlynkData,
   getIotDevices,
+  getAllIotDevices,
   createIotDevice,
   getAllFarms,
 } from "../../api/api";
@@ -16,7 +17,6 @@ const IotDevices = ({ token }) => {
   const [newDevice, setNewDevice] = useState({
     deviceName: "",
     deviceType: "",
-    sensorValue: "",
     unit: "",
     expiryDate: "",
     farmId: "",
@@ -27,11 +27,11 @@ const IotDevices = ({ token }) => {
       try {
         const [blynkData, devicesData, farmsData] = await Promise.all([
           getBlynkData(token),
-          getIotDevices(0, 10, token),
+          getAllIotDevices(token), // Fetch all devices
           getAllFarms(token),
         ]);
         setBlynkData(blynkData);
-        setIotDevices(devicesData.data.items);
+        setIotDevices(devicesData); // Now receives the complete array
         setFarms(farmsData);
         setLoading(false);
         setError(null);
@@ -46,29 +46,32 @@ const IotDevices = ({ token }) => {
 
     return () => clearInterval(intervalId);
   }, [token]);
-
   const handleAddDevice = async (e) => {
     e.preventDefault();
     try {
       await createIotDevice(
         {
-          ...newDevice,
+          deviceName: newDevice.deviceName,
+          deviceType: newDevice.deviceType,
+          unit: newDevice.unit,
+          expiryDate: newDevice.expiryDate,
           farmDetailsId: parseInt(newDevice.farmId),
         },
         token
       );
-      const devicesData = await getIotDevices(0, 10, token);
+      const devicesData = await getAllIotDevices(token); // Fetch all devices again
+
       setIotDevices(devicesData.data.items);
       setShowAddDevice(false);
       setNewDevice({
         deviceName: "",
         deviceType: "",
-        sensorValue: "",
         unit: "",
         expiryDate: "",
         farmId: "",
       });
     } catch (err) {
+      console.error("Error creating device:", err);
       setError(err.message);
     }
   };
@@ -205,36 +208,7 @@ const IotDevices = ({ token }) => {
               <span>1095</span>
             </div>
           </div>
-
-          {/* Messages Card */}
-          {/* <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h3 className="font-semibold mb-2">Messages used</h3>
-            <div className="text-lg mb-2">
-              <span className="font-bold">0</span> of 30%
-            </div>
-            <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-              Add Tag
-            </button>
-          </div> */}
         </div>
-
-        {/* <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <h3 className="font-semibold mb-2">Device Management</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
-              Automations
-            </button>
-            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
-              Users
-            </button>
-            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
-              Organizations
-            </button>
-            <button className="bg-gray-200 hover:bg-gray-300 p-3 rounded text-center">
-              Locations
-            </button>
-          </div>
-        </div> */}
       </div>
       {/* IoT Devices Management Section */}
       <div className="mt-8">
@@ -322,6 +296,20 @@ const IotDevices = ({ token }) => {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Unit*
+                  </label>
+                  <input
+                    type="text"
+                    name="unit"
+                    value={newDevice.unit}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                    placeholder="e.g., °C, %"
                   />
                 </div>
                 <div className="space-y-2">
