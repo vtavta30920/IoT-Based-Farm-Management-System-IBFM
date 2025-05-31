@@ -18,8 +18,8 @@ const activityTypeOptions = [
 const statusOptions = [
   { label: "All", value: "" },
   { label: "Active", value: "ACTIVE" },
-  { label: "Inactive", value: "INACTIVE" },
-  { label: "Complete", value: "COMPLETE" },
+  { label: "Deactive", value: "DEACTIVATED" },
+  { label: "Complete", value: "COMPLETED" },
   { label: "In Progress", value: "IN_PROGRESS" },
 ];
 
@@ -665,21 +665,31 @@ const ActivityManagement = () => {
                 let statusClass = "";
                 if (activity.status === "ACTIVE") {
                   statusClass = "bg-green-100 text-green-800";
-                } else if (activity.status === "INACTIVE") {
-                  statusClass = "bg-red-100 text-red-800";
+                } else if (
+                  activity.status === "INACTIVE" ||
+                  activity.status === "DEACTIVATED"
+                ) {
+                  statusClass = "bg-red-500 text-white font-bold";
                 } else if (
                   activity.status === "COMPLETE" ||
                   activity.status === "COMPLETED"
                 ) {
-                  statusClass = "bg-lime-100 text-lime-700"; // màu lục
+                  statusClass = "bg-lime-500 text-white font-extrabold"; // chữ đậm, màu lục sáng hơn
                 } else if (
                   activity.status === "IN_PROGRESS" ||
                   activity.status === "INPROGRESS"
                 ) {
-                  statusClass = "bg-blue-100 text-blue-700"; // màu xanh dương
+                  statusClass = "bg-blue-600 text-white font-extrabold"; // chữ đậm, màu xanh dương sáng hơn
                 } else {
                   statusClass = "bg-gray-100 text-gray-700";
                 }
+                const isCompleted =
+                  activity.status === "COMPLETE" ||
+                  activity.status === "COMPLETED";
+                const isInProgress =
+                  activity.status === "IN_PROGRESS" ||
+                  activity.status === "INPROGRESS";
+                const canChangeStatus = !isCompleted && !isInProgress;
                 return (
                   <tr
                     key={activity.farmActivitiesId}
@@ -700,10 +710,20 @@ const ActivityManagement = () => {
                     <td className="py-2 px-4 border text-center">
                       <div className="flex justify-center">
                         <button
-                          className={`px-2 py-1 rounded text-xs w-24 flex items-center justify-center ${statusClass}`}
+                          className={`px-2 py-1 rounded text-xs w-24 flex items-center justify-center ${statusClass} ${
+                            !canChangeStatus
+                              ? "opacity-60 cursor-not-allowed"
+                              : ""
+                          }`}
                           onClick={() =>
-                            setStatusModal({ open: true, activity })
+                            canChangeStatus
+                              ? setStatusModal({ open: true, activity })
+                              : undefined
                           }
+                          disabled={!canChangeStatus}
+                          style={{
+                            pointerEvents: canChangeStatus ? "auto" : "none",
+                          }}
                         >
                           {activity.status}
                         </button>
