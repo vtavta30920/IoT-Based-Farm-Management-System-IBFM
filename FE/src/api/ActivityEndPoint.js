@@ -21,7 +21,7 @@ export const getAllActivities = async ({
   status,
   month,
 }) => {
-  let url = `https://localhost:7067/api/v1/farm-activity/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+  let url = `https://webapi20250531180300.azurewebsites.net/api/v1/farm-activity/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`;
   if (type !== undefined && type !== "") url += `&type=${type}`;
   if (status !== undefined && status !== "") url += `&status=${status}`;
   if (month !== undefined && month !== "") url += `&month=${month}`;
@@ -52,7 +52,7 @@ export const useGetAllActivities = (
 // Tạo hoạt động nông trại mới
 export const createActivity = async ({ activityType, startDate, endDate }) => {
   const response = await axios.post(
-    `https://localhost:7067/api/v1/farm-activity/create?activityType=${activityType}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/farm-activity/create?activityType=${activityType}`,
     {
       startDate,
       endDate,
@@ -77,7 +77,7 @@ export const useCreateActivity = () => {
 // Đổi trạng thái hoạt động nông trại
 export const changeActivityStatus = async (farmActivitiesId) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/farm-activity/change-status/${farmActivitiesId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/farm-activity/change-status/${farmActivitiesId}`,
     null,
     {
       headers: {
@@ -96,9 +96,14 @@ export const useChangeActivityStatus = () => {
 };
 
 // Cập nhật hoạt động nông trại
-export const updateActivity = async ({ farmActivitiesId, activityType, startDate, endDate }) => {
+export const updateActivity = async ({
+  farmActivitiesId,
+  activityType,
+  startDate,
+  endDate,
+}) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/farm-activity/update/${farmActivitiesId}?activityType=${activityType}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/farm-activity/update/${farmActivitiesId}?activityType=${activityType}`,
     {
       startDate,
       endDate,
@@ -123,7 +128,7 @@ export const useUpdateActivity = () => {
 // Đổi trạng thái activity sang COMPLETE
 export const completeActivity = async (farmActivitiesId) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/farm-activity/complete/${farmActivitiesId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/farm-activity/complete/${farmActivitiesId}`,
     null,
     {
       headers: {

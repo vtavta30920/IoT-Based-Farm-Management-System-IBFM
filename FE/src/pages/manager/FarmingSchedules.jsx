@@ -68,7 +68,7 @@ const FarmingSchedules = () => {
     try {
       // Use get-active API instead of getAllFarmActivities
       const response = await fetch(
-        `https://localhost:7067/api/v1/farm-activity/get-active?pageIndex=1&pageSize=10`,
+        `https://webapi20250531180300.azurewebsites.net/api/v1/farm-activity/get-active?pageIndex=1&pageSize=10`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

@@ -31,7 +31,7 @@ const GetAllProducts = async (
   const sortParam = `&sortByStockAsc=${sortByStockAsc}`;
 
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/products/product-filter?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}${categoryParam}${sortParam}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/products/product-filter?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}${categoryParam}${sortParam}`
   );
   return data;
 };
@@ -55,7 +55,7 @@ export const useGetAllProducts = (
 
 const GetProductById = async (id) => {
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/products/get-product/${id}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/products/get-product/${id}`
   );
   return data;
 };
@@ -75,7 +75,7 @@ export const updateProductStatus = async (productId) => {
   // Đổi từ POST sang PUT (hoặc PATCH) nếu backend yêu cầu, hoặc kiểm tra lại endpoint
   // Nếu backend chỉ nhận POST nhưng không có body, thêm {} làm body
   const response = await axios.put(
-    `https://localhost:7067/api/v1/products/change-product-status/${productId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/products/change-product-status/${productId}`,
     {} // Thêm body rỗng để tránh lỗi 405 nếu backend yêu cầu body
   );
   return response.data;
@@ -99,7 +99,7 @@ export const useUpdateProductStatus = () => {
 export const createProduct = async (product) => {
   console.log("Create Product API payload:", product);
   const response = await axios.post(
-    "https://localhost:7067/api/v1/products/create",
+    "https://webapi20250531180300.azurewebsites.net/api/v1/products/create",
     product,
     {
       headers: {
@@ -141,7 +141,7 @@ export const useCreateProduct = () => {
 // Thêm hàm gọi API update product
 export const updateProduct = async ({ productId, productData }) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/products/update/${productId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/products/update/${productId}`,
     productData,
     {
       headers: {
@@ -182,7 +182,7 @@ export const getProductByName = async (productName) => {
   }
   // Đúng format: /search-product/{productName}?pageIndex=1&pageSize=10
   const response = await axios.get(
-    `https://localhost:7067/api/v1/products/search-product/${encodeURIComponent(
+    `https://webapi20250531180300.azurewebsites.net/api/v1/products/search-product/${encodeURIComponent(
       productName
     )}?pageIndex=1&pageSize=10`
   );

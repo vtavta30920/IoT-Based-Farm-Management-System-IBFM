@@ -17,7 +17,7 @@ axios.interceptors.request.use(
 
 export const getAllCrops = async () => {
   const response = await axios.get(
-    `https://localhost:7067/api/v1/crop/get-all-active`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/crop/get-all-active`
   );
   return response.data;
 };
@@ -34,7 +34,7 @@ export const changeCropStatus = async ({ cropId, status }) => {
   if (!cropId || typeof status === "undefined")
     throw new Error("cropId and status are required");
   const response = await axios.put(
-    `https://localhost:7067/api/v1/crop/chang-status?cropId=${cropId}&status=${status}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/crop/chang-status?cropId=${cropId}&status=${status}`
   );
   return response.data;
 };
@@ -63,7 +63,7 @@ export const useChangeCropStatus = () => {
 
 export const createCrop = async (cropData) => {
   const response = await axios.post(
-    "https://localhost:7067/api/v1/crop/create",
+    "https://webapi20250531180300.azurewebsites.net/api/v1/crop/create",
     cropData,
     {
       headers: {
@@ -98,7 +98,7 @@ export const useCreateCrop = () => {
 
 export const updateCrop = async (cropId, updateData) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/crop/update/${cropId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/crop/update/${cropId}`,
     updateData // Truyền body JSON chứa cropName, description, quantity, plantingDate
   );
   return response.data;

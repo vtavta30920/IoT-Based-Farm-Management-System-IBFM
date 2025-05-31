@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://localhost:7067/api/v1";
+const API_BASE_URL = "https://webapi20250531180300.azurewebsites.net/api/v1";
 
 // Thêm interceptor để tự động thêm token vào header nếu có
 axios.interceptors.request.use(
@@ -358,7 +358,7 @@ export const getAllActive = async (token) => {
 
 export const getBlynkData = async (token) => {
   const response = await fetch(
-    `https://localhost:7067/api/blynk/get-blynk-data`,
+    `https://webapi20250531180300.azurewebsites.net/api/blynk/get-blynk-data`,
     {
       method: "GET",
       headers: {

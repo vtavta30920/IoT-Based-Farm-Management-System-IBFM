@@ -16,7 +16,7 @@ axios.interceptors.request.use(
 // Hàm gọi API lấy danh sách feedback
 export const getFeedbackList = async (pageIndex = 1, pageSize = 10) => {
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/feedback/feed-back-list?pageIndex=${pageIndex}&pageSize=${pageSize}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/feedback/feed-back-list?pageIndex=${pageIndex}&pageSize=${pageSize}`
   );
   return data;
 };
@@ -33,7 +33,7 @@ export const useGetFeedbackList = (pageIndex = 1, pageSize = 10) => {
 export const getFeedbackByProduct = async (productId) => {
   if (!productId) throw new Error("productId is required");
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/feedback/feedback-by-product/${productId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/feedback/feedback-by-product/${productId}`,
     {
       headers: {
         Accept: "*/*",
@@ -56,7 +56,7 @@ export const useGetFeedbackByProduct = (productId) => {
 export const getFeedbackByOrder = async (orderId) => {
   if (!orderId) throw new Error("orderId is required");
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/feedback/feedback-by-order/${orderId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/feedback/feedback-by-order/${orderId}`,
     {
       headers: {
         Accept: "*/*",
@@ -79,7 +79,7 @@ export const useGetFeedbackByOrder = (orderId) => {
 export const updateFeedbackStatus = async (feedbackId) => {
   if (!feedbackId) throw new Error("feedbackId is required");
   const { data } = await axios.post(
-    `https://localhost:7067/api/v1/feedback/update-feedback-status/${feedbackId}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/feedback/update-feedback-status/${feedbackId}`
   );
   return data;
 };

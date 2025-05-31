@@ -15,7 +15,7 @@ axios.interceptors.request.use(
 
 export const getAllCategories = async () => {
   const response = await axios.get(
-    "https://localhost:7067/api/v1/category/get-all"
+    "https://webapi20250531180300.azurewebsites.net/api/v1/category/get-all"
   );
   return response.data;
 };
@@ -29,7 +29,7 @@ export const useCategories = () => {
 
 export const createCategory = async (categoryName) => {
   const response = await axios.post(
-    "https://localhost:7067/api/v1/category/create",
+    "https://webapi20250531180300.azurewebsites.net/api/v1/category/create",
     JSON.stringify(categoryName),
     {
       headers: {
@@ -64,7 +64,7 @@ export const useCreateCategory = () => {
 
 export const deleteCategory = async (categoryId) => {
   const response = await axios.delete(
-    `https://localhost:7067/api/v1/category/${categoryId}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/category/${categoryId}`
   );
   return response.data;
 };
