@@ -257,7 +257,9 @@ const StaffSchedule = () => {
                                                 });
                                               }
                                             }}
-                                            disabled={completeActivity.isLoading}
+                                            disabled={
+                                              completeActivity.isLoading
+                                            }
                                           >
                                             {completeActivity.isLoading
                                               ? "Completing..."
