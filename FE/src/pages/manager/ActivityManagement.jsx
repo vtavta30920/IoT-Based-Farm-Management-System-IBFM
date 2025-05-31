@@ -117,8 +117,8 @@ const ActivityManagement = () => {
     return new Date(start) <= new Date(end);
   };
 
-  // Helper: kiểm tra khoảng cách giữa start và end là ít nhất 7 ngày
-  const isAtLeastOneWeekApart = (start, end) => {
+  // Helper: kiểm tra khoảng cách giữa start và end là tối đa 7 ngày
+  const isAtMostOneWeekApart = (start, end) => {
     if (!start || !end) return false;
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -127,7 +127,7 @@ const ActivityManagement = () => {
       (endDate.setHours(0, 0, 0, 0) - startDate.setHours(0, 0, 0, 0)) /
         (1000 * 60 * 60 * 24)
     );
-    return diffDays >= 7;
+    return diffDays <= 7 && diffDays >= 0;
   };
 
   // Xử lý submit tạo activity
@@ -152,9 +152,9 @@ const ActivityManagement = () => {
       setFormError("Start date must not be after End date");
       return;
     }
-    if (!isAtLeastOneWeekApart(form.startDate, form.endDate)) {
+    if (!isAtMostOneWeekApart(form.startDate, form.endDate)) {
       setFormError(
-        "The distance between Start date and End date must be at least 7 days"
+        "The distance between Start date and End date must be at most 7 days"
       );
       return;
     }
@@ -283,9 +283,9 @@ const ActivityManagement = () => {
       setEditFormError("Start date must not be after End date");
       return;
     }
-    if (!isAtLeastOneWeekApart(editForm.startDate, editForm.endDate)) {
+    if (!isAtMostOneWeekApart(editForm.startDate, editForm.endDate)) {
       setEditFormError(
-        "The distance between Start date and End date must be at least 7 days"
+        "The distance between Start date and End date must be at most 7 days"
       );
       return;
     }

@@ -29,21 +29,49 @@ export const useGetFeedbackList = (pageIndex = 1, pageSize = 10) => {
   });
 };
 
-// Hàm gọi API lấy feedback theo productId (không phân trang)
+// Hàm gọi API lấy feedback theo productId (GET /api/v1/feedback/feedback-by-product/{productId})
 export const getFeedbackByProduct = async (productId) => {
   if (!productId) throw new Error("productId is required");
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/feedback/feedback-by-product/${productId}`
+    `https://localhost:7067/api/v1/feedback/feedback-by-product/${productId}`,
+    {
+      headers: {
+        Accept: "*/*",
+      },
+    }
   );
   return data;
 };
 
-// Hook react-query để lấy feedback theo productId (không phân trang)
+// Hook react-query để lấy feedback theo productId
 export const useGetFeedbackByProduct = (productId) => {
   return useQuery({
     queryKey: ["v1/feedback/feedback-by-product", productId],
     queryFn: () => getFeedbackByProduct(productId),
     enabled: !!productId,
+  });
+};
+
+// Hàm gọi API lấy feedback theo orderId (GET /api/v1/feedback/feedback-by-order/{orderId})
+export const getFeedbackByOrder = async (orderId) => {
+  if (!orderId) throw new Error("orderId is required");
+  const { data } = await axios.get(
+    `https://localhost:7067/api/v1/feedback/feedback-by-order/${orderId}`,
+    {
+      headers: {
+        Accept: "*/*",
+      },
+    }
+  );
+  return data;
+};
+
+// Hook react-query để lấy feedback theo orderId
+export const useGetFeedbackByOrder = (orderId) => {
+  return useQuery({
+    queryKey: ["v1/feedback/feedback-by-order", orderId],
+    queryFn: () => getFeedbackByOrder(orderId),
+    enabled: !!orderId,
   });
 };
 
