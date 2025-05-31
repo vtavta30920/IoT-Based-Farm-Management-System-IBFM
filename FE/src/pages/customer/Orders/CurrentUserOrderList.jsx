@@ -5,6 +5,7 @@ import {
   useGetCurrentUserOrder,
   useUpdateCancelStatus,
 } from "../../../api/OrderEndPoint";
+import { UserContext } from "../../../contexts/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaStar, FaRegStar } from "react-icons/fa";
 
@@ -55,9 +56,6 @@ const CurrentUserOrderList = () => {
   const [currentOrderItem, setCurrentOrderItem] = useState(null);
   const [ordersWithFeedback, setOrdersWithFeedback] = useState([]);
   const [editingFeedback, setEditingFeedback] = useState(null);
-  const [showViewFeedbackModal, setShowViewFeedbackModal] = useState(false);
-  const [selectedOrderIdForFeedback, setSelectedOrderIdForFeedback] =
-    useState(null);
   const pageSize = 5;
 
   const { data, isLoading } = useGetCurrentUserOrder(
@@ -71,6 +69,7 @@ const CurrentUserOrderList = () => {
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [showViewFeedbackModal, setShowViewFeedbackModal] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState({
@@ -107,13 +106,13 @@ const CurrentUserOrderList = () => {
               );
               if (response.ok) {
                 const feedbackResponse = await response.json();
-                return { ...order, feedbacks: feedbackResponse.data || [] };
+                return { ...order, feedbacks: feedbackResponse.data };
               }
             } catch (error) {
               console.error("Failed to fetch feedback:", error);
             }
           }
-          return { ...order, feedbacks: [] };
+          return order;
         })
       );
       setOrdersWithFeedback(updatedOrders);
@@ -134,9 +133,7 @@ const CurrentUserOrderList = () => {
 
   const submitFeedback = async () => {
     try {
-      if (!currentOrderItem?.orderDetailId) {
-        throw new Error("Invalid order detail ID");
-      }
+      if (!currentOrderItem?.orderDetailId) return;
 
       const feedback = feedbackData[currentOrderItem.orderDetailId];
       if (!feedback || !feedback.rating) {
@@ -149,60 +146,23 @@ const CurrentUserOrderList = () => {
 
       const method = editingFeedback ? "PUT" : "POST";
 
-      const payload = {
-        comment: feedback.comment || "",
-        rating: feedback.rating,
-        orderDetailId: currentOrderItem.orderDetailId,
-      };
-
-      if (editingFeedback) {
-        payload.feedbackId = editingFeedback.feedbackId;
-      }
-
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          comment: feedback.comment || "",
+          rating: feedback.rating,
+          orderDetailId: currentOrderItem.orderDetailId,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to submit feedback");
       }
-
-      const feedbackResponse = await response.json();
-      const newFeedback = feedbackResponse.data || {
-        feedbackId: editingFeedback ? editingFeedback.feedbackId : Date.now(),
-        orderDetailId: currentOrderItem.orderDetailId,
-        productId: currentOrderItem.productId,
-        productName: currentOrderItem.productName,
-        rating: feedback.rating,
-        comment: feedback.comment,
-        createdAt: new Date().toISOString(),
-        orderDetail: {
-          productId: currentOrderItem.productId,
-          productName: currentOrderItem.productName,
-        },
-      };
-
-      // Deep copy to ensure state update triggers re-render
-      setOrdersWithFeedback((prev) => {
-        const newOrders = JSON.parse(JSON.stringify(prev));
-        return newOrders.map((order) => {
-          if (order.orderId === currentOrderItem.orderId) {
-            const updatedFeedbacks = editingFeedback
-              ? order.feedbacks.map((f) =>
-                  f.feedbackId === editingFeedback.feedbackId ? newFeedback : f
-                )
-              : [...(order.feedbacks || []), newFeedback];
-            return { ...order, feedbacks: updatedFeedbacks };
-          }
-          return order;
-        });
-      });
 
       setNotification({
         show: true,
@@ -219,12 +179,10 @@ const CurrentUserOrderList = () => {
         return newData;
       });
 
-      // Invalidate query in the background with a slight delay
-      setTimeout(() => {
-        queryClient.invalidateQueries({
-          queryKey: ["v1/Order/order-list-by-current-account"],
-        });
-      }, 100);
+      // Refresh orders to show the new feedback
+      queryClient.invalidateQueries({
+        queryKey: ["v1/Order/order-list-by-current-account"],
+      });
 
       setShowFeedbackModal(false);
       setCurrentOrderItem(null);
@@ -238,38 +196,35 @@ const CurrentUserOrderList = () => {
     }
   };
 
-  const handleEditFeedback = (feedback, orderId, order) => {
-    // Find the corresponding order item to get productId
-    const orderItemIndex = order.orderDetailIds.indexOf(feedback.orderDetailId);
-    const orderItem = order.orderItems[orderItemIndex] || {};
-
+  const handleEditFeedback = (feedback) => {
     setEditingFeedback(feedback);
     setCurrentOrderItem({
       productName: feedback.orderDetail.productName,
       orderDetailId: feedback.orderDetailId,
-      orderId,
-      productId: orderItem.productId,
     });
     setFeedbackData((prev) => ({
       ...prev,
       [feedback.orderDetailId]: {
         rating: feedback.rating,
-        comment: feedback.comment || "",
+        comment: feedback.comment,
       },
     }));
     setShowFeedbackModal(true);
   };
 
-  // Auto cancel PENDING orders after 5 minutes if status doesn't change
+  // Timer refs to store timeouts for each order
   const pendingTimers = useRef({});
 
+  // Auto cancel PENDING orders after 5 minutes if status doesn't change
   useEffect(() => {
+    // Clear all old timers before setting new ones
     Object.values(pendingTimers.current).forEach(clearTimeout);
     pendingTimers.current = {};
 
     orders.forEach((order) => {
       const status = statusMap[order.status];
       if (status === "PENDING") {
+        // If order doesn't have a timer yet, set one
         if (!pendingTimers.current[order.orderId]) {
           pendingTimers.current[order.orderId] = setTimeout(async () => {
             let success = false;
@@ -294,6 +249,7 @@ const CurrentUserOrderList = () => {
       }
     });
 
+    // Cleanup on unmount or when orders change
     return () => {
       Object.values(pendingTimers.current).forEach(clearTimeout);
       pendingTimers.current = {};
@@ -341,7 +297,7 @@ const CurrentUserOrderList = () => {
             value={selectedStatus}
             onChange={(e) => {
               setSelectedStatus(e.target.value);
-              setPageIndex(1);
+              setPageIndex(1); // Reset to first page when filtering
             }}
             className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
@@ -379,6 +335,7 @@ const CurrentUserOrderList = () => {
             const canCancel = status === "UNDISCHARGED" || status === "PENDING";
             const canFeedback = status === "COMPLETED";
 
+            // Find feedbacks for this order
             const orderWithFeedback = ordersWithFeedback.find(
               (o) => o.orderId === order.orderId
             );
@@ -459,6 +416,7 @@ const CurrentUserOrderList = () => {
                                         await createOrderPayment.mutateAsync(
                                           order.orderId
                                         );
+
                                       if (result.data?.paymentUrl) {
                                         window.location.href =
                                           result.data.paymentUrl;
@@ -525,7 +483,7 @@ const CurrentUserOrderList = () => {
                       {order.orderItems.map((item, i) => {
                         const orderDetailId = order.orderDetailIds[i];
                         const existingFeedback = feedbacks.find(
-                          (f) => f.orderDetailId === orderDetailId
+                          (f) => f.orderDetail?.productId === item.productId
                         );
 
                         return (
@@ -565,27 +523,20 @@ const CurrentUserOrderList = () => {
                                         className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setSelectedOrderIdForFeedback(
-                                            order.orderId
-                                          );
                                           setShowViewFeedbackModal(true);
                                         }}
                                       >
                                         View
                                       </button>
-                                      <button
+                                      {/* <button
                                         className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleEditFeedback(
-                                            existingFeedback,
-                                            order.orderId,
-                                            order
-                                          );
+                                          handleEditFeedback(existingFeedback);
                                         }}
                                       >
                                         Edit
-                                      </button>
+                                      </button> */}
                                     </>
                                   ) : (
                                     <button
@@ -595,8 +546,6 @@ const CurrentUserOrderList = () => {
                                         setCurrentOrderItem({
                                           ...item,
                                           orderDetailId,
-                                          orderId: order.orderId,
-                                          productId: item.productId,
                                         });
                                         setShowFeedbackModal(true);
                                       }}
@@ -692,7 +641,7 @@ const CurrentUserOrderList = () => {
       )}
 
       {/* View Feedback Modal */}
-      {showViewFeedbackModal && selectedOrderIdForFeedback && (
+      {showViewFeedbackModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-6 w-96">
             <h2 className="text-lg font-semibold mb-4 text-center">
@@ -700,8 +649,9 @@ const CurrentUserOrderList = () => {
             </h2>
             <div className="space-y-4">
               {ordersWithFeedback
-                .find((order) => order.orderId === selectedOrderIdForFeedback)
-                ?.feedbacks.map((feedback) => (
+                .flatMap((order) => order.feedbacks || [])
+                .filter((feedback) => feedback)
+                .map((feedback) => (
                   <div key={feedback.feedbackId} className="border-b pb-4 mb-4">
                     <div className="flex justify-between items-start">
                       <h3 className="font-medium">
@@ -715,17 +665,12 @@ const CurrentUserOrderList = () => {
                       {new Date(feedback.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                )) || (
-                <div className="text-center text-gray-500">No feedback</div>
-              )}
+                ))}
             </div>
             <div className="flex justify-end mt-4">
               <button
                 className="bg-gray-400 text-white px-4 py-2 rounded"
-                onClick={() => {
-                  setShowViewFeedbackModal(false);
-                  setSelectedOrderIdForFeedback(null);
-                }}
+                onClick={() => setShowViewFeedbackModal(false)}
               >
                 Close
               </button>

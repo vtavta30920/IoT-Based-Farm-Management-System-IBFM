@@ -176,21 +176,36 @@ export const createOrder = async (orderItems, shippingAddress, token) => {
   return response.json();
 };
 export const createSchedule = async (scheduleData, token) => {
-  const response = await fetch(`${API_BASE_URL}/Schedule/schedule-create`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(scheduleData),
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/Schedule/schedule-create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(scheduleData),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to create schedule");
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to create schedule. Please try again."
+        );
+      } else {
+        const errorText = await response.text();
+        if (errorText.includes("Planting date cannot be in the past")) {
+          throw new Error("Planting date cannot be in the past.");
+        }
+        throw new Error(errorText || "Failed to create schedule.");
+      }
+    }
+
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || "Failed to create schedule.");
   }
-
-  return response.json();
 };
 
 export const getSchedules = async (pageIndex = 0, pageSize = 10, token) => {
@@ -213,24 +228,39 @@ export const getSchedules = async (pageIndex = 0, pageSize = 10, token) => {
 };
 
 export const updateSchedule = async (scheduleId, updatedData, token) => {
-  const response = await fetch(
-    `${API_BASE_URL}/Schedule/schedule-update?scheduleId=${scheduleId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updatedData),
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/Schedule/schedule-update?scheduleId=${scheduleId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      }
+    );
+
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to update schedule. Please try again."
+        );
+      } else {
+        const errorText = await response.text();
+        if (errorText.includes("Planting date cannot be in the past")) {
+          throw new Error("Planting date cannot be in the past.");
+        }
+        throw new Error(errorText || "Failed to update schedule.");
+      }
     }
-  );
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to update schedule");
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || "Failed to update schedule.");
   }
-
-  return response.json();
 };
 export const updateScheduleStatus = async (scheduleId, newStatus, token) => {
   const response = await fetch(
