@@ -33,7 +33,7 @@ const Products = () => {
 
         // Fetch categories (you'll need to implement this API call)
         const categoriesResponse = await fetch(
-          "https://localhost:7067/api/v1/category/get-all"
+          "https://webapi20250531180300.azurewebsites.net/api/v1/category/get-all"
         );
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);

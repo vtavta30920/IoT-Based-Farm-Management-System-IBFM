@@ -26,7 +26,7 @@ const fetchGetAllAccount = async (pageIndex, pageSize, role, status) => {
   if (status) params.append("status", status);
 
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/account/get-all?${params.toString()}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/account/get-all?${params.toString()}`
   );
   return data;
 };
@@ -42,7 +42,7 @@ export const useGetAllAccount = (pageIndex, pageSize, role, status) => {
 // Hàm API get-by-email
 export const getUserByEmail = async (email) => {
   const response = await axios.get(
-    `https://localhost:7067/api/v1/account/get-by-email?email=${email}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/account/get-by-email?email=${email}`
   );
   return response.data;
 };
@@ -59,7 +59,7 @@ export const useGetAccountByEmail = (email) => {
 // Hàm API để cập nhật trạng thái tài khoản chỉ cần truyền id
 export const updateStatus = async (userId) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/account/update-status/${userId}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/account/update-status/${userId}`
   );
   return response.data;
 };
@@ -82,7 +82,7 @@ export const useUpdateStatus = (userId) => {
 // Hàm API để cập nhật role tài khoản chỉ cần truyền accountId và roleId
 export const updateRole = async (accountId, roleId) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/account/update-role?accountId=${accountId}&roleId=${roleId}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/account/update-role?accountId=${accountId}&roleId=${roleId}`
   );
   return response.data;
 };
@@ -106,7 +106,7 @@ export const useUpdateRole = (accountId, roleId) => {
 // Hàm API để cập nhật tài khoản
 export const updateAccount = async (userId, updateData) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/account/update/${userId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/account/update/${userId}`,
     updateData // truyền dữ liệu vào đây
   );
   return response.data;
@@ -127,7 +127,7 @@ export const useUpdateAccount = () => {
 
 export const createAccount = async (createData) => {
   const response = await axios.post(
-    `https://localhost:7067/api/v1/account/create`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/account/create`,
     createData,
     {
       headers: {
@@ -154,7 +154,7 @@ export const useCreateAccount = () => {
 // Hàm API để đổi mật khẩu tài khoản
 export const changePassword = async (userId, passwordData) => {
   const response = await axios.put(
-    `https://localhost:7067/api/v1/account/update-password?id=${userId}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/account/update-password?id=${userId}`,
     passwordData
   );
   return response.data;

@@ -15,7 +15,8 @@ axios.interceptors.request.use(
 
 // Hàm gọi API lấy lịch làm việc của staff hiện tại, có filter theo month (tháng của startDate)
 export const getScheduleByStaff = async (month) => {
-  let url = "https://localhost:7067/api/v1/Schedule/schedule-by-staff";
+  let url =
+    "https://webapi20250531180300.azurewebsites.net/api/v1/Schedule/schedule-by-staff";
   if (month) {
     url += `?month=${month}`;
   }

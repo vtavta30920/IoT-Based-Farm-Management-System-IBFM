@@ -20,7 +20,7 @@ axios.interceptors.request.use(
 const GetCurrentUserOrders = async (pageIndex, pageSize, token, status) => {
   const statusParam = status ? `&status=${status}` : "";
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/Order/order-list-by-current-account?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`,
+    `https://webapi20250531180300.azurewebsites.net/api/v1/Order/order-list-by-current-account?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ const GetAllOrders = async (pageIndex, pageSize, status) => {
   const statusParam =
     status !== undefined && status !== null ? `&status=${status}` : "";
   const { data } = await axios.get(
-    `https://localhost:7067/api/v1/Order/order-list?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`
+    `https://webapi20250531180300.azurewebsites.net/api/v1/Order/order-list?pageIndex=${pageIndex}&pageSize=${pageSize}${statusParam}`
   );
   return data;
 };
@@ -64,7 +64,7 @@ export const useGetAllOrder = (pageIndex, pageSize, status) => {
 // Hàm API order list theo email, có filter status
 const GetOrdersByEmail = async (email, pageIndex = 1, pageSize = 5, status) => {
   // Đúng URL: /order-list-by-emal/{email}?status=4&pageIndex=1&pageSize=10
-  let url = `https://localhost:7067/api/v1/Order/order-list-by-emal/${encodeURIComponent(
+  let url = `https://webapi20250531180300.azurewebsites.net/api/v1/Order/order-list-by-emal/${encodeURIComponent(
     email
   )}?pageIndex=${pageIndex}&pageSize=${pageSize}`;
   if (status !== undefined && status !== null && status !== "") {
@@ -96,7 +96,7 @@ export const useGetOrdersByEmail = (
 
 // Hàm API cập nhật trạng thái giao hàng
 const UpdateDeliveryStatus = async (orderId, token) => {
-  const url = `https://localhost:7067/api/v1/Order/updateDeliveryStatus/${orderId}`;
+  const url = `https://webapi20250531180300.azurewebsites.net/api/v1/Order/updateDeliveryStatus/${orderId}`;
   const headers = token
     ? { Authorization: `Bearer ${token}`, accept: "*/*" }
     : { accept: "*/*" };
@@ -113,7 +113,7 @@ export const useUpdateDeliveryStatus = () => {
 };
 
 const UpdateCompleteStatus = async (orderId, token) => {
-  const url = `https://localhost:7067/api/v1/Order/updateCompletedStatus/${orderId}`;
+  const url = `https://webapi20250531180300.azurewebsites.net/api/v1/Order/updateCompletedStatus/${orderId}`;
   const headers = token
     ? { Authorization: `Bearer ${token}`, accept: "*/*" }
     : { accept: "*/*" };
@@ -130,7 +130,7 @@ export const useUpdateCompleteStatus = () => {
 };
 
 const UpdateCancelStatus = async (orderId, token) => {
-  const url = `https://localhost:7067/api/v1/Order/updateCancelStatus/${orderId}`;
+  const url = `https://webapi20250531180300.azurewebsites.net/api/v1/Order/updateCancelStatus/${orderId}`;
   const headers = token
     ? { Authorization: `Bearer ${token}`, accept: "*/*" }
     : { accept: "*/*" };
@@ -150,7 +150,9 @@ export const useCompletePayment = () => {
   return useMutation({
     mutationFn: (orderId) =>
       axios
-        .post(`https://localhost:7067/api/vnpay/PaymentByOrderId/${orderId}`)
+        .post(
+          `https://webapi20250531180300.azurewebsites.net/api/vnpay/PaymentByOrderId/${orderId}`
+        )
         .then((res) => res.data),
   });
 };
@@ -160,7 +162,7 @@ export const useCreateOrderPayment = () => {
     mutationFn: (orderId) =>
       axios
         .post(
-          `https://localhost:7067/api/v1/Order/createOrderPayment/${orderId}`
+          `https://webapi20250531180300.azurewebsites.net/api/v1/Order/createOrderPayment/${orderId}`
         )
         .then((res) => res.data),
   });

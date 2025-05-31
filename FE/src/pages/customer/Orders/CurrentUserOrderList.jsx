@@ -98,7 +98,7 @@ const CurrentUserOrderList = () => {
           if (statusMap[order.status] === "COMPLETED") {
             try {
               const response = await fetch(
-                `https://localhost:7067/api/v1/feedback/feedback-by-order/${order.orderId}`,
+                `https://webapi20250531180300.azurewebsites.net/api/v1/feedback/feedback-by-order/${order.orderId}`,
                 {
                   headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -144,8 +144,8 @@ const CurrentUserOrderList = () => {
       }
 
       const url = editingFeedback
-        ? `https://localhost:7067/api/v1/feedback/update-feedback/${editingFeedback.feedbackId}`
-        : `https://localhost:7067/api/v1/feedback/create-feedback`;
+        ? `https://webapi20250531180300.azurewebsites.net/api/v1/feedback/update-feedback/${editingFeedback.feedbackId}`
+        : `https://webapi20250531180300.azurewebsites.net/api/v1/feedback/create-feedback`;
 
       const method = editingFeedback ? "PUT" : "POST";
 
