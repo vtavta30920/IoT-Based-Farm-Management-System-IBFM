@@ -305,7 +305,7 @@ export const getAllFarmActivities = async (
   pageSize = 10
 ) => {
   const response = await fetch(
-    `${API_BASE_URL}/farm-activity/get-all?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    `${API_BASE_URL}/farm-activity/get-active?pageIndex=${pageIndex}&pageSize=${pageSize}`,
     {
       method: "GET",
       headers: {
@@ -375,7 +375,7 @@ export const getBlynkData = async (token) => {
   return response.json();
 };
 
-export const getIotDevices = async (pageIndex = 0, pageSize = 10, token) => {
+export const getIotDevices = async (pageIndex = 0, pageSize = 100, token) => {
   const response = await fetch(
     `${API_BASE_URL}/iotDevices/iotDevices-list?pageIndex=${pageIndex}&pageSize=${pageSize}`,
     {
@@ -393,6 +393,26 @@ export const getIotDevices = async (pageIndex = 0, pageSize = 10, token) => {
 
   return response.json();
 };
+export const getAllIotDevices = async (token, pageSize = 100) => {
+  let allDevices = [];
+  let currentPage = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await getIotDevices(currentPage, pageSize, token);
+    const devices = response.data?.items || response.items || [];
+    allDevices = [...allDevices, ...devices];
+
+    // Check if we've fetched all items
+    if (devices.length < pageSize) {
+      hasMore = false;
+    } else {
+      currentPage++;
+    }
+  }
+
+  return allDevices;
+};
 
 export const createIotDevice = async (deviceData, token) => {
   const response = await fetch(`${API_BASE_URL}/iotDevices/iotDevices-create`, {
@@ -401,11 +421,17 @@ export const createIotDevice = async (deviceData, token) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(deviceData),
+    body: JSON.stringify({
+      deviceName: deviceData.deviceName,
+      deviceType: deviceData.deviceType,
+      expiryDate: deviceData.expiryDate,
+      farmDetailsId: deviceData.farmDetailsId,
+    }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error("Failed to create IoT device. Response:", errorText);
     throw new Error(errorText || "Failed to create IoT device");
   }
 

@@ -8,7 +8,7 @@ import {
   updateScheduleStatus,
   getStaffAccounts,
   getAllFarms,
-  getAllFarmActivities,
+  getAllFarmActivities, // Note: Update to use get-active API
   getExcludingInactive,
 } from "../../api/api";
 
@@ -20,7 +20,7 @@ const FarmingSchedules = () => {
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [modalError, setModalError] = useState(null); // New state for modal errors
+  const [modalError, setModalError] = useState(null);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 5,
@@ -34,10 +34,11 @@ const FarmingSchedules = () => {
     startDate: "",
     endDate: "",
     assignedTo: "",
-    farmActivityId: "",
+    farmActivities: [], // Stores farmActivityId as strings
     farmDetailsId: "",
     cropId: "",
     plantingDate: "",
+    quantity: "",
   });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -65,8 +66,18 @@ const FarmingSchedules = () => {
 
   const fetchFarmActivities = async () => {
     try {
-      const response = await getAllFarmActivities(token);
-      setFarmActivities(response);
+      // Use get-active API instead of getAllFarmActivities
+      const response = await fetch(
+        `https://localhost:7067/api/v1/farm-activity/get-active?pageIndex=1&pageSize=10`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      ).then((res) => res.json());
+      if (response.status === 1) {
+        setFarmActivities(response.data.items);
+      } else {
+        throw new Error(response.message || "Failed to fetch farm activities");
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -98,7 +109,7 @@ const FarmingSchedules = () => {
           filteredSchedules = filteredSchedules.filter(
             (schedule) =>
               schedule.fullNameStaff
-                .toLowerCase()
+                ?.toLowerCase()
                 .includes(searchTerm.toLowerCase()) ||
               schedule.cropView?.cropName
                 ?.toLowerCase()
@@ -145,14 +156,23 @@ const FarmingSchedules = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: [
-        "assignedTo",
-        "farmActivityId",
-        "farmDetailsId",
-        "cropId",
-      ].includes(name)
+      [name]: ["assignedTo", "farmDetailsId", "cropId", "quantity"].includes(
+        name
+      )
         ? validateNumber(value)
         : value,
+    });
+  };
+
+  const handleActivitySelection = (activityId) => {
+    setFormData((prev) => {
+      const updatedActivities = prev.farmActivities.includes(activityId)
+        ? prev.farmActivities.filter((id) => id !== activityId)
+        : [...prev.farmActivities, activityId];
+      return {
+        ...prev,
+        farmActivities: updatedActivities,
+      };
     });
   };
 
@@ -160,31 +180,41 @@ const FarmingSchedules = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      setModalError(null); // Clear previous modal errors
+      setModalError(null);
 
       if (new Date(formData.startDate) > new Date(formData.endDate)) {
         throw new Error("Start date cannot be after end date");
       }
 
-      // Validate required fields
+      if (formData.farmActivities.length === 0) {
+        throw new Error("Please select at least one farm activity");
+      }
+
+      // Validate required fields (removed location)
       if (
         !formData.startDate ||
         !formData.endDate ||
         !formData.assignedTo ||
-        !formData.farmActivityId ||
         !formData.farmDetailsId ||
-        !formData.cropId
+        !formData.cropId ||
+        !formData.quantity
       ) {
         throw new Error("Please fill in all required fields");
       }
 
-      const response = await createSchedule(
-        {
-          ...formData,
-          farmId: formData.farmDetailsId,
-        },
-        token
-      );
+      const requestData = {
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        assignedTo: Number(formData.assignedTo),
+        farmActivityId: formData.farmActivities.map(Number),
+        farmDetailsId: Number(formData.farmDetailsId),
+        cropId: Number(formData.cropId),
+        plantingDate: formData.plantingDate || null,
+        quantity: Number(formData.quantity),
+      };
+
+      console.log("Create request body:", requestData); // Debug
+      const response = await createSchedule(requestData, token);
 
       if (response.status === 1) {
         setIsCreateModalOpen(false);
@@ -194,7 +224,7 @@ const FarmingSchedules = () => {
         throw new Error(response.message || "Failed to create schedule");
       }
     } catch (err) {
-      setModalError(err.message); // Set error in modal state
+      setModalError(err.message);
     } finally {
       setLoading(false);
     }
@@ -210,17 +240,34 @@ const FarmingSchedules = () => {
         throw new Error("Start date cannot be after end date");
       }
 
-      // Prepare the update data
+      if (formData.farmActivities.length === 0) {
+        throw new Error("Please select at least one farm activity");
+      }
+
+      // Validate required fields (removed location)
+      if (
+        !formData.startDate ||
+        !formData.endDate ||
+        !formData.assignedTo ||
+        !formData.farmDetailsId ||
+        !formData.cropId ||
+        !formData.quantity
+      ) {
+        throw new Error("Please fill in all required fields");
+      }
+
       const updateData = {
         startDate: formData.startDate,
         endDate: formData.endDate,
         assignedTo: Number(formData.assignedTo),
-        farmActivityId: Number(formData.farmActivityId),
+        farmActivityId: formData.farmActivities.map(Number), // Use farmActivityId
         farmDetailsId: Number(formData.farmDetailsId),
         cropId: Number(formData.cropId),
-        plantingDate: formData.plantingDate || null, // Handle case where planting date might be empty
+        plantingDate: formData.plantingDate || null,
+        quantity: Number(formData.quantity),
       };
 
+      console.log("Update request body:", updateData); // Debug
       const response = await updateSchedule(
         currentSchedule.scheduleId,
         updateData,
@@ -242,6 +289,7 @@ const FarmingSchedules = () => {
       setLoading(false);
     }
   };
+
   const handleStatusChange = async (scheduleId, newStatus) => {
     try {
       setLoading(true);
@@ -263,12 +311,13 @@ const FarmingSchedules = () => {
       startDate: "",
       endDate: "",
       assignedTo: "",
-      farmActivityId: "",
+      farmActivities: [],
       farmDetailsId: "",
       cropId: "",
       plantingDate: "",
+      quantity: "",
     });
-    setModalError(null); // Clear modal errors when form is reset
+    setModalError(null);
   };
 
   const openEditModal = (schedule) => {
@@ -277,12 +326,15 @@ const FarmingSchedules = () => {
       startDate: formatDateForInput(schedule.startDate),
       endDate: formatDateForInput(schedule.endDate),
       assignedTo: schedule.assignedTo.toString(),
-      farmActivityId: schedule.farmActivityId?.toString() || "",
+      farmActivities:
+        schedule.farmActivityView?.map((a) => a.farmActivitiesId.toString()) ||
+        [],
       farmDetailsId: schedule.farmId?.toString() || "",
       cropId: schedule.cropId?.toString() || "",
       plantingDate: schedule.plantingDate
         ? formatDateForInput(schedule.plantingDate)
         : "",
+      quantity: schedule.quantity?.toString() || "",
     });
     setIsEditModalOpen(true);
     setModalError(null);
@@ -295,18 +347,29 @@ const FarmingSchedules = () => {
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
-    const [day, month, year] = dateString.split("/");
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    // Handle DD/MM/YYYY format from API response
+    if (dateString.includes("/")) {
+      const [day, month, year] = dateString.split("/");
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
+    // Handle other formats if needed
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? "" : date.toISOString().split("T")[0];
   };
 
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return `${date.getDate().toString().padStart(2, "0")}/${(
-      date.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}/${date.getFullYear()}`;
+    // Handle YYYY-MM-DD format from input
+    if (dateString.includes("-")) {
+      const date = new Date(dateString);
+      return `${date.getDate().toString().padStart(2, "0")}/${(
+        date.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}/${date.getFullYear()}`;
+    }
+    // Already in DD/MM/YYYY
+    return dateString;
   };
 
   const handlePageChange = (newPage) => {
@@ -315,6 +378,161 @@ const FarmingSchedules = () => {
       pageIndex: newPage,
     });
   };
+
+  const renderFarmActivitiesSection = () => (
+    <div className="mb-4 col-span-2">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Farm Activities (Select one or more)
+      </label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {farmActivities.map((activity) => (
+          <div key={activity.farmActivitiesId} className="flex items-center">
+            <input
+              type="checkbox"
+              id={`activity-${activity.farmActivitiesId}`}
+              checked={formData.farmActivities.includes(
+                activity.farmActivitiesId.toString()
+              )}
+              onChange={() =>
+                handleActivitySelection(activity.farmActivitiesId.toString())
+              }
+              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor={`activity-${activity.farmActivitiesId}`}
+              className="ml-2 block text-sm text-gray-700"
+            >
+              {activity.activityType} (
+              {formatDateForDisplay(activity.startDate)} -{" "}
+              {formatDateForDisplay(activity.endDate)})
+            </label>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderViewModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4">
+          Schedule Details #{currentSchedule.scheduleId}
+        </h2>
+
+        {/* Basic Info Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="mb-2">
+            <span className="font-medium">Staff:</span>{" "}
+            {currentSchedule.fullNameStaff}
+          </div>
+          <div className="mb-2">
+            <span className="font-medium">Status:</span>{" "}
+            <span
+              className={`px-2 py-1 rounded text-xs ${
+                currentSchedule.status === "ACTIVE"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}
+            >
+              {currentSchedule.status}
+            </span>
+          </div>
+          <div className="mb-2">
+            <span className="font-medium">Start Date:</span>{" "}
+            {formatDateForDisplay(currentSchedule.startDate)}
+          </div>
+          <div className="mb-2">
+            <span className="font-medium">End Date:</span>{" "}
+            {formatDateForDisplay(currentSchedule.endDate)}
+          </div>
+          <div className="mb-2">
+            <span className="font-medium">Planting Date:</span>{" "}
+            {formatDateForDisplay(currentSchedule.plantingDate) || "N/A"}
+          </div>
+        </div>
+
+        {/* Farm Information */}
+        {farms.find((f) => f.farmId === currentSchedule.farmId) && (
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">Farm Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="font-medium">Name:</span>{" "}
+                {
+                  farms.find((f) => f.farmId === currentSchedule.farmId)
+                    ?.farmName
+                }
+              </div>
+              <div>
+                <span className="font-medium">Location:</span>{" "}
+                {
+                  farms.find((f) => f.farmId === currentSchedule.farmId)
+                    ?.location
+                }
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Crop Information */}
+        {currentSchedule.cropView && (
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">Crop Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="font-medium">Name:</span>{" "}
+                {currentSchedule.cropView.cropName}
+              </div>
+              <div>
+                <span className="font-medium">Description:</span>{" "}
+                {currentSchedule.cropView.description || "N/A"}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Farm Activities */}
+        {currentSchedule.farmActivityView?.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3">Farm Activities</h3>
+            <div className="space-y-3">
+              {currentSchedule.farmActivityView.map((activity, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="font-medium">Type:</span>{" "}
+                      {activity.activityType}
+                    </div>
+                    <div>
+                      <span className="font-medium">Status:</span>{" "}
+                      {activity.status}
+                    </div>
+                    <div>
+                      <span className="font-medium">Start Date:</span>{" "}
+                      {formatDateForDisplay(activity.startDate)}
+                    </div>
+                    <div>
+                      <span className="font-medium">End Date:</span>{" "}
+                      {formatDateForDisplay(activity.endDate)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end mt-6">
+          <button
+            className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded"
+            onClick={() => setIsViewModalOpen(false)}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
@@ -327,7 +545,7 @@ const FarmingSchedules = () => {
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
             onClick={() => {
               setIsCreateModalOpen(true);
-              setModalError(null); // Clear previous modal errors
+              setModalError(null);
             }}
           >
             + New Schedule
@@ -418,8 +636,12 @@ const FarmingSchedules = () => {
                     {pagination.pageIndex * pagination.pageSize + index + 1}
                   </td>
                   <td className="py-2 px-4 border">{schedule.fullNameStaff}</td>
-                  <td className="py-2 px-4 border">{schedule.startDate}</td>
-                  <td className="py-2 px-4 border">{schedule.endDate}</td>
+                  <td className="py-2 px-4 border">
+                    {formatDateForDisplay(schedule.startDate)}
+                  </td>
+                  <td className="py-2 px-4 border">
+                    {formatDateForDisplay(schedule.endDate)}
+                  </td>
                   <td className="py-2 px-4 border">
                     <select
                       value={schedule.status}
@@ -516,11 +738,10 @@ const FarmingSchedules = () => {
       {/* Create Schedule Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl w-full max-w-2xl shadow-2xl">
+          <div className="bg-white p-8 rounded-xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               Create New Schedule
             </h2>
-            {/* Modal error message */}
             {modalError && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
                 {modalError}
@@ -564,7 +785,6 @@ const FarmingSchedules = () => {
                     value={formData.plantingDate}
                     onChange={handleInputChange}
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
-                    required
                   />
                 </div>
                 <div className="mb-4">
@@ -588,28 +808,19 @@ const FarmingSchedules = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Farm Activity
+                    Quantity
                   </label>
-                  <select
-                    name="farmActivityId"
-                    value={formData.farmActivityId}
+                  <input
+                    type="number"
+                    name="quantity"
+                    value={formData.quantity}
                     onChange={handleInputChange}
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
-                  >
-                    <option value="">Select Farm Activity</option>
-                    {farmActivities.map((activity) => (
-                      <option
-                        key={activity.farmActivitiesId}
-                        value={activity.farmActivitiesId}
-                      >
-                        {activity.activityType} (
-                        {formatDateForDisplay(activity.startDate)} -{" "}
-                        {formatDateForDisplay(activity.endDate)})
-                      </option>
-                    ))}
-                  </select>
+                    min="0"
+                  />
                 </div>
+                {renderFarmActivitiesSection()}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Farm
@@ -676,11 +887,10 @@ const FarmingSchedules = () => {
       {/* Edit Schedule Modal */}
       {isEditModalOpen && currentSchedule && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-2xl">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
               Edit Schedule #{currentSchedule.scheduleId}
             </h2>
-            {/* Modal error message */}
             {modalError && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
                 {modalError}
@@ -724,7 +934,6 @@ const FarmingSchedules = () => {
                     value={formData.plantingDate}
                     onChange={handleInputChange}
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
-                    required
                   />
                 </div>
                 <div className="mb-4">
@@ -748,28 +957,19 @@ const FarmingSchedules = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Farm Activity
+                    Quantity
                   </label>
-                  <select
-                    name="farmActivityId"
-                    value={formData.farmActivityId}
+                  <input
+                    type="number"
+                    name="quantity"
+                    value={formData.quantity}
                     onChange={handleInputChange}
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                     required
-                  >
-                    <option value="">Select Farm Activity</option>
-                    {farmActivities.map((activity) => (
-                      <option
-                        key={activity.farmActivitiesId}
-                        value={activity.farmActivitiesId}
-                      >
-                        {activity.activityType} (
-                        {formatDateForDisplay(activity.startDate)} -{" "}
-                        {formatDateForDisplay(activity.endDate)})
-                      </option>
-                    ))}
-                  </select>
+                    min="0"
+                  />
                 </div>
+                {renderFarmActivitiesSection()}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Farm
@@ -834,135 +1034,7 @@ const FarmingSchedules = () => {
       )}
 
       {/* View Schedule Modal */}
-      {isViewModalOpen && currentSchedule && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-2xl">
-            <h2 className="text-xl font-bold mb-4">
-              Schedule Details #{currentSchedule.scheduleId}
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="mb-2">
-                <span className="font-medium">Staff:</span>{" "}
-                {currentSchedule.fullNameStaff}
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">Status:</span>{" "}
-                <span
-                  className={`px-2 py-1 rounded text-xs ${
-                    currentSchedule.status === "ACTIVE"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {currentSchedule.status}
-                </span>
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">Start Date:</span>{" "}
-                {currentSchedule.startDate}
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">End Date:</span>{" "}
-                {currentSchedule.endDate}
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">Planting Date:</span>{" "}
-                {currentSchedule.plantingDate || "N/A"}
-              </div>
-              <div className="mb-2">
-                <span className="font-medium">Created At:</span>{" "}
-                {currentSchedule.createdAt}
-              </div>
-            </div>
-
-            {/* Farm Information Section */}
-            {currentSchedule.farmId && (
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">Farm Information</h3>
-                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded">
-                  {farms
-                    .filter((farm) => farm.farmId === currentSchedule.farmId)
-                    .map((farm) => (
-                      <>
-                        <div className="mb-2">
-                          <span className="font-medium">Name:</span>{" "}
-                          {farm.farmName}
-                        </div>
-                        <div className="mb-2">
-                          <span className="font-medium">Location:</span>{" "}
-                          {farm.location}
-                        </div>
-                        <div className="mb-2">
-                          <span className="font-medium">Created At:</span>{" "}
-                          {farm.createdAt}
-                        </div>
-                        <div className="mb-2">
-                          <span className="font-medium">Updated At:</span>{" "}
-                          {farm.updatedAt}
-                        </div>
-                      </>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* Crop Information Section */}
-            {currentSchedule.cropView && (
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">Crop Information</h3>
-                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded">
-                  <div className="mb-2">
-                    <span className="font-medium">Name:</span>{" "}
-                    {currentSchedule.cropView.cropName}
-                  </div>
-                  <div className="mb-2">
-                    <span className="font-medium">Description:</span>{" "}
-                    {currentSchedule.cropView.description}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Farm Activities Section */}
-            {currentSchedule.farmActivityView && (
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">Farm Activities</h3>
-                {currentSchedule.farmActivityView.map((activity, index) => (
-                  <div key={index} className="bg-gray-50 p-3 rounded mb-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="font-medium">Activity Type:</span>{" "}
-                        {activity.activityType}
-                      </div>
-                      <div>
-                        <span className="font-medium">Status:</span>{" "}
-                        {activity.status}
-                      </div>
-                      <div>
-                        <span className="font-medium">Start Date:</span>{" "}
-                        {activity.startDate}
-                      </div>
-                      <div>
-                        <span className="font-medium">End Date:</span>{" "}
-                        {activity.endDate}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="flex justify-end mt-6">
-              <button
-                className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded"
-                onClick={() => setIsViewModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {isViewModalOpen && currentSchedule && renderViewModal()}
     </div>
   );
 };
