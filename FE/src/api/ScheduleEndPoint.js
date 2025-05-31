@@ -13,18 +13,24 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Hàm gọi API lấy lịch làm việc của staff hiện tại
-export const getScheduleByStaff = async () => {
-  const { data } = await axios.get(
-    "https://localhost:7067/api/v1/Schedule/schedule-by-staff"
-  );
+// Hàm gọi API lấy lịch làm việc của staff hiện tại, có filter theo month (tháng của startDate)
+export const getScheduleByStaff = async (month) => {
+  let url = "https://localhost:7067/api/v1/Schedule/schedule-by-staff";
+  if (month) {
+    url += `?month=${month}`;
+  }
+  const { data } = await axios.get(url, {
+    headers: {
+      Accept: "*/*",
+    },
+  });
   return data;
 };
 
-// Hook react-query để lấy lịch làm việc của staff hiện tại
-export const useGetScheduleByStaff = () => {
+// Hook react-query để lấy lịch làm việc của staff hiện tại, có filter theo month
+export const useGetScheduleByStaff = (month) => {
   return useQuery({
-    queryKey: ["v1/Schedule/schedule-by-staff"],
-    queryFn: getScheduleByStaff,
+    queryKey: ["v1/Schedule/schedule-by-staff", month],
+    queryFn: () => getScheduleByStaff(month),
   });
 };

@@ -205,7 +205,8 @@ const Products = () => {
                           <span
                             key={i}
                             style={{
-                              color: i < (fb.rating || 0) ? "#fbbf24" : "#d1d5db",
+                              color:
+                                i < (fb.rating || 0) ? "#fbbf24" : "#d1d5db",
                               fontSize: "1.1em",
                             }}
                           >
@@ -217,6 +218,13 @@ const Products = () => {
                     <div className="text-gray-700 whitespace-pre-line break-words">
                       {fb.comment}
                     </div>
+                    {fb.createdAt && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        {`Created at: ${new Date(fb.createdAt).toLocaleString(
+                          "vi-VN"
+                        )}`}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -6,7 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 const PAGE_SIZE = 5;
 
 const StaffSchedule = () => {
-  const { data, isLoading, isError } = useGetScheduleByStaff();
+  // Thêm filter month
+  const [monthFilter, setMonthFilter] = useState("");
+  const { data, isLoading, isError } = useGetScheduleByStaff(monthFilter);
   const [pageIndex, setPageIndex] = useState(1);
   const [expandedId, setExpandedId] = useState(null);
 
@@ -33,6 +35,15 @@ const StaffSchedule = () => {
   const handleExpand = (scheduleId) => {
     setExpandedId(expandedId === scheduleId ? null : scheduleId);
   };
+
+  // Danh sách tháng cho filter
+  const months = [
+    { label: "All", value: "" },
+    ...Array.from({ length: 12 }, (_, i) => ({
+      label: `Month ${i + 1}`,
+      value: i + 1,
+    })),
+  ];
 
   return (
     <div className="p-6 bg-white min-h-screen flex flex-col">
@@ -66,6 +77,24 @@ const StaffSchedule = () => {
       <h1 className="text-2xl font-bold text-green-700 mb-6 text-center">
         My Schedules
       </h1>
+      {/* Filter by month */}
+      <div className="mb-4 flex items-center gap-4">
+        <label className="font-medium">Filter by Month:</label>
+        <select
+          className="border rounded p-2"
+          value={monthFilter}
+          onChange={(e) => {
+            setMonthFilter(e.target.value);
+            setPageIndex(1);
+          }}
+        >
+          {months.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="overflow-x-auto rounded-lg border bg-white">
         <table className="min-w-full bg-white border border-gray-300">
           <thead className="bg-gray-200 border-b border-gray-300">
