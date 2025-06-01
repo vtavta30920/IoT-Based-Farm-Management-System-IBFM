@@ -519,7 +519,7 @@ const CurrentUserOrderList = () => {
                                 <div className="flex justify-center gap-1">
                                   {existingFeedback ? (
                                     <>
-                                      <button
+                                      {/* <button
                                         className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -527,7 +527,7 @@ const CurrentUserOrderList = () => {
                                         }}
                                       >
                                         View
-                                      </button>
+                                      </button> */}
                                       {/* <button
                                         className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
                                         onClick={(e) => {
